@@ -1,38 +1,330 @@
-.App {
-  text-align: center;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+.app {
+  background-color: #f5f5f5;
   min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 28px;
+}
+
+.content-wrapper {
+  display: flex;
+  gap: 40px;
+}
+
+.form-section {
+  flex: 1;
+  max-width: 400px;
+}
+
+.preview-section {
+  flex: 2;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #555;
+}
+
+.input-container {
+  margin-bottom: 15px;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.input-row input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  text-align: center;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.input-row input[type="text"]:focus {
+  border-color: #2196F3;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.input-row input[type="color"] {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.remove-btn {
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.remove-btn:hover {
+  background-color: #ff5252;
+  transform: scale(1.05);
+}
+
+.form-buttons {
+  margin-top: 15px;
+}
+
+.add-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.add-btn:hover {
+  background-color: #43a047;
+  transform: scale(1.05);
+}
+
+.preview-container {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  width: 100%;
+}
+
+.preview-title {
+  text-align: center;
+  font-size: 40px;
+  margin-bottom: 50px;
+  color: #333;
+  font-weight: bold;
+}
+
+.reference-section {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  margin-bottom: 50px;
+  flex-wrap: wrap;
+}
+
+.reference-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 10px;
+}
+
+.reference-color {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.reference-char {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  border: 2px solid #333;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  border-radius: 5px;
+}
+
+.practice-section {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 15px;
+  justify-items: center;
+  margin-bottom: 30px;
+}
+
+.practice-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 2px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+}
+
+.practice-char {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.print-btn {
+  background-color: #2196F3;
   color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s;
 }
 
-.App-link {
-  color: #61dafb;
+.print-btn:hover {
+  background-color: #0b7dda;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+@media (max-width: 768px) {
+  .content-wrapper {
+    flex-direction: column;
   }
-  to {
-    transform: rotate(360deg);
+  
+  .form-section,
+  .preview-section {
+    max-width: 100%;
+  }
+  
+  .reference-section {
+    gap: 30px;
+  }
+  
+  .practice-section {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  
+  .practice-circle {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .practice-char {
+    font-size: 24px;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .app {
+    padding: 0;
+    background-color: white;
+    width: 210mm;
+    height: 297mm;
+    min-height: 297mm;
+    display: block;
+  }
+  
+  .container, .preview-container {
+    box-shadow: none;
+    padding: 20mm;
+    max-width: 100%;
+    margin: 0;
+    width: 210mm;
+    height: 297mm;
+    min-height: 297mm;
+  }
+  
+  .form-section,
+  .action-buttons,
+  h1 {
+    display: none;
+  }
+  
+  .preview-title {
+    font-size: 36pt;
+    margin-bottom: 25mm;
+  }
+  
+  .reference-section {
+    gap: 25mm;
+    margin-bottom: 20mm;
+  }
+  
+  .reference-color {
+    width: 12mm;
+    height: 12mm;
+  }
+  
+  .reference-char {
+    font-size: 16pt;
+    width: 12mm;
+    height: 12mm;
+    border-width: 1pt;
+  }
+  
+  .practice-section {
+    gap: 8mm;
+  }
+  
+  .practice-circle {
+    width: 20mm;
+    height: 20mm;
+    border-width: 1pt;
+  }
+  
+  .practice-char {
+    font-size: 14pt;
   }
 }
