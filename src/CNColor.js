@@ -138,32 +138,34 @@ class PreviewSheet extends React.Component {
     
     return (
       <div className="preview-container">
-        <div className="preview-title">找一找 涂色</div>
-        
-        <div className="reference-section">
-          {characters.map((char, index) => (
-            <div key={index} className="reference-item">
-              <div 
-                className="reference-color" 
-                style={{ backgroundColor: colors[index] }}
-              ></div>
-              <div className="reference-char">{char}</div>
-            </div>
-          ))}
-        </div>
-        
-        <div className="practice-section">
-          {Array.from({ length: totalCircles }).map((_, i) => {
-            const row = Math.floor(i / 7); // 每行7个
-            const col = i % 7;
-            const char = patterns[row]?.[col] || '';
-            
-            return (
-              <div key={i} className="practice-circle">
-                <div className="practice-char">{char}</div>
+        <div className="print-content">
+          <div className="preview-title">找一找 涂色</div>
+          
+          <div className="reference-section">
+            {characters.map((char, index) => (
+              <div key={index} className="reference-item">
+                <div 
+                  className="reference-color" 
+                  style={{ backgroundColor: colors[index] }}
+                ></div>
+                <div className="reference-char">{char}</div>
               </div>
-            );
-          })}
+            ))}
+          </div>
+          
+          <div className="practice-section">
+            {Array.from({ length: totalCircles }).map((_, i) => {
+              const row = Math.floor(i / 7);
+              const col = i % 7;
+              const char = patterns[row]?.[col] || '';
+              
+              return (
+                <div key={i} className="practice-circle">
+                  <div className="practice-char">{char}</div>
+                </div>
+              );
+            })}
+          </div>
         </div>
         
         <div className="action-buttons">

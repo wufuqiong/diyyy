@@ -265,25 +265,34 @@ label {
   body {
     margin: 0;
     padding: 0;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   
   .app {
     padding: 0;
     background-color: white;
-    width: 210mm;
-    height: 297mm;
-    min-height: 297mm;
-    display: block;
+    width: 210; /* 210mm - 2 * 10mm边距 */
+    height: 297; /* 297mm - 2 * 10mm边距 */
+    min-height: 277mm;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    box-shadow: none;
   }
   
   .container, .preview-container {
     box-shadow: none;
-    padding: 20mm;
-    max-width: 100%;
+    padding: 0;
+    width: 100%;
+    height: 100%;
     margin: 0;
-    width: 210mm;
-    height: 297mm;
-    min-height: 297mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
   
   .form-section,
@@ -294,37 +303,64 @@ label {
   
   .preview-title {
     font-size: 36pt;
-    margin-bottom: 25mm;
+    margin-bottom: 20mm;
+    text-align: center;
   }
   
   .reference-section {
-    gap: 25mm;
-    margin-bottom: 20mm;
+    display: flex;
+    justify-content: center;
+    gap: 20mm;
+    margin-bottom: 15mm;
+    flex-wrap: wrap;
+  }
+  
+  .reference-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   
   .reference-color {
     width: 12mm;
     height: 12mm;
+    margin-bottom: 3mm;
   }
   
   .reference-char {
     font-size: 16pt;
     width: 12mm;
     height: 12mm;
-    border-width: 1pt;
+    border-width: 2pt;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .practice-section {
-    gap: 8mm;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5mm;
+    justify-items: center;
+    margin: 0 auto;
+    width: 100%;
   }
   
   .practice-circle {
     width: 20mm;
     height: 20mm;
-    border-width: 1pt;
+    border-width: 2pt;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .practice-char {
-    font-size: 14pt;
+    font-size: 20pt;
+  }
+  
+  .preview-container {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 }
