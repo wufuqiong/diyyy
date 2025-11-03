@@ -9,11 +9,11 @@ import { components } from './core/components';
 import { typography } from './core/typography';
 import { customShadows } from './core/custom-shadows';
 
-import type { ThemeOptions } from './types';
+import type { ExtendedThemeOptions } from './types';
 
 // ----------------------------------------------------------------------
 
-export const baseTheme: ThemeOptions = {
+export const baseTheme: ExtendedThemeOptions = {
   colorSchemes: {
     light: {
       palette: palette.light,
@@ -30,7 +30,7 @@ export const baseTheme: ThemeOptions = {
 // ----------------------------------------------------------------------
 
 type CreateThemeProps = {
-  themeOverrides?: ThemeOptions;
+  themeOverrides?: ExtendedThemeOptions;
 };
 
 export function createTheme({ themeOverrides = {} }: CreateThemeProps = {}): Theme {

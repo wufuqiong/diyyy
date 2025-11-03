@@ -10,12 +10,19 @@ import type { CustomShadows } from './core/custom-shadows';
 
 // ----------------------------------------------------------------------
 
-/**
- * Theme options
- * Extended type that includes additional properties for color schemes and CSS variables.
- *
- * @see https://github.com/mui/material-ui/blob/master/packages/mui-material/src/styles/createTheme.ts
- */
+declare module '@mui/material/styles' {
+  interface Theme {
+    shape: {
+      borderRadius: number;
+    };
+  }
+  
+  interface ThemeOptions {
+    shape?: {
+      borderRadius?: number;
+    };
+  }
+}
 
 export type ThemeColorScheme = SupportedColorScheme;
 export type ThemeCssVariables = Pick<
@@ -28,7 +35,8 @@ type ColorSchemeOptionsExtended = ColorSystemOptions & {
   customShadows?: CustomShadows;
 };
 
-export type ThemeOptions = Omit<MuiThemeOptions, 'components'> &
+// FIX: Use a more descriptive name
+export type ExtendedThemeOptions = Omit<MuiThemeOptions, 'components'> &
   Pick<CssVarsThemeOptions, 'defaultColorScheme' | 'components'> & {
     colorSchemes?: Partial<Record<ThemeColorScheme, ColorSchemeOptionsExtended>>;
     cssVariables?: ThemeCssVariables;

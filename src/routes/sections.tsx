@@ -19,6 +19,8 @@ export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
+export const CNColorPage = lazy(() => import('src/pages/cncolor'));
+
 const renderFallback = () => (
   <Box
     sx={{
@@ -39,6 +41,7 @@ const renderFallback = () => (
   </Box>
 );
 
+/*
 export const routesSection: RouteObject[] = [
   {
     element: (
@@ -68,4 +71,22 @@ export const routesSection: RouteObject[] = [
     element: <Page404 />,
   },
   { path: '*', element: <Page404 /> },
+];
+*/
+
+export const routesSection: RouteObject[] = [
+  {
+    element: (
+      <DashboardLayout>
+        <Suspense fallback={renderFallback()}>
+          <Outlet />
+        </Suspense>
+      </DashboardLayout>
+    ),
+    children: [
+      { index: true, element: <DashboardPage /> },
+      { path: 'user', element: <UserPage /> },
+      { path: 'cncolor', element: <CNColorPage />},
+    ],
+  },
 ];

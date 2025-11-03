@@ -1,3 +1,5 @@
+import ColorLensIcon from '@mui/icons-material/ColorLens';
+
 import { Label } from 'src/components/label';
 import { SvgColor } from 'src/components/svg-color';
 
@@ -12,6 +14,27 @@ export type NavItem = {
   info?: React.ReactNode;
 };
 
+export const navData = [
+  /*
+  {
+    title: 'Dashboard',
+    path: '/',
+    icon: icon('ic-analytics'),
+  },
+  {
+    title: 'User',
+    path: '/user',
+    icon: icon('ic-user'),
+  },
+  */
+  {
+    title: 'Chinese Coloring',
+    path: '/cncolor',
+    icon: <ColorLensIcon />,
+  }
+];
+
+/*
 export const navData = [
   {
     title: 'Dashboard',
@@ -49,3 +72,4 @@ export const navData = [
     icon: icon('ic-disabled'),
   },
 ];
+*/

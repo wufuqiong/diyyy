@@ -6,12 +6,12 @@ import { ThemeProvider as ThemeVarsProvider } from '@mui/material/styles';
 import { createTheme } from './create-theme';
 
 import type {} from './extend-theme-types';
-import type { ThemeOptions } from './types';
+import type { ExtendedThemeOptions } from './types';
 
 // ----------------------------------------------------------------------
 
 export type ThemeProviderProps = Partial<MuiThemeProviderProps> & {
-  themeOverrides?: ThemeOptions;
+  themeOverrides?: ExtendedThemeOptions;
 };
 
 export function ThemeProvider({ themeOverrides, children, ...other }: ThemeProviderProps) {
