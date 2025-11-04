@@ -20,6 +20,7 @@ export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
 export const CNColorPage = lazy(() => import('src/pages/cncolor'));
+export const CNMazePage = lazy(() => import('src/pages/cnmaze'));
 
 const renderFallback = () => (
   <Box
@@ -87,6 +88,7 @@ export const routesSection: RouteObject[] = [
       { index: true, element: <DashboardPage /> },
       { path: 'user', element: <UserPage /> },
       { path: 'cncolor', element: <CNColorPage />},
+      { path: 'cnmaze', element: <CNMazePage />},
     ],
   },
 ];

@@ -1,15 +1,15 @@
 import { CONFIG } from 'src/config-global';
 
-import { CNColorView } from 'src/sections/cncolor/view';
+import { CNMazeView } from 'src/sections/cnmaze/view';
 
 // ----------------------------------------------------------------------
 
 export default function Page() {
   return (
     <>
-      <title>{`Chinese Coloring - ${CONFIG.appName}`}</title>
+      <title>{`Chinese Maze - ${CONFIG.appName}`}</title>
 
-      <CNColorView />
+      <CNMazeView />
     </>
   );
 }

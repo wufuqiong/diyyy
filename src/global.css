@@ -54,3 +54,48 @@ input[type='number']::-webkit-inner-spin-button {
   margin: 0;
   -webkit-appearance: none;
 }
+
+/* Global print styles */
+@media print {
+  /* Hide navigation, headers, and other UI elements */
+  .MuiAppBar-root,
+  .MuiDrawer-root,
+  .MuiButton-root,
+  .MuiIconButton-root {
+    display: none !important;
+  }
+  
+  /* Ensure the print content takes full width */
+  .MuiContainer-root {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* Remove shadows and borders for printing */
+  .MuiPaper-root {
+    box-shadow: none !important;
+    border: none !important;
+  }
+  
+  /* Ensure colors print correctly */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* Page breaks */
+  .page-break {
+    page-break-after: always;
+  }
+  
+  /* No margin on pages */
+  @page {
+    margin: 0.5in;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+  }
+}
