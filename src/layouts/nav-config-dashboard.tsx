@@ -1,6 +1,3 @@
-import ColorLensIcon from '@mui/icons-material/ColorLens';
-import TurnSharpRightIcon from '@mui/icons-material/TurnSharpRight';
-
 import { Label } from 'src/components/label';
 import { SvgColor } from 'src/components/svg-color';
 
@@ -29,14 +26,14 @@ export const navData = [
   },
   */
   {
-    title: 'Chinese Coloring',
+    title: '汉字涂色',
     path: '/cncolor',
-    icon: <ColorLensIcon />,
+    icon: <img src="/assets/icons/coloring.png" alt="cloring icon" style={{ width: '24px', height: '24px' }} />,
   },
   {
-    title: 'Chinese Maze',
+    title: '汉字迷宫',
     path: '/cnmaze',
-    icon: <TurnSharpRightIcon />,
+    icon: <img src="/assets/icons/maze.png" alt="maze icon" style={{ width: '24px', height: '24px' }} />,
   },
 ];
 

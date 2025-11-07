@@ -66,13 +66,24 @@ interface MiemieData {
 // Type assertion for the imported data
 const miemie = miemieData as MiemieData;
 
-const TITLE = "汉字迷宫";
+type Mode = 'WORD' | 'PHRASE' | 'SENTENCE';
+
+const TITLE_PRESETS: Record<Mode, string> = {
+  'WORD': '汉字迷宫',
+  'PHRASE': '请找到以下词语',
+  'SENTENCE': '请找到以下句子',
+};
 
 const TABLE_SIZE_PRESETS: TableSizePreset[] = [
   {
     name: '8 x 8',
     rows: 8,
     cols: 8,
+  },
+  {
+    name: '9 x 9',
+    rows: 9,
+    cols: 9,
   },
   {
     name: '10 x 10',
@@ -216,8 +227,7 @@ export class CNMazeView extends React.Component<object, CNMazeState> {
   generateWordMaze = (char: string, rows: number, cols: number): string[][] => {
     const maze: string[][] = [];
     const simpleChars = shuffleArray([...miemie[SAMPLE_DICT], ...miemie[SAMPLE_DICT]]);
-    
-
+  
     for (let i = 0; i < rows; i++) {
       const row: string[] = [];
       for (let j = 0; j < cols; j++) {
@@ -524,12 +534,11 @@ class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState>
                 mx: 1,
                 px: 2,
                 py: 0.5,
-                backgroundColor: 'gold',
-                color: 'black',
+                backgroundColor: 'primary.main',
+                color: 'white',
                 borderRadius: 1,
                 fontWeight: 'bold',
                 fontSize: '1.2em',
-                border: '2px solid orange',
               }}
             >
               {char}
@@ -547,7 +556,7 @@ class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState>
     return (
       <Box sx={{ p: 2 }}>
         <Typography 
-          variant="h1" 
+          variant="h2" 
           align="center" 
           gutterBottom 
           sx={{ 
@@ -555,7 +564,7 @@ class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState>
             my: 4,
           }}
         >
-          {TITLE}
+          {TITLE_PRESETS[mode as Mode]}
         </Typography>
         {mode === 'WORD' && this.getWordModeInstruction(characters[0][0])}
         <Box sx={{ 
@@ -590,35 +599,13 @@ class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState>
                   position: 'relative',
                 }}
               >
-                <Typography variant="h3">{char}</Typography>
+                {!isStart && !isEnd && <Typography variant="h3">{char}</Typography>}
                 {isStart && (
-                  <Star 
-                    sx={{ 
-                      position: 'absolute',
-                      top: 4,
-                      left: 4,
-                      fontSize: '1.5rem', // Larger icon
-                      color: 'gold',
-                      backgroundColor: 'rgba(255,255,255,0.8)',
-                      borderRadius: '50%',
-                      p: 0.5,
-                    }} 
-                  />
+                  <Star sx={{ fontSize: '3.5em', verticalAlign: 'middle', color: 'gold' }} />
                 )}
 
                 {isEnd && (
-                  <Flag 
-                    sx={{ 
-                      position: 'absolute',
-                      bottom: 4,
-                      right: 4,
-                      fontSize: '1.5rem', // Larger icon
-                      color: 'red',
-                      backgroundColor: 'rgba(255,255,255,0.8)',
-                      borderRadius: '50%',
-                      p: 0.5,
-                    }} 
-                  />
+                  <Flag sx={{ fontSize: '3.5em', verticalAlign: 'middle', color: 'red' }} />
                 )}
               </Box>
             );
