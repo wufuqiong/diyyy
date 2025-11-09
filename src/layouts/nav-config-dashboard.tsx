@@ -26,7 +26,7 @@ export const navData = [
   },
   */
   {
-    title: '汉字涂色',
+    title: '涂色',
     path: '/cncolor',
     icon: <img src="/assets/icons/coloring.png" alt="cloring icon" style={{ width: '24px', height: '24px' }} />,
   },

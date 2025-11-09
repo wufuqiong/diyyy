@@ -57,12 +57,17 @@ interface CNMazeState {
   selectedMode: number;
   selectedTableSize: number;
   selectedLevel: string;
+  selectedLanguage: string;
+  fullSelectedValue: string;
   pages: PageData[];
 }
 
-// Assuming miemie.json has this structure
+interface LanguageLevels {
+  [level: string]: string[];
+}
+
 interface MiemieData {
-  [key: string]: string[];
+  [language: string]: LanguageLevels;
 }
 
 // Type assertion for the imported data
@@ -115,7 +120,9 @@ const MODE_PRESETS: ModePreset[] = [
 ]
 
 const MAX_INPUT_LENGTH = 300;
-const SAMPLE_DICT = "人教版小学语文一年级上册";
+const CHINESE_SAMPLE_DICT = "人教版小学语文一年级上册";
+const ENGLISH_UPPER = "A-Z大写字母";
+const ENGLISH_LOWWER = "a-z小写字母";
 
 // Random shuffle array with proper typing
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -205,6 +212,10 @@ const EndIcon = ({ char }: { char: string }) => {
   );
 };
 
+function hasChineseCharacters(characters: string[]): boolean {
+  const chineseRegex = /[\u4e00-\u9fff]/; // Basic Chinese characters
+  return characters.some(char => chineseRegex.test(char));
+}
 
 export class CNMazeView extends React.Component<object, CNMazeState> {
   constructor(props: object) {
@@ -214,6 +225,8 @@ export class CNMazeView extends React.Component<object, CNMazeState> {
       selectedMode: 0,
       selectedTableSize: 0,
       selectedLevel: '',
+      selectedLanguage: '',
+      fullSelectedValue: '',
       pages: [],
     };
   }
@@ -237,13 +250,26 @@ export class CNMazeView extends React.Component<object, CNMazeState> {
     });
   };
 
-  handleLevelChange = (e: SelectChangeEvent<string>): void => {
-    const level = e.target.value;
-    this.setState({ selectedLevel: level });
-    
-    if (level && miemie[level]) {
-      const chineseChars = miemie[level].join('');
-      this.setState({ userInput: chineseChars });
+  handleLevelChange = (e: SelectChangeEvent<string>) => {
+    const value = e.target.value;
+    if (value.includes('|')) {
+      const [language, level] = value.split('|');
+      // Set both language and level in state
+      this.setState({ 
+        selectedLanguage: language,
+        selectedLevel: level,
+        fullSelectedValue: value
+      });
+      const characters = miemie[language][level];
+      this.setState({
+        userInput: characters.join(',')
+      })
+    } else {
+      this.setState({ 
+        selectedLanguage: '',
+        selectedLevel: '',
+        fullSelectedValue: '',
+      });
     }
   };
 
@@ -259,8 +285,14 @@ export class CNMazeView extends React.Component<object, CNMazeState> {
 
   generateWordMaze = (char: string, rows: number, cols: number): string[][] => {
     const maze: string[][] = [];
-    const simpleChars = shuffleArray([...miemie[SAMPLE_DICT], ...miemie[SAMPLE_DICT]]);
-  
+    let simpleChars: string[] = [];
+
+    if (hasChineseCharacters([char])) {
+      simpleChars = miemie["Chinese"][CHINESE_SAMPLE_DICT] || [];
+    } else {
+      simpleChars = [...miemie["English"][ENGLISH_UPPER], ...miemie["English"][ENGLISH_LOWWER]];
+      simpleChars = [...simpleChars, ...simpleChars, ...simpleChars];
+    }
     for (let i = 0; i < rows; i++) {
       const row: string[] = [];
       for (let j = 0; j < cols; j++) {
@@ -279,9 +311,9 @@ export class CNMazeView extends React.Component<object, CNMazeState> {
   
   generatePages = (): void => {
     const { selectedMode, selectedTableSize } = this.state;
-    let { userInput } = this.state;
+    const { userInput } = this.state;
     
-    userInput = this.filterChineseCharacters(userInput);
+    //userInput = this.filterChineseCharacters(userInput);
     
     if (!userInput.trim()) {
       alert('请输入要练习的文字');
@@ -295,7 +327,17 @@ export class CNMazeView extends React.Component<object, CNMazeState> {
 
     this.setState({ userInput }, () => {
       if (mode == 'WORD') {
-        const inputChars = userInput.split('');
+        let inputChars: string[] = [];
+
+      // Method 1: Split by multiple delimiters using regex
+      if (userInput.trim() !== '') {
+        inputChars = userInput.split(/[\s,;，；、]+/).filter(char => char.trim() !== '');
+      }
+
+      // If the above doesn't capture any characters, try splitting by empty string
+      if (inputChars.length === 0 && userInput.trim() !== '') {
+        inputChars = userInput.split('').filter(char => char.trim() !== '');
+      }
         const totalPages = inputChars.length;
         for (let i = 0; i < totalPages; i++) {
           const pageChars = this.generateWordMaze(inputChars[i], rows, cols);
@@ -316,7 +358,7 @@ export class CNMazeView extends React.Component<object, CNMazeState> {
   };
 
   render() {
-    const { userInput, selectedMode, selectedTableSize, selectedLevel, pages} = this.state;
+    const { userInput, selectedMode, selectedTableSize, fullSelectedValue, pages} = this.state;
     return (
       <Box className="app" sx={{ p: 2 }}>
         <Container maxWidth="lg">
@@ -391,19 +433,22 @@ export class CNMazeView extends React.Component<object, CNMazeState> {
                     </FormControl>
                   </Grid>
                   
-                  <Grid size={{ xs: 12, sm: 4 }}>
+                   <Grid size={{ xs: 12, sm: 4 }}>
                     <FormControl fullWidth>
                       <InputLabel>预设字库</InputLabel>
                       <Select
-                        value={selectedLevel}
+                        value={fullSelectedValue}
                         onChange={this.handleLevelChange}
                         label="预设字库"
                       >
                         <MenuItem value="">请选择字库</MenuItem>
-                        {Object.keys(miemie).map(level => (
-                          <MenuItem key={level} value={level}>
-                            {level}
-                          </MenuItem>
+                        {Object.keys(miemie).map(language => (
+                          // Group languages with their levels
+                          Object.keys(miemie[language]).map(level => (
+                            <MenuItem key={`${language}-${level}`} value={`${language}|${level}`}>
+                              {language} - {level}
+                            </MenuItem>
+                          ))
                         ))}
                       </Select>
                     </FormControl>

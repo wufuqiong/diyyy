@@ -22,6 +22,7 @@ export const Page404 = lazy(() => import('src/pages/page-not-found'));
 export const CNColorPage = lazy(() => import('src/pages/cncolor'));
 export const CNMazePage = lazy(() => import('src/pages/cnmaze'));
 
+
 const renderFallback = () => (
   <Box
     sx={{
