@@ -19,6 +19,8 @@ import {
 
 import miemieData from 'src/data/miemie.json';
 
+import { useRandomIcon } from 'src/components/iconify/random-icon';
+
 interface TableSizePreset {
   name: string;
   rows: number;
@@ -171,6 +173,37 @@ const generateWordMazePath = (rows: number, cols: number): number[][]  => {
   }
   return [];
 }
+
+// Instead of functions, create React components
+const StartIcon = ({ char }: { char: string }) => {
+  const iconStart = useRandomIcon(`maze-page-start-icon-${char}`);
+  return (
+    <img
+      src={iconStart}
+      alt="start icon"
+      style={{ 
+        width: '2em', 
+        height: '2em', 
+        verticalAlign: 'middle',
+      }} 
+    />
+  );
+};
+
+const EndIcon = ({ char }: { char: string }) => {
+  const iconEnd = useRandomIcon(`maze-page-end-icon-${char}`);
+  return (
+    <img
+      src={iconEnd}
+      alt="end icon"
+      style={{ 
+        width: '2em', 
+        height: '2em', 
+        verticalAlign: 'middle',
+      }} 
+    />
+  );
+};
 
 
 export class CNMazeView extends React.Component<object, CNMazeState> {
@@ -509,7 +542,7 @@ class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState>
     return indicators;
   };
 
-  getWordModeInstruction = (char: string): React.ReactElement => 
+  getWordModeInstruction = (char: string, start: React.ReactElement, end: React.ReactElement): React.ReactElement => 
   (
       <Box 
           sx={{ 
@@ -525,7 +558,7 @@ class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState>
               color: 'primary.main',
             }}
           >
-            请从 <Star sx={{ fontSize: '1.5em', verticalAlign: 'middle', color: 'gold' }} /> 出发，
+            请从{start}出发，
             沿着
             <Box 
               component="span" 
@@ -544,14 +577,16 @@ class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState>
               {char}
             </Box>
             字走，走到
-            <Flag sx={{ fontSize: '1.5em', verticalAlign: 'middle', color: 'red', ml: 1 }} /> 处。
+            {end}处。
           </Typography>
         </Box>
   );
 
+
+
   renderPage = (pageData: PreviewPage): React.ReactElement => {
     const { characters, rows, cols, mode } = pageData;
-    const totalCircles = rows * cols;
+    const totalCircles = rows * cols;    
     
     return (
       <Box sx={{ p: 2 }}>
@@ -566,7 +601,11 @@ class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState>
         >
           {TITLE_PRESETS[mode as Mode]}
         </Typography>
-        {mode === 'WORD' && this.getWordModeInstruction(characters[0][0])}
+        {mode === 'WORD' && 
+          this.getWordModeInstruction(characters[0][0],
+            <StartIcon char={characters[0][0]} />,
+            <EndIcon char={characters[0][0]} />)
+        }
         <Box sx={{ 
           display: 'grid', 
           gridTemplateColumns: `repeat(${cols}, 0fr)`, // Use actual cols
@@ -600,13 +639,8 @@ class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState>
                 }}
               >
                 {!isStart && !isEnd && <Typography variant="h3">{char}</Typography>}
-                {isStart && (
-                  <Star sx={{ fontSize: '3.5em', verticalAlign: 'middle', color: 'gold' }} />
-                )}
-
-                {isEnd && (
-                  <Flag sx={{ fontSize: '3.5em', verticalAlign: 'middle', color: 'red' }} />
-                )}
+                {isStart && <StartIcon char={characters[0][0]} />}
+                {isEnd && <EndIcon char={characters[0][0]} />}
               </Box>
             );
           })}

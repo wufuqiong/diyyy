@@ -84,13 +84,11 @@ def walk_icons(name_list, output_dir="."):
             size = 0
             while not found and i < len(sizes):
                 size = sizes[i]
+                time.sleep(1)
                 if not download_animal_icon(name, 0, lib=lib, size=size, output_dir=output_dir_name):
                     i += 1
                 else:
                     found = True
-            if found:
-                for ver_id in range(1, 2):
-                    download_animal_icon(name, ver_id, lib=lib, size=size, output_dir=output_dir_name)
 
     print("Finished.")
 
