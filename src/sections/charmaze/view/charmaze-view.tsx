@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { Component, createRef } from 'react';
 
-import { Clear, Print, NavigateBefore, NavigateNext } from '@mui/icons-material';
+import { Print, Clear, NavigateBefore, NavigateNext, Flag, Star } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -19,20 +19,34 @@ import {
 
 import miemieData from 'src/data/miemie.json';
 
-// Define types for our data structures
-interface ColorPreset {
+import { useRandomIcon } from 'src/components/iconify/random-icon';
+
+
+interface TableSizePreset {
   name: string;
-  colors: string[];
+  rows: number;
+  cols: number;
+}
+
+interface ModePreset {
+  name: string;
+  id: string;
 }
 
 interface PageData {
-  chars: string[];
-  colors: string[];
+  refChars: string[];
+  chars: string[][];
+  rows: number;
+  cols: number;
+  mode: string;
 }
 
 interface PreviewPage {
-  characters: string[];
-  colors: string[];
+  refChars: string[];
+  characters: string[][];
+  rows: number;
+  cols: number;
+  mode: string;
   pageNumber: number;
   totalPages: number;
 }
@@ -41,12 +55,12 @@ interface PreviewSheetProps {
   pages: PreviewPage[];
 }
 
-interface CNColorState {
+interface CharMazeState {
   userInput: string;
-  wordsPerPage: number;
-  selectedPreset: number;
-  selectedLanguage: string;
+  selectedMode: number;
+  selectedTableSize: number;
   selectedLevel: string;
+  selectedLanguage: string;
   fullSelectedValue: string;
   pages: PageData[];
 }
@@ -62,30 +76,56 @@ interface MiemieData {
 // Type assertion for the imported data
 const miemie = miemieData as MiemieData;
 
+type Mode = 'WORD' | 'PHRASE' | 'SENTENCE';
+
+const TITLE_PRESETS: Record<Mode, string> = {
+  'WORD': '汉字迷宫',
+  'PHRASE': '请找到以下词语',
+  'SENTENCE': '请找到以下句子',
+};
+
+const TABLE_SIZE_PRESETS: TableSizePreset[] = [
+  {
+    name: '8 x 8',
+    rows: 8,
+    cols: 8,
+  },
+  {
+    name: '9 x 9',
+    rows: 9,
+    cols: 9,
+  },
+  {
+    name: '10 x 10',
+    rows: 10,
+    cols: 10,
+  },
+  {
+    name: '12 x 12',
+    rows: 12,
+    cols: 12,
+  },
+]
+
+const MODE_PRESETS: ModePreset[] = [
+  {
+    name: '单字练习',
+    id: 'WORD',
+  },
+  {
+    name: '词语练习',
+    id: 'PHRASE',
+  },
+  {
+    name: '句子练习',
+    id: 'SENTENCE',
+  },
+]
+
 const MAX_INPUT_LENGTH = 300;
 const CHINESE_SAMPLE_DICT = "人教版小学语文一年级上册";
 const ENGLISH_UPPER = "A-Z大写字母";
 const ENGLISH_LOWWER = "a-z小写字母";
-
-// Modify color presets, ensuring 5 distinct colors in each palette
-const COLOR_PRESETS: ColorPreset[] = [
-  {
-    name: '经典组合',
-    colors: ['#FF6B6B', '#f5b63aff', '#45B7D1', '#51db8dff', '#F7DC6F']
-  },
-  {
-    name: '柔和组合',
-    colors: ['#FF9999', '#66CCCC', '#9999FF', '#FFCC99', '#CC99FF']
-  },
-  {
-    name: '鲜艳组合',
-    colors: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF']
-  },
-  {
-    name: '自然组合',
-    colors: ['#8B4513', '#228B22', '#1E90FF', '#FFD700', '#FF6347']
-  }
-];
 
 // Random shuffle array with proper typing
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -97,15 +137,102 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return newArray;
 };
 
-export class CNColorView extends React.Component<object, CNColorState> {
+const generateWordMazePath = (rows: number, cols: number): number[][]  => {
+
+  const visited: number[][] = Array.from({ length: rows }, () => 
+    Array.from({ length: cols }, () => 0)
+  );
+  const path: number[][] = [];
+
+  const dfs = (x: number, y: number): boolean => {
+    if (x == rows - 1 && y == cols - 1) {
+      path.push([x, y]);
+      return true;
+    }
+
+    visited[x][y] = 1;
+    path.push([x, y]);
+
+    let directions: number[][] = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+    directions = shuffleArray(directions);
+    for (let i = 0; i < directions.length; i++) {
+      const nx = directions[i][0] + x;
+      const ny = directions[i][1] + y;
+      if (nx >= 0 && ny >= 0 && nx < rows && ny < cols && visited[nx][ny] == 0) {
+        let sum = 0;
+        for (let j = 0; j < directions.length; j++) {
+          const nnx = directions[j][0] + nx;
+          const nny = directions[j][1] + ny;
+          if (nnx >= 0 && nny >=0 && nnx < rows && nny < cols) {
+            sum += visited[nnx][nny];
+          }
+        }
+        if (sum <= 1 && dfs(nx, ny)) {
+          return true;
+        }
+      }
+    }
+
+    path.pop();
+    visited[x][y] = 0;
+    return false;
+  }
+
+  if (dfs(0, 0)) {
+    return path;
+  }
+  return [];
+}
+
+const generatePhraseMazePath = (chars: string[], rows: number, cols: number): number[][] => [
+  
+]
+
+// Instead of functions, create React components
+const StartIcon = ({ char }: { char: string }) => {
+  const iconStart = useRandomIcon(`maze-page-start-icon-${char}`);
+  return (
+    <img
+      src={iconStart}
+      alt="start icon"
+      style={{ 
+        width: '2em', 
+        height: '2em', 
+        verticalAlign: 'middle',
+      }} 
+    />
+  );
+};
+
+const EndIcon = ({ char }: { char: string }) => {
+  const iconEnd = useRandomIcon(`maze-page-end-icon-${char}`);
+  return (
+    <img
+      src={iconEnd}
+      alt="end icon"
+      style={{ 
+        width: '2em', 
+        height: '2em', 
+        verticalAlign: 'middle',
+      }} 
+    />
+  );
+};
+
+function hasChineseCharacters(characters: string[]): boolean {
+  const chineseRegex = /[\u4e00-\u9fff]/; // Basic Chinese characters
+  return characters.some(char => chineseRegex.test(char));
+}
+
+export class CharMazeView extends React.Component<object, CharMazeState> {
   constructor(props: object) {
     super(props);
     this.state = {
       userInput: '',
-      wordsPerPage: 3,
-      selectedPreset: 0,
-      selectedLanguage: '',
+      selectedMode: 0,
+      selectedTableSize: 0,
       selectedLevel: '',
+      selectedLanguage: '',
       fullSelectedValue: '',
       pages: [],
     };
@@ -118,13 +245,16 @@ export class CNColorView extends React.Component<object, CNColorState> {
     }
   };
 
-  handleWordsPerPageChange = (e: SelectChangeEvent<number>): void => {
-    this.setState({ wordsPerPage: e.target.value as number });
+  handleModeChange = (e: SelectChangeEvent<number>): void => {
+    this.setState({
+      selectedMode: e.target.value as number
+    });
   };
 
-  handleColorPresetChange = (e: SelectChangeEvent<number>): void => {
-    const presetIndex = e.target.value as number;
-    this.setState({ selectedPreset: presetIndex });
+  handleTableSizeChange = (e: SelectChangeEvent<number>): void => {
+    this.setState({
+      selectedTableSize: e.target.value as number
+    });
   };
 
   handleLevelChange = (e: SelectChangeEvent<string>) => {
@@ -145,17 +275,14 @@ export class CNColorView extends React.Component<object, CNColorState> {
       this.setState({ 
         selectedLanguage: '',
         selectedLevel: '',
-        fullSelectedValue: ''
+        fullSelectedValue: '',
       });
     }
-}
+  };
 
   handleClearInput = (): void => {
     this.setState({ 
       userInput: '',
-      selectedLanguage: '',
-      selectedLevel: '',
-      fullSelectedValue: '',
       pages: [],
     });
   };
@@ -163,15 +290,45 @@ export class CNColorView extends React.Component<object, CNColorState> {
   filterChineseCharacters = (text: string): string => 
     text.replace(/[^\u4e00-\u9fff]/g, '');
 
-  generateRandomColorsForPage = (pageChars: string[], presetIndex: number): string[] => {
-    const presetColors = COLOR_PRESETS[presetIndex].colors;
-    const numColors = Math.min(pageChars.length, 5);
-    const shuffledColors = shuffleArray(presetColors).slice(0, numColors);
-    return pageChars.map((char, index) => shuffledColors[index % shuffledColors.length]);
-  };
+  generateMaze = (chars: string[], rows: number, cols: number, mode: string): string[][] => {
+    const maze: string[][] = [];
+    let simpleChars: string[] = [];
 
+    if (hasChineseCharacters(chars)) {
+      simpleChars = miemie["Chinese"][CHINESE_SAMPLE_DICT] || [];
+    } else {
+      simpleChars = [...miemie["English"][ENGLISH_UPPER], ...miemie["English"][ENGLISH_LOWWER]];
+      simpleChars = [...simpleChars, ...simpleChars, ...simpleChars];
+    }
+    for (let i = 0; i < rows; i++) {
+      const row: string[] = [];
+      for (let j = 0; j < cols; j++) {
+        row.push(simpleChars[i*rows + j]);
+      }
+      maze.push(row);
+    }
+
+    if (mode == 'WORD') {
+      const path = generateWordMazePath(rows, cols);
+      for (let i = 0; i < path.length; i++) {
+        const randomChar = chars[Math.floor(Math.random() * chars.length)];
+        maze[path[i][0]] [path[i][1]] = randomChar;
+      }
+    }
+    
+    if (mode == 'PHRASE') {
+      const path = generatePhraseMazePath(chars, rows, cols);
+      const items = chars.join('')
+      for (let i = 0; i< path.length; i++) {
+        maze[path[i][0]][path[i][1]] = chars[i];
+      }
+    }
+    
+    return maze;
+  }
+  
   generatePages = (): void => {
-    const { wordsPerPage, selectedPreset } = this.state;
+    const { selectedMode, selectedTableSize } = this.state;
     const { userInput } = this.state;
     
     //userInput = this.filterChineseCharacters(userInput);
@@ -181,43 +338,54 @@ export class CNColorView extends React.Component<object, CNColorState> {
       return;
     }
 
-    if (wordsPerPage < 2 || wordsPerPage > 5) {
-      alert('每页字数必须在2-5之间');
-      return;
-    }
+    const rows = TABLE_SIZE_PRESETS[selectedTableSize].rows;
+    const cols = TABLE_SIZE_PRESETS[selectedTableSize].cols;
+    const mode = MODE_PRESETS[selectedMode].id;
+    const pages: PageData[] = [];
 
     this.setState({ userInput }, () => {
-      let inputChars: string[] = [];
+      if (mode == 'WORD') {
+        let inputChars: string[] = [];
 
-      // Method 1: Split by multiple delimiters using regex
-      if (userInput.trim() !== '') {
-        inputChars = userInput.split(/[\s,;，；、]+/).filter(char => char.trim() !== '');
-      }
+        // Method 1: Split by multiple delimiters using regex
+        if (userInput.trim() !== '') {
+          inputChars = userInput.split(/[\s,;，；、]+/).filter(char => char.trim() !== '');
+        }
 
-      // If the above doesn't capture any characters, try splitting by empty string
-      if (inputChars.length === 0 && userInput.trim() !== '') {
-        inputChars = userInput.split('').filter(char => char.trim() !== '');
-      }
-      
-      const totalPages = Math.ceil(inputChars.length / wordsPerPage);
-      
-      const pages: PageData[] = [];
-      for (let i = 0; i < totalPages; i++) {
-        const startIndex = i * wordsPerPage;
-        const endIndex = startIndex + wordsPerPage;
-        const pageChars = inputChars.slice(startIndex, endIndex);
-        
-        if (pageChars.length < wordsPerPage) {
-          const neededChars = wordsPerPage - pageChars.length;
-          pageChars.push(...inputChars.slice(0, neededChars));
+        // If the above doesn't capture any characters, try splitting by empty string
+        if (inputChars.length === 0 && userInput.trim() !== '') {
+          inputChars = userInput.split('').filter(char => char.trim() !== '');
         }
         
-        const pageColors = this.generateRandomColorsForPage(pageChars, selectedPreset);
-        
-        pages.push({
-          chars: pageChars,
-          colors: pageColors
-        });
+        const totalPages = inputChars.length;
+        for (let i = 0; i < totalPages; i++) {
+          const pageChars = this.generateMaze(inputChars, rows, cols, mode);
+          pages.push({
+            refChars: [inputChars[i]],
+            chars: pageChars,
+            rows: rows,
+            cols: cols,
+            mode: mode,
+          });
+        }
+      }
+      
+      if (mode == 'PHRASE') {
+        let inputChars: string[] = [];
+        if (userInput.trim() !== '') {
+          inputChars = userInput.split(/[\s,;，；、]+/).filter(char => char.trim() !== '');
+        }
+        const totalPages = Math.floor(inputChars.length / 10);
+        for (let i = 0; i< totalPages; i++) {
+          const pageChars = this.generateMaze(inputChars, rows, cols, mode);
+          pages.push({
+            refChars: [inputChars[i]],
+            chars: pageChars,
+            rows: rows,
+            cols: cols,
+            mode: mode,
+          });
+        }
       }
 
       this.setState({ pages });
@@ -225,8 +393,7 @@ export class CNColorView extends React.Component<object, CNColorState> {
   };
 
   render() {
-    const { userInput, wordsPerPage, selectedPreset, fullSelectedValue, pages } = this.state;
-
+    const { userInput, selectedMode, selectedTableSize, fullSelectedValue, pages} = this.state;
     return (
       <Box className="app" sx={{ p: 2 }}>
         <Container maxWidth="lg">
@@ -269,29 +436,13 @@ export class CNColorView extends React.Component<object, CNColorState> {
                 <Grid container spacing={2} sx={{ mb: 3 }}>
                   <Grid size={{ xs: 12, sm: 4 }}>
                     <FormControl fullWidth>
-                      <InputLabel>每页字数</InputLabel>
+                      <InputLabel>模式选择</InputLabel>
                       <Select
-                        value={wordsPerPage}
-                        onChange={this.handleWordsPerPageChange}
-                        label="每页字数"
+                        value={selectedMode}
+                        onChange={this.handleModeChange}
+                        label="练习模式"
                       >
-                        <MenuItem value={2}>2字/页</MenuItem>
-                        <MenuItem value={3}>3字/页</MenuItem>
-                        <MenuItem value={4}>4字/页</MenuItem>
-                        <MenuItem value={5}>5字/页</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  
-                  <Grid size={{ xs: 12, sm: 4 }}>
-                    <FormControl fullWidth>
-                      <InputLabel>颜色色系</InputLabel>
-                      <Select
-                        value={selectedPreset}
-                        onChange={this.handleColorPresetChange}
-                        label="颜色色系"
-                      >
-                        {COLOR_PRESETS.map((preset, index) => (
+                        {MODE_PRESETS.map((preset, index) => (
                           <MenuItem key={index} value={index}>
                             {preset.name}
                           </MenuItem>
@@ -301,6 +452,23 @@ export class CNColorView extends React.Component<object, CNColorState> {
                   </Grid>
                   
                   <Grid size={{ xs: 12, sm: 4 }}>
+                    <FormControl fullWidth>
+                      <InputLabel>迷宫尺寸</InputLabel>
+                      <Select
+                        value={selectedTableSize}
+                        onChange={this.handleTableSizeChange}
+                        label="迷宫尺寸"
+                      >
+                        {TABLE_SIZE_PRESETS.map((preset, index) => (
+                          <MenuItem key={index} value={index}>
+                            {preset.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  
+                   <Grid size={{ xs: 12, sm: 4 }}>
                     <FormControl fullWidth>
                       <InputLabel>预设字库</InputLabel>
                       <Select
@@ -321,43 +489,6 @@ export class CNColorView extends React.Component<object, CNColorState> {
                     </FormControl>
                   </Grid>
                 </Grid>
-                
-                {/* Color palette preview - This is the section that's showing in print */}
-                <Box sx={{ 
-                  mb: 3,
-                  '@media print': {
-                    display: 'none'
-                  }
-                }}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    当前色系
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                    {COLOR_PRESETS[selectedPreset].colors.map((color, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          width: 40,
-                          height: 40,
-                          backgroundColor: color,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderRadius: 1,
-                          border: '1px solid #ccc'
-                        }}
-                        title={color}
-                      >
-                        <Typography variant="caption" sx={{ color: 'white', textShadow: '1px 1px 2px black' }}>
-                          {index + 1}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                  <Typography variant="caption" color="textSecondary">
-                    每页将随机使用其中的 {wordsPerPage} 种颜色，确保颜色区分明显
-                  </Typography>
-                </Box>
                 
                 <Button
                   variant="contained"
@@ -395,8 +526,11 @@ export class CNColorView extends React.Component<object, CNColorState> {
               }}>
                 {pages.length > 0 ? (
                   <PreviewSheet pages={pages.map((page, index) => ({
+                    refChars: page.refChars,
                     characters: page.chars,
-                    colors: page.colors,
+                    rows: page.rows,
+                    cols: page.cols,
+                    mode: page.mode,
                     pageNumber: index + 1,
                     totalPages: pages.length
                   }))} />
@@ -419,41 +553,8 @@ export class CNColorView extends React.Component<object, CNColorState> {
         </Container>
       </Box>
     );
-  }
+  };
 }
-
-function hasChineseCharacters(characters: string[]): boolean {
-  const chineseRegex = /[\u4e00-\u9fff]/; // Basic Chinese characters
-  return characters.some(char => chineseRegex.test(char));
-}
-
-const generatePatterns = (characters: string[]): string[][] => {
-  if (characters.length === 0) return [];
-  
-  const chars = [...characters];
-  let additionalChars: string[] = [];
-  const result: string[][] = [];
-  let similarChars: string[] = [];
-
-  if (hasChineseCharacters(characters)) {
-    similarChars = miemie["Chinese"][CHINESE_SAMPLE_DICT] || [];
-  } else {
-    similarChars = [...miemie["English"][ENGLISH_UPPER], ...miemie["English"][ENGLISH_LOWWER]];
-  }
-  console.log(similarChars)
-  additionalChars = additionalChars.concat(similarChars);
-  additionalChars = shuffleArray(additionalChars);
-
-  for (let i = 0; i < 7; i++) {
-    additionalChars = shuffleArray(additionalChars);
-    const randomAdditional = additionalChars.slice(0, 7 - chars.length);
-    let line = [...chars, ...randomAdditional];
-    line = shuffleArray(line);
-    result.push(line);
-  }
-  
-  return result;
-};
 
 interface PreviewSheetState {
   currentPage: number;
@@ -522,87 +623,152 @@ class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState>
     return indicators;
   };
 
+  getWordModeInstruction = (char: string, start: React.ReactElement, end: React.ReactElement): React.ReactElement => 
+  (
+    <Box 
+      sx={{ 
+        textAlign: 'center',
+        mb: 3,
+        p: 2,
+      }}
+    >
+      <Typography 
+        variant="h4" 
+        sx={{ 
+          fontWeight: 'bold',
+          color: 'primary.main',
+        }}
+      >
+        请从{start}出发，
+        沿着
+        <Box 
+          component="span" 
+          sx={{ 
+            display: 'inline-block',
+            mx: 1,
+            px: 2,
+            py: 0.5,
+            backgroundColor: 'primary.main',
+            color: 'white',
+            borderRadius: 1,
+            fontWeight: 'bold',
+            fontSize: '1.2em',
+          }}
+        >
+          {char}
+        </Box>
+        字走，走到
+        {end}处。
+      </Typography>
+    </Box>
+  );
+
+  getPhraseModeInstruction = (chars: string[]): React.ReactElement => 
+  (
+    <Box 
+      sx={{ 
+        textAlign: 'center',
+        mb: 3,
+        p: 2,
+      }}
+    >
+      <Typography 
+        variant="h4" 
+        sx={{ 
+          fontWeight: 'bold',
+          color: 'primary.main',
+        }}
+      >
+        {chars.map((index) => (
+        <Box 
+          component="span" 
+          sx={{ 
+            display: 'inline-block',
+            mx: 1,
+            px: 2,
+            py: 0.5,
+            backgroundColor: 'primary.main',
+            color: 'white',
+            borderRadius: 1,
+            fontWeight: 'bold',
+            fontSize: '1.2em',
+          }}
+        >
+          {index}
+        </Box>
+        ))}
+      </Typography>
+    </Box>
+  );
+
+  getInstruction = (mode: string, refChars: string[]): React.ReactElement => {
+    switch(mode) {
+      case 'WORD':
+        return this.getWordModeInstruction(refChars[0],
+            <StartIcon char={refChars[0]} />,
+            <EndIcon char={refChars[0]} />);
+      case 'PHRASE':
+        return this.getPhraseModeInstruction(refChars);
+      case 'SENTENCE':
+        return <></>;
+      default:
+        return <></>;
+    }
+  } 
+
   renderPage = (pageData: PreviewPage): React.ReactElement => {
-    const { characters, colors } = pageData;
-    const patterns = generatePatterns(characters);
-    const totalCircles = 49;
+    const { refChars, characters, rows, cols, mode } = pageData;
+    const totalCircles = rows * cols;   
     
     return (
       <Box sx={{ p: 2 }}>
         <Typography 
-          variant="h1" 
+          variant="h2" 
           align="center" 
           gutterBottom 
           sx={{ 
             fontWeight: 'bold',
-            my: 4,       // margin-top & margin-bottom: 32px
+            my: 4,
           }}
         >
-          找一找 涂色
+          {TITLE_PRESETS[mode as Mode]}
         </Typography>
-        
-        <Box sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 3,
-              my: 5,
-              flexWrap: 'wrap' 
-            }}
-        >
-          {characters.map((char, index) => (
-            <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box
-                sx={{
-                  width: '12mm',
-                  height: '12mm',
-                  backgroundColor: colors[index],
-                  borderRadius: '50%',
-                  border: '2px solid #333',
-                  aspectRatio: '1',
-                }}
-              />
-              <Typography
-                variant="h4"
-                sx={{
-                  width: '12mm',
-                  height: '12mm',
-                  textAlign: 'center',
-                }}
-              >
-                {char}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-        
+        {this.getInstruction(mode, refChars)}
         <Box sx={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          gap: '5mm',
+          gridTemplateColumns: `repeat(${cols}, 0fr)`, // Use actual cols
           margin: '0 auto',
-          maxWidth: '180mm',
+          justifyContent: 'center', // Add this
+          maxWidth: 'fit-content',
         }}>
           {Array.from({ length: totalCircles }).map((_, i) => {
-            const row = Math.floor(i / 7);
-            const col = i % 7;
-            const char = patterns[row]?.[col] || '';
-            
+            const row = Math.floor(i / cols);  // Divide by actual columns
+            const col = i % cols;              // Modulo by actual columns
+            const char = characters[row]?.[col] || '';
+            // Check if this is the start position (0,0)
+            const isStart = row === 0 && col === 0 && mode === 'WORD';
+            // Check if this is the end position (rows-1, cols-1)
+            const isEnd = row === rows - 1 && col === cols - 1 && mode === 'WORD';
+            const width = 20 * 8 / rows;
+            const height = 20 * 8 / cols;
             return (
               <Box
                 key={i}
                 sx={{
-                  width: '20mm',
-                  height: '20mm',
+                  width: `${width}mm`,
+                  height: `${height}mm`,
                   aspectRatio: '1',
-                  border: '0.75pt solid #333',
-                  borderRadius: '50%',
+                  border: '1pt solid #333',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: 'white'
+                  backgroundColor: 'white',
+                  position: 'relative',
                 }}
               >
-                <Typography variant="h3">{char}</Typography>
+                {!isStart && !isEnd && <Typography variant="h3">{char}</Typography>}
+                {isStart && <StartIcon char={refChars[0]} />}
+                {isEnd && <EndIcon char={refChars[0]} />}
               </Box>
             );
           })}

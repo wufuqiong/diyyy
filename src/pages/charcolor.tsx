@@ -1,6 +1,6 @@
 import { CONFIG } from 'src/config-global';
 
-import { CNColorView } from 'src/sections/cncolor/view';
+import { CharColorView } from 'src/sections/charcolor/view';
 
 // ----------------------------------------------------------------------
 
@@ -9,7 +9,7 @@ export default function Page() {
     <>
       <title>{`Chinese Coloring - ${CONFIG.appName}`}</title>
 
-      <CNColorView />
+      <CharColorView />
     </>
   );
 }

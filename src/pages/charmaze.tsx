@@ -1,6 +1,6 @@
 import { CONFIG } from 'src/config-global';
 
-import { CNMazeView } from 'src/sections/cnmaze/view';
+import { CharMazeView } from 'src/sections/charmaze/view';
 
 // ----------------------------------------------------------------------
 
@@ -9,7 +9,7 @@ export default function Page() {
     <>
       <title>{`Chinese Maze - ${CONFIG.appName}`}</title>
 
-      <CNMazeView />
+      <CharMazeView />
     </>
   );
 }
