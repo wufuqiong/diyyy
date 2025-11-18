@@ -1,7 +1,7 @@
 {
   "name": "@minimal/material-kit-react",
-  "author": "minimals.cc",
-  "licence": "MIT",
+  "homepage": "https://wufuqiong.github.io/diyyy",
+  "author": "Fuqiong Wu",
   "version": "3.0.0",
   "private": false,
   "type": "module",
@@ -61,6 +61,7 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-unused-imports": "^4.1.4",
+    "gh-pages": "^6.3.0",
     "globals": "^16.0.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.2",

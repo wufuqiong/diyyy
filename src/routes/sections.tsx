@@ -90,6 +90,7 @@ export const routesSection: RouteObject[] = [
       { path: 'user', element: <UserPage /> },
       { path: 'charcolor', element: <CharColorPage />},
       { path: 'charmaze', element: <CharMazePage />},
+      { path: '*', element: <Page404 /> },
     ],
   },
 ];

@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Outlet, RouterProvider, createBrowserRouter } from 'react-router';
+import { Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom'; // Fixed import
 
 import App from './app';
 import { routesSection } from './routes/sections';
@@ -18,7 +18,9 @@ const router = createBrowserRouter([
     errorElement: <ErrorBoundary />,
     children: routesSection,
   },
-]);
+], {
+  basename: import.meta.env.BASE_URL // Add this for GitHub Pages
+});
 
 const root = createRoot(document.getElementById('root')!);
 
