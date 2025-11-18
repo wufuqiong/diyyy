@@ -17,7 +17,7 @@ import {
   SelectChangeEvent
 } from '@mui/material';
 
-import miemieData from 'src/data/miemie.json';
+import miemieData from 'src/data/miemie-words.json';
 
 // Define types for our data structures
 interface ColorPreset {

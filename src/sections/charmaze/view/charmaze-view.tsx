@@ -17,7 +17,8 @@ import {
   SelectChangeEvent
 } from '@mui/material';
 
-import miemieData from 'src/data/miemie.json';
+import miemieWords from 'src/data/miemie-words.json';
+import miemiePhrase from 'src/data/miemie-phrase.json';
 
 import { useRandomIcon } from 'src/components/iconify/random-icon';
 
@@ -26,11 +27,6 @@ interface TableSizePreset {
   name: string;
   rows: number;
   cols: number;
-}
-
-interface ModePreset {
-  name: string;
-  id: string;
 }
 
 interface PageData {
@@ -65,25 +61,6 @@ interface CharMazeState {
   pages: PageData[];
 }
 
-interface LanguageLevels {
-  [level: string]: string[];
-}
-
-interface MiemieData {
-  [language: string]: LanguageLevels;
-}
-
-// Type assertion for the imported data
-const miemie = miemieData as MiemieData;
-
-type Mode = 'WORD' | 'PHRASE' | 'SENTENCE';
-
-const TITLE_PRESETS: Record<Mode, string> = {
-  'WORD': '汉字迷宫',
-  'PHRASE': '请找到以下词语',
-  'SENTENCE': '请找到以下句子',
-};
-
 const TABLE_SIZE_PRESETS: TableSizePreset[] = [
   {
     name: '8 x 8',
@@ -107,20 +84,43 @@ const TABLE_SIZE_PRESETS: TableSizePreset[] = [
   },
 ]
 
-const MODE_PRESETS: ModePreset[] = [
-  {
-    name: '单字练习',
-    id: 'WORD',
-  },
-  {
-    name: '词语练习',
-    id: 'PHRASE',
-  },
-  {
-    name: '句子练习',
-    id: 'SENTENCE',
-  },
-]
+interface LanguageLevels {
+  [level: string]: string[];
+}
+
+interface miemieData {
+  [language: string]: LanguageLevels;
+}
+
+// Type assertion for the imported data
+const miemiewords = miemieWords as miemieData;
+const miemiephrase = miemiePhrase as miemieData;
+
+type Mode = 'WORD' | 'PHRASE' | 'SENTENCE';
+
+const TITLE_PRESETS: Record<Mode, string> = {
+  'WORD': '单字迷宫',
+  'PHRASE': '请找到以下词语',
+  'SENTENCE': '请找到以下句子',
+};
+
+const MODE_PRESETS: Record<Mode, string> = {
+  'WORD': '单字练习',
+  'PHRASE': '词语练习',
+  'SENTENCE': '句子练习',
+}
+
+const SELECTER_TITLE_PRESETS: Record<Mode, string> = {
+  'WORD': '预设字库',
+  'PHRASE': '预设词库',
+  'SENTENCE': '预设句库',
+}
+
+const MIEMIE_PRESETS: Record<Mode, miemieData> = {
+  'WORD': miemiewords,
+  'PHRASE': miemiephrase,
+  'SENTENCE': miemiewords
+}
 
 const MAX_INPUT_LENGTH = 300;
 const CHINESE_SAMPLE_DICT = "人教版小学语文一年级上册";
@@ -184,9 +184,89 @@ const generateWordMazePath = (rows: number, cols: number): number[][]  => {
   return [];
 }
 
-const generatePhraseMazePath = (chars: string[], rows: number, cols: number): number[][] => [
+interface WordPosition {
+  word: string;
+  positions: [number, number][];
+};
+
+const generatePhraseMazePath = (chars: string[], rows: number, cols: number): WordPosition[] => {
+  const maze: string[][] = Array(rows).fill(null).map(() => Array(cols).fill(''));
+  const wordPositions: WordPosition[] = [];
   
-]
+  const sortedChars = [...chars].sort((a, b) => b.length - a.length);
+  
+  const centerRow = Math.floor(rows / 2);
+  const centerCol = Math.floor(cols / 2);
+  
+  for (const word of sortedChars) {
+    let placed = false;
+    
+    for (let radius = 0; radius <= Math.max(rows, cols) && !placed; radius++) {
+      for (let dr = -radius; dr <= radius && !placed; dr++) {
+        for (let dc = -radius; dc <= radius && !placed; dc++) {
+          if (Math.abs(dr) + Math.abs(dc) !== radius) continue;
+          
+          const row = centerRow + dr;
+          const col = centerCol + dc;
+          
+          if (row >= 0 && row < rows && col >= 0 && col < cols) {
+            const directions: ('horizontal' | 'vertical')[] = ['horizontal', 'vertical'];
+            directions.sort(() => Math.random() - 0.5);
+            
+            for (const direction of directions) {
+              if (canPlaceWord(maze, word, row, col, direction, rows, cols)) {
+                const positions = placeWord(maze, word, row, col, direction);
+                wordPositions.push({ word, positions });
+                placed = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    if (!placed) {
+      break;
+    }
+  }
+  
+  return wordPositions;
+};
+
+const canPlaceWord = (maze: string[][], word: string, row: number, col: number, 
+                              direction: 'horizontal' | 'vertical', 
+                              rows: number, cols: number): boolean => {
+  if (direction === 'horizontal') {
+    if (col + word.length > cols) return false;
+    for (let i = 0; i < word.length; i++) {
+      if (maze[row][col + i] !== '') return false;
+    }
+  } else {
+    if (row + word.length > rows) return false;
+    for (let i = 0; i < word.length; i++) {
+      if (maze[row + i][col] !== '') return false;
+    }
+  }
+  return true;
+};
+
+const placeWord = (maze: string[][], word: string, row: number, col: number,
+                           direction: 'horizontal' | 'vertical'): [number, number][] => {
+  const positions: [number, number][] = [];
+  if (direction === 'horizontal') {
+    for (let i = 0; i < word.length; i++) {
+      maze[row][col + i] = word[i];
+      positions.push([row, col + i]);
+    }
+  } else {
+    for (let i = 0; i < word.length; i++) {
+      maze[row + i][col] = word[i];
+      positions.push([row + i, col]);
+    }
+  }
+  return positions;
+};
 
 // Instead of functions, create React components
 const StartIcon = ({ char }: { char: string }) => {
@@ -236,7 +316,11 @@ export class CharMazeView extends React.Component<object, CharMazeState> {
       fullSelectedValue: '',
       pages: [],
     };
-  }
+  };
+
+  parseSelectedMode = (selectedMode: number): Mode => (
+    Object.keys(MODE_PRESETS)[selectedMode] as Mode
+  )
 
   handleUserInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
     const input = e.target.value;
@@ -267,7 +351,8 @@ export class CharMazeView extends React.Component<object, CharMazeState> {
         selectedLevel: level,
         fullSelectedValue: value
       });
-      const characters = miemie[language][level];
+      const mode = this.parseSelectedMode(this.state.selectedMode);
+      const characters = MIEMIE_PRESETS[mode as Mode][language][level];
       this.setState({
         userInput: characters.join(',')
       })
@@ -295,11 +380,13 @@ export class CharMazeView extends React.Component<object, CharMazeState> {
     let simpleChars: string[] = [];
 
     if (hasChineseCharacters(chars)) {
-      simpleChars = miemie["Chinese"][CHINESE_SAMPLE_DICT] || [];
+      simpleChars = miemiewords["Chinese"][CHINESE_SAMPLE_DICT] || [];
     } else {
-      simpleChars = [...miemie["English"][ENGLISH_UPPER], ...miemie["English"][ENGLISH_LOWWER]];
+      simpleChars = [...miemiewords["English"][ENGLISH_UPPER], ...miemiewords["English"][ENGLISH_LOWWER]];
       simpleChars = [...simpleChars, ...simpleChars, ...simpleChars];
     }
+
+    simpleChars = shuffleArray(simpleChars);
     for (let i = 0; i < rows; i++) {
       const row: string[] = [];
       for (let j = 0; j < cols; j++) {
@@ -309,19 +396,22 @@ export class CharMazeView extends React.Component<object, CharMazeState> {
     }
 
     if (mode == 'WORD') {
+      const char = chars[0]
       const path = generateWordMazePath(rows, cols);
       for (let i = 0; i < path.length; i++) {
-        const randomChar = chars[Math.floor(Math.random() * chars.length)];
+        const randomChar = char[Math.floor(Math.random() * char.length)];
         maze[path[i][0]] [path[i][1]] = randomChar;
       }
     }
     
     if (mode == 'PHRASE') {
-      const path = generatePhraseMazePath(chars, rows, cols);
-      const items = chars.join('')
-      for (let i = 0; i< path.length; i++) {
-        maze[path[i][0]][path[i][1]] = chars[i];
-      }
+      const wordPositions = generatePhraseMazePath(chars, rows, cols);
+      wordPositions.forEach(wordPos => {
+        const {word, positions} = wordPos;
+        for (let i = 0; i < word.length; i++) {
+          maze[positions[i][0]][positions[i][1]] = word[i];
+        }
+      })
     }
     
     return maze;
@@ -340,7 +430,7 @@ export class CharMazeView extends React.Component<object, CharMazeState> {
 
     const rows = TABLE_SIZE_PRESETS[selectedTableSize].rows;
     const cols = TABLE_SIZE_PRESETS[selectedTableSize].cols;
-    const mode = MODE_PRESETS[selectedMode].id;
+    const mode = this.parseSelectedMode(selectedMode);
     const pages: PageData[] = [];
 
     this.setState({ userInput }, () => {
@@ -359,7 +449,7 @@ export class CharMazeView extends React.Component<object, CharMazeState> {
         
         const totalPages = inputChars.length;
         for (let i = 0; i < totalPages; i++) {
-          const pageChars = this.generateMaze(inputChars, rows, cols, mode);
+          const pageChars = this.generateMaze([inputChars[i]], rows, cols, mode);
           pages.push({
             refChars: [inputChars[i]],
             chars: pageChars,
@@ -372,19 +462,27 @@ export class CharMazeView extends React.Component<object, CharMazeState> {
       
       if (mode == 'PHRASE') {
         let inputChars: string[] = [];
+        const totalWords = 5;
         if (userInput.trim() !== '') {
-          inputChars = userInput.split(/[\s,;，；、]+/).filter(char => char.trim() !== '');
+            inputChars = userInput.split(/[\s,;，；、]+/).filter(char => char.trim() !== '');
         }
-        const totalPages = Math.floor(inputChars.length / 10);
-        for (let i = 0; i< totalPages; i++) {
-          const pageChars = this.generateMaze(inputChars, rows, cols, mode);
-          pages.push({
-            refChars: [inputChars[i]],
-            chars: pageChars,
-            rows: rows,
-            cols: cols,
-            mode: mode,
-          });
+        
+        const totalPages = Math.ceil(inputChars.length / totalWords); // Use ceil to handle partial pages
+        
+        for (let i = 0; i < totalPages; i++) {
+            const startIndex = i * totalWords;
+            const endIndex = startIndex + totalWords;
+            const pageCharsSlice = inputChars.slice(startIndex, endIndex);
+            
+            const pageChars = this.generateMaze(pageCharsSlice, rows, cols, mode);
+            
+            pages.push({
+                refChars: pageCharsSlice, // Use the slice for this page
+                chars: pageChars,
+                rows: rows,
+                cols: cols,
+                mode: mode,
+            });
         }
       }
 
@@ -392,8 +490,34 @@ export class CharMazeView extends React.Component<object, CharMazeState> {
     });
   };
 
+  getWordLibSelecter = (mode: Mode): React.ReactElement => {
+    const title = SELECTER_TITLE_PRESETS[mode as Mode];
+    const miemiedata = MIEMIE_PRESETS[mode as Mode];
+
+    return (
+      <FormControl fullWidth>
+        <InputLabel>{title}</InputLabel>
+        <Select
+          value={this.state.fullSelectedValue}
+          onChange={this.handleLevelChange}
+          label={title}
+        >
+          <MenuItem value="">请选择</MenuItem>
+          {Object.keys(miemiedata).map(language => (
+            // Group languages with their levels
+            Object.keys(miemiedata[language]).map(level => (
+              <MenuItem key={`${language}-${level}`} value={`${language}|${level}`}>
+                {language} - {level}
+              </MenuItem>
+            ))
+          ))}
+        </Select>
+      </FormControl>
+    );
+  };
+
   render() {
-    const { userInput, selectedMode, selectedTableSize, fullSelectedValue, pages} = this.state;
+    const { userInput, selectedMode, selectedTableSize, pages} = this.state;
     return (
       <Box className="app" sx={{ p: 2 }}>
         <Container maxWidth="lg">
@@ -442,9 +566,9 @@ export class CharMazeView extends React.Component<object, CharMazeState> {
                         onChange={this.handleModeChange}
                         label="练习模式"
                       >
-                        {MODE_PRESETS.map((preset, index) => (
+                        {Object.keys(MODE_PRESETS).map((preset, index) => (
                           <MenuItem key={index} value={index}>
-                            {preset.name}
+                            {MODE_PRESETS[preset as Mode]}
                           </MenuItem>
                         ))}
                       </Select>
@@ -468,25 +592,8 @@ export class CharMazeView extends React.Component<object, CharMazeState> {
                     </FormControl>
                   </Grid>
                   
-                   <Grid size={{ xs: 12, sm: 4 }}>
-                    <FormControl fullWidth>
-                      <InputLabel>预设字库</InputLabel>
-                      <Select
-                        value={fullSelectedValue}
-                        onChange={this.handleLevelChange}
-                        label="预设字库"
-                      >
-                        <MenuItem value="">请选择字库</MenuItem>
-                        {Object.keys(miemie).map(language => (
-                          // Group languages with their levels
-                          Object.keys(miemie[language]).map(level => (
-                            <MenuItem key={`${language}-${level}`} value={`${language}|${level}`}>
-                              {language} - {level}
-                            </MenuItem>
-                          ))
-                        ))}
-                      </Select>
-                    </FormControl>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    {this.getWordLibSelecter(this.parseSelectedMode(selectedMode))}
                   </Grid>
                 </Grid>
                 
@@ -702,6 +809,7 @@ class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState>
   );
 
   getInstruction = (mode: string, refChars: string[]): React.ReactElement => {
+    console.log(refChars);
     switch(mode) {
       case 'WORD':
         return this.getWordModeInstruction(refChars[0],
@@ -719,7 +827,7 @@ class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState>
   renderPage = (pageData: PreviewPage): React.ReactElement => {
     const { refChars, characters, rows, cols, mode } = pageData;
     const totalCircles = rows * cols;   
-    
+
     return (
       <Box sx={{ p: 2 }}>
         <Typography 
