@@ -21,11 +21,11 @@ export const navData = [
   {
     title: '识字涂色',
     path: '/charcolor',
-    icon: <img src="/assets/icons/coloring.png" alt="cloring icon" style={{ width: '24px', height: '24px' }} />,
+    icon: icon('ic-coloring'),
   },
   {
     title: '识字迷宫',
     path: '/charmaze',
-    icon: <img src="/assets/icons/maze.png" alt="maze icon" style={{ width: '24px', height: '24px' }} />,
+    icon: icon('ic-maze'),
   },
 ];
