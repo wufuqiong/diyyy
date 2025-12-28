@@ -31,6 +31,11 @@ export const navData = [
   {
     title: '描红写字',
     path: '/chartrace',
-    icon: icon('ic-maze'),
+    icon: icon('ic-write'),
+  },
+  {
+    title: '算术天地',
+    path: '/math-genie',
+    icon: icon('ic-math'),
   }
 ];

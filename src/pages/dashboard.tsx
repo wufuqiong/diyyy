@@ -98,6 +98,13 @@ function DashboardContent() {
       icon: <ExploreIcon sx={{ fontSize: 30, color: 'secondary.main' }} />,
       to: '/chartrace',
       color: 'secondary'
+    },
+    {
+      title: 'Math Genie',
+      description: 'Practice addtions and subtractions.',
+      icon: <ExploreIcon sx={{ fontSize: 30, color: 'secondary.main' }} />,
+      to: '/math-genie',
+      color: 'secondary'
     }
   ];
 
