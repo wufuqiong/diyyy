@@ -28,4 +28,9 @@ export const navData = [
     path: '/charmaze',
     icon: icon('ic-maze'),
   },
+  {
+    title: '描红写字',
+    path: '/chartrace',
+    icon: icon('ic-maze'),
+  }
 ];

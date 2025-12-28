@@ -217,8 +217,45 @@ export class PreviewSheet extends React.Component<PreviewSheetProps, PreviewShee
     </Box>
   );
 
+  getSentenceModeInstruction = (chars: string[]): React.ReactElement => 
+  (
+    <Box 
+      sx={{ 
+        textAlign: 'center',
+        mb: 3,
+        p: 2,
+      }}
+    >
+      <Typography 
+        variant="h4" 
+        sx={{ 
+          fontWeight: 'bold',
+          color: 'primary.main',
+        }}
+      >
+        {chars.map((index) => (
+        <Box 
+          component="span" 
+          sx={{ 
+            display: 'inline-block',
+            mx: 1,
+            px: 2,
+            py: 0.5,
+            backgroundColor: 'primary.main',
+            color: 'white',
+            borderRadius: 1,
+            fontWeight: 'bold',
+            fontSize: '1.2em',
+          }}
+        >
+          {index}
+        </Box>
+        ))}
+      </Typography>
+    </Box>
+  );
+
   getInstruction = (mode: string, refChars: string[]): React.ReactElement => {
-    console.log(refChars);
     switch(mode) {
       case 'WORD':
         return this.getWordModeInstruction(refChars[0],
@@ -227,7 +264,7 @@ export class PreviewSheet extends React.Component<PreviewSheetProps, PreviewShee
       case 'PHRASE':
         return this.getPhraseModeInstruction(refChars);
       case 'SENTENCE':
-        return <></>;
+        return this.getSentenceModeInstruction(refChars);
       default:
         return <></>;
     }

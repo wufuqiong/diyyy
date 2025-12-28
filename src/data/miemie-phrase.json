@@ -1,6 +1,16 @@
 {
     "English":
     {
+        "th-words": [],
+        "sh-words": [],
+        "ch-words": [],
+        "ai-words": ["rain", "train", "hair", "tail", "nail", "mail", "jail"],
+        "oa-words": ["boat", "goat", "oak", "coat", "soap", "coal", "goal", "foam", "toast", "road"],
+        "oo-words": ["food", "cook", "wood", "good", "look", "hood", "moon", "spoon", "boot"],
+        "ur-words": ["nurse", "purse", "hurt", "purple", "burger", "turn", "turkey", "fur", "curtain"],
+        "Solar-System": ["Earth", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"],
+        "mesurement": ["millimeter", "centimeter", "kilometer", "meter", "kilogram", "gram", "ton", "pound", "ounce", "degrees", "temprature", "height", "weight", "time", "length", "width", "ruler", "scale"],
+        "Halloween": ["Vampire", "Frankenstein", "Ghost", "Witch", "Scarecrow", "Mummy", "Skeleton", "Zombie", "Tombstone", "Cauldron", "Spooky", "Fright"]
     },
     "Chinese":
     {

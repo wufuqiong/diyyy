@@ -91,6 +91,13 @@ function DashboardContent() {
       icon: <ExploreIcon sx={{ fontSize: 30, color: 'secondary.main' }} />,
       to: '/charmaze',
       color: 'secondary'
+    },
+    {
+      title: 'Char Trace',
+      description: 'Practice writing characters by tracing them. Improve your handwriting skills with our interactive tracing tool.',
+      icon: <ExploreIcon sx={{ fontSize: 30, color: 'secondary.main' }} />,
+      to: '/chartrace',
+      color: 'secondary'
     }
   ];
 

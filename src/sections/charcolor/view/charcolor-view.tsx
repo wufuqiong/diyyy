@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Clear, Print, NavigateBefore, NavigateNext } from '@mui/icons-material';
+import { Clear, Shuffle, Print, NavigateBefore, NavigateNext } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -17,7 +17,12 @@ import {
   SelectChangeEvent
 } from '@mui/material';
 
+import { shuffleArray } from 'src/utils/array-tools';
+
 import miemieData from 'src/data/miemie-words.json';
+import miemieDetails from 'src/data/miemie-details.json';
+import { MiemieData, MiemieDetails, MiemieLesson } from 'src/types';
+
 
 // Define types for our data structures
 interface ColorPreset {
@@ -48,19 +53,14 @@ interface CharColorState {
   selectedLanguage: string;
   selectedLevel: string;
   fullSelectedValue: string;
+  selectedBook: string;
   pages: PageData[];
-}
-
-interface LanguageLevels {
-  [level: string]: string[];
-}
-
-interface MiemieData {
-  [language: string]: LanguageLevels;
 }
 
 // Type assertion for the imported data
 const miemie = miemieData as MiemieData;
+const miemieDetailsTyped = miemieDetails as MiemieDetails;
+
 
 const MAX_INPUT_LENGTH = 300;
 const CHINESE_SAMPLE_DICT = "人教版小学语文一年级上册";
@@ -87,16 +87,6 @@ const COLOR_PRESETS: ColorPreset[] = [
   }
 ];
 
-// Random shuffle array with proper typing
-const shuffleArray = <T,>(array: T[]): T[] => {
-  const newArray = [...array];
-  for (let i = newArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-  }
-  return newArray;
-};
-
 export class CharColorView extends React.Component<object, CharColorState> {
   constructor(props: object) {
     super(props);
@@ -107,6 +97,7 @@ export class CharColorView extends React.Component<object, CharColorState> {
       selectedLanguage: '',
       selectedLevel: '',
       fullSelectedValue: '',
+      selectedBook: '',
       pages: [],
     };
   }
@@ -145,10 +136,31 @@ export class CharColorView extends React.Component<object, CharColorState> {
       this.setState({ 
         selectedLanguage: '',
         selectedLevel: '',
-        fullSelectedValue: ''
+        fullSelectedValue: '',
+        selectedBook: '',
       });
     }
-}
+  }
+
+  handleSelectBookChange = (e: SelectChangeEvent<string>) => {
+    const selectedBookTitle = e.target.value;
+    this.setState({ selectedBook: selectedBookTitle });
+    
+    const levelKey = this.state.selectedLevel as keyof MiemieDetails;
+    const lessons = miemieDetailsTyped[levelKey];
+    
+    const selectedLesson = lessons.find(lesson => lesson.title === selectedBookTitle);
+    
+    if (selectedLesson) {
+      this.setState({
+        userInput: selectedLesson.word.join(',')
+      });
+    } else {
+      this.setState({
+        userInput: ''
+      });
+    }
+  };
 
   handleClearInput = (): void => {
     this.setState({ 
@@ -156,12 +168,55 @@ export class CharColorView extends React.Component<object, CharColorState> {
       selectedLanguage: '',
       selectedLevel: '',
       fullSelectedValue: '',
+      selectedBook: '',
       pages: [],
     });
   };
 
-  filterChineseCharacters = (text: string): string => 
-    text.replace(/[^\u4e00-\u9fff]/g, '');
+  handleShuffleInput = (): void => {
+    let inputChars = this.userInputToinputChars(this.state.userInput)
+    inputChars = shuffleArray(inputChars)
+    this.setState({
+      userInput: inputChars.join(',')
+    })
+  }
+
+  userInputToinputChars = (userInput: string): string[] => {
+    let inputChars: string[] = [];
+
+    // Method 1: Split by multiple delimiters using regex
+    if (userInput.trim() !== '') {
+      inputChars = userInput.split(/[\s,;，；、]+/).filter(char => char.trim() !== '');
+    }
+
+    // If the above doesn't capture any characters, try splitting by empty string
+    if (inputChars.length === 0 && userInput.trim() !== '') {
+      inputChars = userInput.split('').filter(char => char.trim() !== '');
+    }
+
+    return inputChars
+  }
+
+  renderBookOptions = () => {
+    const { selectedLevel } = this.state;
+    
+    if (!selectedLevel) {
+      return <MenuItem value="">请先选择级别</MenuItem>;
+    }
+    
+    const levelKey = selectedLevel as keyof MiemieDetails;
+    const lessons = miemieDetailsTyped[levelKey];
+    
+    if (!lessons || lessons.length === 0) {
+      return <MenuItem value="">暂无书册</MenuItem>;
+    }
+    
+    return lessons.map((lesson, index) => (
+      <MenuItem key={index} value={lesson.title}>
+        {lesson.title}
+      </MenuItem>
+    ));
+  };
 
   generateRandomColorsForPage = (pageChars: string[], presetIndex: number): string[] => {
     const presetColors = COLOR_PRESETS[presetIndex].colors;
@@ -174,8 +229,6 @@ export class CharColorView extends React.Component<object, CharColorState> {
     const { wordsPerPage, selectedPreset } = this.state;
     const { userInput } = this.state;
     
-    //userInput = this.filterChineseCharacters(userInput);
-    
     if (!userInput.trim()) {
       alert('请输入要练习的文字');
       return;
@@ -187,18 +240,8 @@ export class CharColorView extends React.Component<object, CharColorState> {
     }
 
     this.setState({ userInput }, () => {
-      let inputChars: string[] = [];
+      const inputChars: string[] = this.userInputToinputChars(userInput);
 
-      // Method 1: Split by multiple delimiters using regex
-      if (userInput.trim() !== '') {
-        inputChars = userInput.split(/[\s,;，；、]+/).filter(char => char.trim() !== '');
-      }
-
-      // If the above doesn't capture any characters, try splitting by empty string
-      if (inputChars.length === 0 && userInput.trim() !== '') {
-        inputChars = userInput.split('').filter(char => char.trim() !== '');
-      }
-      
       const totalPages = Math.ceil(inputChars.length / wordsPerPage);
       
       const pages: PageData[] = [];
@@ -211,9 +254,8 @@ export class CharColorView extends React.Component<object, CharColorState> {
           const neededChars = wordsPerPage - pageChars.length;
           pageChars.push(...inputChars.slice(0, neededChars));
         }
-        
+
         const pageColors = this.generateRandomColorsForPage(pageChars, selectedPreset);
-        
         pages.push({
           chars: pageChars,
           colors: pageColors
@@ -225,7 +267,7 @@ export class CharColorView extends React.Component<object, CharColorState> {
   };
 
   render() {
-    const { userInput, wordsPerPage, selectedPreset, fullSelectedValue, pages } = this.state;
+    const { userInput, wordsPerPage, selectedPreset, fullSelectedValue, selectedLevel, selectedBook, pages } = this.state;
 
     return (
       <Box className="app" sx={{ p: 2 }}>
@@ -240,26 +282,39 @@ export class CharColorView extends React.Component<object, CharColorState> {
               <Paper sx={{ p: 3 }}>
                 <Box sx={{ mb: 3 }}>
                   <FormControl fullWidth>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                      <TextField
-                        multiline
-                        rows={3}
-                        value={userInput}
-                        onChange={this.handleUserInputChange}
-                        placeholder={`请输入最多${MAX_INPUT_LENGTH}个要练习的文字`}
-                        inputProps={{ maxLength: MAX_INPUT_LENGTH }}
-                        fullWidth
-                        variant="outlined"
-                      />
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                    <TextField
+                      multiline
+                      rows={3}
+                      value={userInput}
+                      onChange={this.handleUserInputChange}
+                      placeholder={`请输入最多${MAX_INPUT_LENGTH}个要练习的文字`}
+                      inputProps={{ maxLength: MAX_INPUT_LENGTH }}
+                      fullWidth
+                      variant="outlined"
+                    />
+                    {/* Vertical button container */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: 0.5  // Adjust vertical spacing between buttons
+                    }}>
                       <IconButton 
                         onClick={this.handleClearInput}
                         disabled={!userInput}
                         color="error"
-                        sx={{ mt: 0.5 }}
                       >
                         <Clear />
                       </IconButton>
+                      <IconButton 
+                        onClick={this.handleShuffleInput}
+                        disabled={!userInput}
+                        color="primary"
+                      >
+                        <Shuffle />
+                      </IconButton>
                     </Box>
+                  </Box>
                     <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
                       已输入 {userInput.length}/{MAX_INPUT_LENGTH} 字
                     </Typography>
@@ -267,7 +322,7 @@ export class CharColorView extends React.Component<object, CharColorState> {
                 </Box>
                 
                 <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid size={{ xs: 12, sm: 4 }}>
+                  <Grid size={{ xs: 12, sm: 2 }}>
                     <FormControl fullWidth>
                       <InputLabel>每页字数</InputLabel>
                       <Select
@@ -283,7 +338,7 @@ export class CharColorView extends React.Component<object, CharColorState> {
                     </FormControl>
                   </Grid>
                   
-                  <Grid size={{ xs: 12, sm: 4 }}>
+                  <Grid size={{ xs: 12, sm: 2 }}>
                     <FormControl fullWidth>
                       <InputLabel>颜色色系</InputLabel>
                       <Select
@@ -317,6 +372,19 @@ export class CharColorView extends React.Component<object, CharColorState> {
                             </MenuItem>
                           ))
                         ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <FormControl fullWidth>
+                      <InputLabel>预设书册</InputLabel>
+                      <Select
+                        value={this.state.selectedBook}
+                        onChange={this.handleSelectBookChange}
+                      >
+                        <MenuItem value="">请选择书册</MenuItem>
+                        {this.renderBookOptions()}
                       </Select>
                     </FormControl>
                   </Grid>

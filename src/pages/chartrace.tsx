@@ -1,15 +1,15 @@
 import { CONFIG } from 'src/config-global';
 
-import { CharColorView } from 'src/sections/charcolor/view';
+import { CharTraceView } from 'src/sections/chartrace/view';
 
 // ----------------------------------------------------------------------
 
 export default function Page() {
   return (
     <>
-      <title>{`Char Coloring - ${CONFIG.appName}`}</title>
+      <title>{`Char Trace - ${CONFIG.appName}`}</title>
 
-      <CharColorView />
+      <CharTraceView />
     </>
   );
 }

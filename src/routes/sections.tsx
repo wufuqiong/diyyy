@@ -16,6 +16,7 @@ export const DashboardPage = lazy(() => import('src/pages/dashboard'));
 
 export const CharColorPage = lazy(() => import('src/pages/charcolor'));
 export const CharMazePage = lazy(() => import('src/pages/charmaze'));
+export const CharTracePage = lazy(() => import('src/pages/chartrace'));
 
 
 const renderFallback = () => (
@@ -52,6 +53,7 @@ export const routesSection: RouteObject[] = [
       { index: true, element: <DashboardPage /> },
       { path: 'charcolor', element: <CharColorPage />},
       { path: 'charmaze', element: <CharMazePage />},
+      { path: 'chartrace', element: <CharTracePage />},
     ],
   },
 ];
