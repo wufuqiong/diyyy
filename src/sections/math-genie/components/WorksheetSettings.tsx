@@ -5,6 +5,8 @@ import {
   Print as PrintIcon,
   AutoAwesome as SparklesIcon,
   AutoFixHigh as WandIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
 import {
   Box,
@@ -21,6 +23,8 @@ import {
   InputAdornment,
   Chip,
   Stack,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 
 import { DifficultyLevel, OperationType } from 'src/types';
@@ -34,6 +38,8 @@ interface Props {
   setOperation: (o: OperationType) => void;
   count: number;
   setCount: (c: number) => void;
+  showAnswers: boolean; // Add this
+  setShowAnswers: (s: boolean) => void; // Add this
   isGenerating: boolean;
   onGenerate: () => void;
   onPrint: () => void;
@@ -50,6 +56,8 @@ const WorksheetSettings: React.FC<Props> = ({
   setOperation,
   count,
   setCount,
+  showAnswers,
+  setShowAnswers,
   isGenerating,
   onGenerate,
   onPrint,
@@ -278,6 +286,34 @@ const WorksheetSettings: React.FC<Props> = ({
             Min 1, Max 60 (approx 6 per page)
           </Typography>
         </Box>
+
+        {/* Show Answers Section - NEW */}
+        <Box>
+          <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
+            Display Options
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={showAnswers}
+                onChange={(e) => setShowAnswers(e.target.checked)}
+                color="primary"
+              />
+            }
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {showAnswers ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
+                <Typography variant="body2">
+                  Show Answers
+                </Typography>
+              </Box>
+            }
+            sx={{ ml: 0 }}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            {showAnswers ? 'Answers are visible' : 'Answers are hidden (blank boxes)'}
+          </Typography>
+        </Box>
       </Stack>
 
       <Box sx={{ mt: 'auto', pt: 3, borderTop: 1, borderColor: 'grey.100' }}>
@@ -293,9 +329,9 @@ const WorksheetSettings: React.FC<Props> = ({
               textTransform: 'none',
               fontWeight: 600,
               boxShadow: 1,
-              background: 'linear-gradient(135deg, primary.main, primary.dark)',
+              background: 'linear-gradient(135deg, #1976d2, #0d47a1)',
               '&:hover': {
-                background: 'linear-gradient(135deg, primary.dark, primary.dark)',
+                background: 'linear-gradient(135deg, #1565c0, #0d47a1)',
                 boxShadow: 3,
               },
               width: '100%',

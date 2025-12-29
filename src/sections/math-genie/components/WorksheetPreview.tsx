@@ -1,7 +1,7 @@
-import React from 'react';
+// src/sections/math-genie/components/WorksheetPreview.tsx
+import React, { useState, useEffect } from 'react';
 
-import { styled } from '@mui/material/styles';
-import { Box, Paper, Typography, Divider } from '@mui/material';
+import { Box, Paper, Typography, Pagination, Stack } from '@mui/material';
 
 import { MathProblem } from 'src/types';
 
@@ -11,69 +11,23 @@ interface Props {
   problems: MathProblem[];
   title: string;
   theme: string;
+  showAnswers: boolean;
 }
 
-const WorksheetContainer = styled(Box)(({ theme }) => ({
-  width: '100%',
-  height: '100%',
-  backgroundColor: theme.palette.grey[50],
-  overflowY: 'auto',
-  padding: theme.spacing(1),
-  '@media print': {
-    backgroundColor: 'white',
-    padding: 0,
-    overflow: 'visible',
-  },
-}));
-
-const PageContainer = styled(Paper)(({ theme }) => ({
-  width: '210mm',
-  minHeight: '297mm',
-  maxHeight: '297mm',
-  overflow: 'hidden',
-  margin: '0 auto',
-  marginBottom: theme.spacing(4),
-  padding: '20mm',
-  paddingBottom: '15mm',
-  backgroundColor: 'white',
-  boxShadow: theme.shadows[5],
-  '&:last-child': {
-    marginBottom: 0,
-  },
-  '@media print': {
-    boxShadow: 'none',
-    marginBottom: 0,
-    padding: '15mm',
-    minHeight: 0,
-  },
-}));
-
-const HeaderSection = styled(Box)(({ theme }) => ({
-  marginBottom: theme.spacing(3),
-  borderBottom: '2px solid',
-  borderColor: theme.palette.grey[300],
-  paddingBottom: theme.spacing(2),
-  '@media print': {
-    marginBottom: theme.spacing(2),
-  },
-}));
-
-const ProblemsGrid = styled(Box)(({ theme }) => ({
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(80mm, 1fr))',
-  gap: theme.spacing(2),
-  gridAutoRows: 'minmax(120px, auto)',
-  justifyItems: 'center',
-  alignItems: 'center',
-}));
-
-const WorksheetPreview: React.FC<Props> = ({ problems, title, theme }) => {
-  const PROBLEMS_PER_PAGE = problems.length <= 12 ? 8 : 10;
-  const pages = [];
+const WorksheetPreview: React.FC<Props> = ({ problems, title, theme, showAnswers }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const PROBLEMS_PER_PAGE = 8;
   
-  for (let i = 0; i < problems.length; i += PROBLEMS_PER_PAGE) {
-    pages.push(problems.slice(i, i + PROBLEMS_PER_PAGE));
-  }
+  // Calculate pages
+  const totalPages = Math.ceil(problems.length / PROBLEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * PROBLEMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + PROBLEMS_PER_PAGE, problems.length);
+  const currentProblems = problems.slice(startIndex, endIndex);
+
+  // Reset to page 1 when problems change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [problems]);
 
   if (problems.length === 0) {
     return (
@@ -89,24 +43,60 @@ const WorksheetPreview: React.FC<Props> = ({ problems, title, theme }) => {
           color: 'grey.400',
         }}
       >
-        Generating preview...
+        <Typography variant="h6" color="inherit">
+          Generating preview...
+        </Typography>
       </Box>
     );
   }
 
+  const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
-    <WorksheetContainer className="worksheet-container">
-      {pages.map((pageProblems, pageIndex) => (
-        <PageContainer
-          key={pageIndex}
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'grey.50',
+        overflowY: 'auto',
+        padding: 2,
+        '@media print': {
+          backgroundColor: 'white',
+          padding: 0,
+          overflow: 'visible',
+        },
+      }}
+      className="worksheet-preview"
+    >
+      {/* Screen view with pagination - hidden when printing */}
+      <Box 
+        sx={{ 
+          '@media print': { 
+            display: 'none !important' 
+          } 
+        }}
+      >
+        <Paper
           elevation={0}
           sx={{
-            pageBreakAfter: pageIndex < pages.length - 1 ? 'always' : 'auto',
-            pageBreakInside: 'avoid',
+            width: '210mm',
+            minHeight: '297mm',
+            overflow: 'hidden',
+            margin: '0 auto',
+            marginBottom: 4,
+            padding: '20mm',
+            paddingBottom: '15mm',
+            backgroundColor: 'white',
+            boxShadow: 5,
+            '&:last-child': {
+              marginBottom: 0,
+            },
           }}
         >
           {/* Header */}
-          <HeaderSection>
+          <Box sx={{ mb: 3, borderBottom: '2px solid', borderColor: 'grey.300', pb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <Box sx={{ flex: 1 }}>
                 <Typography
@@ -116,35 +106,41 @@ const WorksheetPreview: React.FC<Props> = ({ problems, title, theme }) => {
                     color: 'grey.800',
                     mb: 0.5,
                     fontSize: { xs: '1.5rem', md: '1.875rem' },
-                    '@media print': {
-                      fontSize: '1.5rem',
-                    },
                   }}
                 >
                   {title || `${theme} Math Worksheet`}
                 </Typography>
               </Box>
               
-              {pages.length > 1 && (
+              {totalPages > 1 && (
                 <Typography
                   variant="body2"
                   sx={{
                     textAlign: 'right',
                     color: 'grey.500',
                     fontSize: { xs: '0.75rem', md: '0.875rem' },
-                    '@media print': {
-                      fontSize: '0.75rem',
-                    },
                   }}
                 >
-                  Page {pageIndex + 1} of {pages.length}
+                  Page {currentPage} of {totalPages}
                 </Typography>
               )}
             </Box>
-          </HeaderSection>
+          </Box>
 
-          <ProblemsGrid>
-            {pageProblems.map((problem, index) => (
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 2,
+              gridAutoRows: 'minmax(200px, auto)',
+              justifyItems: 'center',
+              alignItems: 'center',
+              '@media (min-width: 1200px)': {
+                gridTemplateColumns: 'repeat(2, 1fr)',
+              },
+            }}
+          >
+            {currentProblems.map((problem, index) => (
               <Box
                 key={problem.id}
                 sx={{
@@ -156,14 +152,129 @@ const WorksheetPreview: React.FC<Props> = ({ problems, title, theme }) => {
               >
                 <ProblemVisualizer 
                   problem={problem} 
-                  index={pageIndex * PROBLEMS_PER_PAGE + index}
+                  index={startIndex + index}
+                  showAnswers={showAnswers}
                 />
               </Box>
             ))}
-          </ProblemsGrid>
-        </PageContainer>
-      ))}
-    </WorksheetContainer>
+          </Box>
+        </Paper>
+
+        {totalPages > 1 && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+            <Pagination
+              count={totalPages}
+              page={currentPage}
+              onChange={handlePageChange}
+              color="primary"
+              size="large"
+            />
+          </Box>
+        )}
+      </Box>
+
+      {/* Print view - all pages - visible only when printing */}
+      <Box 
+        sx={{ 
+          display: 'none',
+          '@media print': { 
+            display: 'block !important',
+            '& .page-container': {
+              pageBreakAfter: 'always',
+              '&:last-child': {
+                pageBreakAfter: 'auto',
+              }
+            }
+          } 
+        }}
+      >
+        {Array.from({ length: totalPages }).map((_, pageIndex) => {
+          const printStartIndex = pageIndex * PROBLEMS_PER_PAGE;
+          const printEndIndex = Math.min(printStartIndex + PROBLEMS_PER_PAGE, problems.length);
+          const printProblems = problems.slice(printStartIndex, printEndIndex);
+
+          return (
+            <Paper
+              key={`print-page-${pageIndex}`}
+              className="page-container"
+              elevation={0}
+              sx={{
+                width: '210mm',
+                minHeight: '297mm',
+                overflow: 'hidden',
+                margin: '0 auto',
+                padding: '20mm',
+                paddingBottom: '15mm',
+                backgroundColor: 'white',
+                boxShadow: 5,
+                pageBreakAfter: pageIndex < totalPages - 1 ? 'always' : 'auto',
+                pageBreakInside: 'avoid',
+              }}
+            >
+              <Box sx={{ mb: 3, borderBottom: '2px solid', borderColor: 'grey.300', pb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      variant="h4"
+                      sx={{
+                        fontWeight: 'bold',
+                        color: 'grey.800',
+                        mb: 0.5,
+                        fontSize: '1.5rem',
+                      }}
+                    >
+                      {title || `${theme} Math Worksheet`}
+                    </Typography>
+                  </Box>
+                  
+                  {totalPages > 1 && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        textAlign: 'right',
+                        color: 'grey.500',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      Page {pageIndex + 1} of {totalPages}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: 2,
+                  gridAutoRows: 'minmax(200px, auto)',
+                  justifyItems: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                {printProblems.map((problem, index) => (
+                  <Box
+                    key={problem.id}
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      pageBreakInside: 'avoid',
+                      breakInside: 'avoid',
+                    }}
+                  >
+                    <ProblemVisualizer 
+                      problem={problem} 
+                      index={printStartIndex + index}
+                      showAnswers={showAnswers}
+                    />
+                  </Box>
+                ))}
+              </Box>
+            </Paper>
+          );
+        })}
+      </Box>
+    </Box>
   );
 };
 

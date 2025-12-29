@@ -31,6 +31,12 @@ export default defineConfig({
       },
     ],
   },
-  server: { port: PORT, host: true },
+  server: { 
+    port: PORT, 
+    host: true,
+    hmr: {
+      overlay: false, // Disable error overlay which can conflict with DevTools
+    }
+  },
   preview: { port: PORT, host: true },
 });

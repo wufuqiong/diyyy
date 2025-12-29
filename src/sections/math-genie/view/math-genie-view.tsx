@@ -144,7 +144,8 @@ export const MathGenieView: React.FC = () => {
     difficulty: DifficultyLevel.EASY,
     operation: OperationType.ADDITION,
     count: 8,
-    title: 'Fun Math Time!'
+    title: 'Fun Math Time!',
+    showAnswers: false, // Add this - default to false
   });
 
   const [problems, setProblems] = useState<MathProblem[]>([]);
@@ -236,6 +237,8 @@ export const MathGenieView: React.FC = () => {
           setOperation={(o) => setConfig({ ...config, operation: o })}
           count={config.count}
           setCount={(c) => setConfig({ ...config, count: c })}
+          showAnswers={config.showAnswers || false}
+          setShowAnswers={(s) => setConfig({ ...config, showAnswers: s })}
           isGenerating={isGenerating}
           onGenerate={handleGenerate}
           onPrint={handlePrint}
@@ -253,7 +256,7 @@ export const MathGenieView: React.FC = () => {
           position: 'relative',
           '@media print': {
             height: 'auto',
-            minHeight: '297mm',
+            minHeight: 0,
             overflow: 'visible',
             width: '100%',
           },
@@ -273,6 +276,7 @@ export const MathGenieView: React.FC = () => {
           problems={problems} 
           title={config.title}
           theme={config.theme}
+          showAnswers={config.showAnswers || false}
         />
         
         {/* Loading Overlay */}

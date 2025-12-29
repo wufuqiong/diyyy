@@ -54,6 +54,7 @@ export interface WorksheetConfig {
   operation: OperationType;
   count: number;
   title: string;
+  showAnswers?: boolean; // Add this
 }
 
 export interface GenerationResponse {

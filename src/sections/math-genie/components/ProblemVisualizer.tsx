@@ -8,10 +8,11 @@ import { MathProblem } from 'src/types';
 interface Props {
   problem: MathProblem;
   index: number;
+  showAnswers: boolean; // Add this
 }
 
-const ProblemVisualizer: React.FC<Props> = ({ problem, index }) => {
-  const { operation, num1, num2, emoji1, emoji2 } = problem;
+const ProblemVisualizer: React.FC<Props> = ({ problem, index, showAnswers }) => {
+  const { operation, num1, num2, emoji1, emoji2, answer } = problem;
 
   const renderGroup = (count: number, emoji: string, crossedOut: boolean = false) => (
     <Box
@@ -130,7 +131,7 @@ const ProblemVisualizer: React.FC<Props> = ({ problem, index }) => {
           ) : (
             <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center" flexWrap="wrap">
               {renderGroup(num1 - num2, emoji1, false)}
-              {renderGroup(num2, emoji1, true)}
+              {renderGroup(num2, emoji1, !showAnswers)}
             </Stack>
           )}
         </Stack>
@@ -150,65 +151,127 @@ const ProblemVisualizer: React.FC<Props> = ({ problem, index }) => {
           marginTop: 'auto',
         }}
       >
-        <Stack direction="row" spacing={0.5} alignItems="center">
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              border: '2px solid',
-              borderColor: 'grey.400',
-              borderRadius: 1,
-              backgroundColor: 'white',
-              boxShadow: 1,
-            }}
-          />
-          <Box
-            sx={{
-              width: 36,
-              height: 36,
-              border: '2px solid',
-              borderColor: 'grey.400',
-              borderRadius: '50%',
-              backgroundColor: 'white',
-              boxShadow: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          />
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              border: '2px solid',
-              borderColor: 'grey.400',
-              borderRadius: 1,
-              backgroundColor: 'white',
-              boxShadow: 1,
-            }}
-          />
-          <Typography 
-            variant="h4"
-            sx={{
-              fontWeight: 'bold',
-              color: 'grey.800',
-              fontFamily: '"Comic Neue", cursive',
-            }}
-          >
-            =
-          </Typography>
-          <Box
-            sx={{
-              width: 50,
-              height: 40,
-              border: '2px solid',
-              borderColor: 'grey.800',
-              borderRadius: 1,
-              backgroundColor: 'white',
-              boxShadow: 1,
-            }}
-          />
-        </Stack>
+        {showAnswers ? (
+          // Show the complete equation with answer
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 'bold',
+                color: 'grey.800',
+                minWidth: 40,
+                textAlign: 'center',
+              }}
+            >
+              {num1}
+            </Typography>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 'bold',
+                color: 'grey.800',
+                minWidth: 20,
+                textAlign: 'center',
+              }}
+            >
+              {operation}
+            </Typography>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 'bold',
+                color: 'grey.800',
+                minWidth: 40,
+                textAlign: 'center',
+              }}
+            >
+              {num2}
+            </Typography>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 'bold',
+                color: 'grey.800',
+                fontFamily: '"Comic Neue", cursive',
+                mx: 1,
+              }}
+            >
+              =
+            </Typography>
+            <Box
+              sx={{
+                width: 50,
+                height: 40,
+                border: '2px solid',
+                borderColor: 'grey.800',
+                borderRadius: 1,
+                backgroundColor: 'white',
+                boxShadow: 1,
+              }}
+            />
+          </Stack>
+        ) : (
+          // Show blank boxes (original behavior)
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                border: '2px solid',
+                borderColor: 'grey.400',
+                borderRadius: 1,
+                backgroundColor: 'white',
+                boxShadow: 1,
+              }}
+            />
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                border: '2px solid',
+                borderColor: 'grey.400',
+                borderRadius: '50%',
+                backgroundColor: 'white',
+                boxShadow: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            />
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                border: '2px solid',
+                borderColor: 'grey.400',
+                borderRadius: 1,
+                backgroundColor: 'white',
+                boxShadow: 1,
+              }}
+            />
+            <Typography 
+              variant="h4"
+              sx={{
+                fontWeight: 'bold',
+                color: 'grey.800',
+                fontFamily: '"Comic Neue", cursive',
+              }}
+            >
+              =
+            </Typography>
+            <Box
+              sx={{
+                width: 50,
+                height: 40,
+                border: '2px solid',
+                borderColor: 'grey.800',
+                borderRadius: 1,
+                backgroundColor: 'white',
+                boxShadow: 1,
+              }}
+            />
+          </Stack>
+        )}
       </Box>
     </Paper>
   );

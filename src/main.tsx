@@ -8,6 +8,22 @@ import { ErrorBoundary } from './routes/components';
 
 // ----------------------------------------------------------------------
 
+// Suppress React DevTools port error
+if (typeof window !== 'undefined') {
+  const originalError = console.error;
+  console.error = (...args) => {
+    if (
+      args.length > 0 &&
+      typeof args[0] === 'string' &&
+      (args[0].includes('Attempting to use a disconnected port object') ||
+       args[0].includes('Error: Attempting to use a disconnected port object'))
+    ) {
+      return; // Ignore this specific DevTools error
+    }
+    originalError.apply(console, args);
+  };
+}
+
 const router = createBrowserRouter([
   {
     Component: () => (
