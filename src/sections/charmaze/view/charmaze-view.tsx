@@ -20,8 +20,6 @@ import {
 import { filterMazeCharacters, shuffleArray } from 'src/utils/array-tools';
 import { generateWordMazePath, generatePhraseMazePath, generateSentenceMazePath } from 'src/utils/maze-tools';
 
-import miemieWords from 'src/data/miemie-words.json';
-import miemiePhrase from 'src/data/miemie-phrase.json';
 import miemieDetails from 'src/data/miemie-details.json';
 import { MiemieData, MiemieDetails, MiemieLesson } from 'src/types';
 
@@ -62,8 +60,6 @@ const TABLE_SIZE_PRESETS: TableSizePreset[] = [
 ];
 
 // Type assertion for the imported data
-const miemiewords = miemieWords as MiemieData;
-const miemiephrase = miemiePhrase as MiemieData;
 const miemieDetailsTyped = miemieDetails as MiemieDetails;
 
 type Mode = 'WORD' | 'PHRASE' | 'SENTENCE';
@@ -80,16 +76,39 @@ const SELECTER_TITLE_PRESETS: Record<Mode, string> = {
   'SENTENCE': '预设句库',
 };
 
+const getMiemieDataFromDetails = (field: 'word' | 'phrase' | 'sentence'): MiemieData => {
+  const result: MiemieData = {};
+  
+  Object.keys(miemieDetailsTyped).forEach((key) => {
+    const lessons = miemieDetailsTyped[key as keyof MiemieDetails];
+    if (!lessons) return;
+
+    const items = lessons.reduce((acc: string[], lesson) => acc.concat(lesson[field] || []), []);
+    if (items.length === 0) return;
+
+    const isChinese = items.some(item => /[\u4e00-\u9fff]/.test(item));
+    const language = isChinese ? 'Chinese' : 'English';
+
+    if (!result[language]) {
+      result[language] = {};
+    }
+    result[language][key] = items;
+  });
+
+  return result;
+};
+
+const miemieWordData = getMiemieDataFromDetails('word');
+const miemiePhraseData = getMiemieDataFromDetails('phrase');
+const miemieSentenceData = getMiemieDataFromDetails('sentence');
+
 const MIEMIE_PRESETS: Record<Mode, MiemieData> = {
-  'WORD': miemiewords,
-  'PHRASE': miemiephrase,
-  'SENTENCE': miemiewords,
+  'WORD': miemieWordData,
+  'PHRASE': miemiePhraseData,
+  'SENTENCE': miemieSentenceData,
 };
 
 const MAX_INPUT_LENGTH = 300;
-const CHINESE_SAMPLE_DICT = "人教版小学语文一年级上册";
-const ENGLISH_UPPER = "A-Z大写字母";
-const ENGLISH_LOWER = "a-z小写字母";
 
 
 function hasChineseCharacters(characters: string[]): boolean {
@@ -253,13 +272,10 @@ export class CharMazeView extends Component<object, CharMazeState> {
     let simpleChars: string[] = [];
 
     if (hasChineseCharacters(chars)) {
-      simpleChars = miemiewords["Chinese"][CHINESE_SAMPLE_DICT] || [];
+      simpleChars = Object.values(miemieWordData["Chinese"] || {}).flat();
       simpleChars = ['，', '。', '！', ...simpleChars]
     } else {
-      simpleChars = [
-        ...(miemiewords["English"][ENGLISH_UPPER] || []),
-        ...(miemiewords["English"][ENGLISH_LOWER] || [])
-      ];
+      simpleChars = miemieWordData["English"]?.["英语字母"] || [];
       // Duplicate to ensure enough characters
       simpleChars = [...simpleChars, ...simpleChars, ...simpleChars];
     }

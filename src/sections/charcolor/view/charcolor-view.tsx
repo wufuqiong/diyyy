@@ -19,7 +19,6 @@ import {
 
 import { shuffleArray } from 'src/utils/array-tools';
 
-import miemieData from 'src/data/miemie-words.json';
 import miemieDetails from 'src/data/miemie-details.json';
 import { MiemieData, MiemieDetails, MiemieLesson } from 'src/types';
 
@@ -58,14 +57,33 @@ interface CharColorState {
 }
 
 // Type assertion for the imported data
-const miemie = miemieData as MiemieData;
 const miemieDetailsTyped = miemieDetails as MiemieDetails;
 
+const getMiemieDataFromDetails = (field: 'word' | 'phrase' | 'sentence'): MiemieData => {
+  const result: MiemieData = {};
+  
+  Object.keys(miemieDetailsTyped).forEach((key) => {
+    const lessons = miemieDetailsTyped[key as keyof MiemieDetails];
+    if (!lessons) return;
+
+    const items = lessons.reduce((acc: string[], lesson) => acc.concat(lesson[field] || []), []);
+    if (items.length === 0) return;
+
+    const isChinese = items.some(item => /[\u4e00-\u9fff]/.test(item));
+    const language = isChinese ? 'Chinese' : 'English';
+
+    if (!result[language]) {
+      result[language] = {};
+    }
+    result[language][key] = items;
+  });
+
+  return result;
+};
+
+const miemie = getMiemieDataFromDetails('word');
 
 const MAX_INPUT_LENGTH = 300;
-const CHINESE_SAMPLE_DICT = "人教版小学语文一年级上册";
-const ENGLISH_UPPER = "A-Z大写字母";
-const ENGLISH_LOWWER = "a-z小写字母";
 
 // Modify color presets, ensuring 5 distinct colors in each palette
 const COLOR_PRESETS: ColorPreset[] = [
@@ -504,9 +522,9 @@ const generatePatterns = (characters: string[]): string[][] => {
   let similarChars: string[] = [];
 
   if (hasChineseCharacters(characters)) {
-    similarChars = miemie["Chinese"][CHINESE_SAMPLE_DICT] || [];
+    similarChars = Object.values(miemie["Chinese"] || {}).flat();
   } else {
-    similarChars = [...miemie["English"][ENGLISH_UPPER], ...miemie["English"][ENGLISH_LOWWER]];
+    similarChars = miemie["English"]?.["英语字母"] || [];
   }
   additionalChars = additionalChars.concat(similarChars);
   additionalChars = shuffleArray(additionalChars);

@@ -167,5 +167,81 @@
     ],
     "一跃而起-4级": [
         
+    ],
+    "phonics": [
+        {
+            "title": "th-words",
+            "word": [],
+            "phrase": [],
+            "sentence": []
+        },
+        {
+            "title": "sh-words",
+            "word": [],
+            "phrase": [],
+            "sentence": []
+        },
+        {
+            "title": "ch-words",
+            "word": [],
+            "phrase": [],
+            "sentence": []
+        },
+        {
+            "title": "ai-words",
+            "phrase": ["rain", "train", "hair", "tail", "nail", "mail", "jail"],
+            "word": [],
+            "sentence": []
+        },
+        {
+            "title": "oa-words",
+            "phrase": ["boat", "goat", "oak", "coat", "soap", "coal", "goal", "foam", "toast", "road"],
+            "word": [],
+            "sentence": []
+        },
+        {
+            "title": "oo-words",
+            "phrase": ["food", "cook", "wood", "good", "look", "hood", "moon", "spoon", "boot"],
+            "word": [],
+            "sentence": []
+        },
+        {
+            "title": "ur-words",
+            "phrase": ["nurse", "purse", "hurt", "purple", "burger", "turn", "turkey", "fur", "curtain"],
+            "word": [],
+            "sentence": []
+        },
+        {
+            "title": "Solar-System",
+            "phrase": ["Earth", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"],
+            "word": [],
+            "sentence": []
+        },
+        {
+            "title": "mesurement",
+            "phrase": ["millimeter", "centimeter", "kilometer", "meter", "kilogram", "gram", "ton", "pound", "ounce", "degrees", "temprature", "height", "weight", "time", "length", "width", "ruler", "scale"],
+            "word": [],
+            "sentence": []
+        },
+        {
+            "title": "Halloween",
+            "phrase": ["Vampire", "Frankenstein", "Ghost", "Witch", "Scarecrow", "Mummy", "Skeleton", "Zombie", "Tombstone", "Cauldron", "Spooky", "Fright"],
+            "word": [],
+            "sentence": []
+        }
+    ],
+    "英语字母": [
+        {
+            "title": "A-Z大写字母",
+            "word": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
+            "phrase": [],
+            "sentence": []
+        },
+        {
+            "title": "a-z小写字母",
+            "word": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
+            "phrase": [],
+            "sentence": []
+        }
     ]
 }
