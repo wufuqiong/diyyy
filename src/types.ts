@@ -67,3 +67,48 @@ export interface GenerationResponse {
   }>;
   titleSuggestion: string;
 }
+
+export enum GridType {
+  TIAN = 'tian', // 田字格
+  MI = 'mi',     // 米字格
+  SQUARE = 'square', // 方格
+  ENGLISH_LINES = 'english', // 四线格 (English 4-lines)
+  NONE = 'none'
+}
+
+export interface SheetConfig {
+  // Content
+  text: string;
+
+  // Grid Appearance
+  gridType: GridType;
+  gridColor: string;
+  gridOpacity: number;
+  gridSize: number; // in mm roughly, translated to px
+
+  // Text Appearance
+  fontFamily: string;
+  mainTextColor: string; // The solid character
+  traceTextColor: string; // The faded character
+  traceOpacity: number;
+
+  // Layout
+  rowsPerPage: number;
+  colsPerRow: number;
+  traceCount: number; // Number of characters to trace after the main one
+
+  // Header/Footer
+  headerTitle: string;
+  headerContent: string;
+
+  // Advanced
+  showPinyin: boolean;
+  showStrokeCount: boolean;
+  showStrokeOrder: boolean; // Simulates step-by-step
+}
+
+export interface CharData {
+  char: string;
+  pinyin: string;
+  strokes: number;
+}
