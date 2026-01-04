@@ -6,6 +6,7 @@ import { useBoolean } from 'minimal-shared/hooks';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 
 import { _langs, _notifications } from 'src/_mock';
 
@@ -15,7 +16,6 @@ import { _account } from '../nav-config-account';
 import { dashboardLayoutVars } from './css-vars';
 import { navData } from '../nav-config-dashboard';
 import { MainSection } from '../core/main-section';
-import { Searchbar } from '../components/searchbar';
 import { MenuButton } from '../components/menu-button';
 import { HeaderSection } from '../core/header-section';
 import { LayoutSection } from '../core/layout-section';
@@ -47,6 +47,23 @@ export function DashboardLayout({
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
+  const renderSidebarTopArea = () => (
+    <Box sx={{ px: 2.5, py: 3, display: 'inline-flex', alignItems: 'center' }}>
+      <Box
+        component="img"
+        src="/assets/images/diyyy.svg"
+        sx={{
+          width: 40,
+          height: 40,
+          mr: 1.5,
+        }}
+      />
+      <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+        DIYYY
+      </Typography>
+    </Box>
+  );
+
   const renderHeader = () => {
     const headerSlotProps: HeaderSectionProps['slotProps'] = {
       container: {
@@ -67,15 +84,15 @@ export function DashboardLayout({
             onClick={onOpen}
             sx={{ mr: 1, ml: -1, [theme.breakpoints.up(layoutQuery)]: { display: 'none' } }}
           />
-          <NavMobile data={navData} open={open} onClose={onClose} />
+          <NavMobile
+            data={navData}
+            open={open}
+            onClose={onClose}
+            slots={{ topArea: renderSidebarTopArea() }}
+          />
         </>
       ),
-      rightArea: (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.75 } }}>
-          {/** @slot Searchbar */}
-          <Searchbar />
-        </Box>
-      ),
+      rightArea: null,
     };
 
     return (
@@ -104,7 +121,11 @@ export function DashboardLayout({
        * @Sidebar
        *************************************** */
       sidebarSection={
-        <NavDesktop data={navData} layoutQuery={layoutQuery} />
+        <NavDesktop
+          data={navData}
+          layoutQuery={layoutQuery}
+          slots={{ topArea: renderSidebarTopArea() }}
+        />
       }
       /** **************************************
        * @Footer

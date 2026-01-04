@@ -4,12 +4,13 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
+import DrawIcon from '@mui/icons-material/Draw';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
-import ExploreIcon from '@mui/icons-material/Explore';
+import CalculateIcon from '@mui/icons-material/Calculate';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
-import DashboardIcon from '@mui/icons-material/Dashboard';
+import ExtensionIcon from '@mui/icons-material/Extension';
 
 import { CONFIG } from 'src/config-global';
 
@@ -81,30 +82,30 @@ function DashboardContent() {
     {
       title: 'Char Color',
       description: 'Explore and customize character colors with our intuitive color palette tool. Create beautiful color schemes for your characters.',
-      icon: <ColorLensIcon sx={{ fontSize: 30, color: 'primary.main' }} />,
+      icon: <ColorLensIcon sx={{ fontSize: 30, color: 'error.main' }} />,
       to: '/charcolor',
-      color: 'primary'
+      color: 'error'
     },
     {
       title: 'Char Maze',
       description: 'Navigate through challenging mazes with your character. Test your skills in this exciting maze adventure game.',
-      icon: <ExploreIcon sx={{ fontSize: 30, color: 'secondary.main' }} />,
+      icon: <ExtensionIcon sx={{ fontSize: 30, color: 'warning.main' }} />,
       to: '/charmaze',
-      color: 'secondary'
+      color: 'warning'
     },
     {
       title: 'Char Trace',
       description: 'Practice writing characters by tracing them. Improve your handwriting skills with our interactive tracing tool.',
-      icon: <ExploreIcon sx={{ fontSize: 30, color: 'secondary.main' }} />,
+      icon: <DrawIcon sx={{ fontSize: 30, color: 'success.main' }} />,
       to: '/chartrace',
-      color: 'secondary'
+      color: 'success'
     },
     {
       title: 'Math Genie',
       description: 'Practice addtions and subtractions.',
-      icon: <ExploreIcon sx={{ fontSize: 30, color: 'secondary.main' }} />,
+      icon: <CalculateIcon sx={{ fontSize: 30, color: 'info.main' }} />,
       to: '/math-genie',
-      color: 'secondary'
+      color: 'info'
     }
   ];
 

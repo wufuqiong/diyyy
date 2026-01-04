@@ -52,7 +52,7 @@ export function AuthLayout({
       leftArea: (
         <>
           {/** @slot Logo */}
-          <Logo />
+          
         </>
       ),
       rightArea: (
