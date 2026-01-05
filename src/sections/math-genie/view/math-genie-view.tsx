@@ -219,7 +219,7 @@ export const MathGenieView: React.FC = () => {
         sx={{
           display: { xs: 'block', lg: 'flex' },
           height: { xs: 'auto', lg: '100%' },
-          width: { xs: '100%', lg: 320 }, // Fixed width for sidebar
+          width: { xs: '100%', lg: 300 }, // Fixed width for sidebar
           boxShadow: 5,
           flexShrink: 0,
           zIndex: 10,

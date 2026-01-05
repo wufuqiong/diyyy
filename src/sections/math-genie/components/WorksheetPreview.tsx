@@ -1,7 +1,8 @@
 // src/sections/math-genie/components/WorksheetPreview.tsx
 import React, { useState, useEffect } from 'react';
 
-import { Box, Paper, Typography, Pagination, Stack } from '@mui/material';
+import PrintIcon from '@mui/icons-material/Print';
+import { Box, Paper, Typography, Pagination, Stack, IconButton } from '@mui/material';
 
 import { MathProblem } from 'src/types';
 
@@ -98,7 +99,7 @@ const WorksheetPreview: React.FC<Props> = ({ problems, title, theme, showAnswers
           {/* Header */}
           <Box sx={{ mb: 3, borderBottom: '2px solid', borderColor: 'grey.300', pb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Typography
                   variant="h4"
                   sx={{
@@ -110,6 +111,9 @@ const WorksheetPreview: React.FC<Props> = ({ problems, title, theme, showAnswers
                 >
                   {title || `${theme} Math Worksheet`}
                 </Typography>
+                <IconButton onClick={() => window.print()} color="primary">
+                  <PrintIcon />
+                </IconButton>
               </Box>
               
               {totalPages > 1 && (

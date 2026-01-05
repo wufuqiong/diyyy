@@ -100,9 +100,17 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
     >
       <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
         <Box>
-            <Typography variant="h6" fontWeight="bold" color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box component="span" sx={{ bgcolor: 'warning.main', color: 'white', px: 0.5, borderRadius: 1 }}>字</Box>
-              Zitie Master
+            <Typography
+                variant="h4"
+                sx={{
+                fontWeight: 'bold',
+                background: 'linear-gradient(135deg, #2563eb, #4f46e5)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                mb: 1,
+                }}
+            >
+                Zitie Master
             </Typography>
             <Typography variant="caption" color="text.secondary">Printable Calligraphy Generator</Typography>
         </Box>

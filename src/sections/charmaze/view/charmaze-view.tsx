@@ -1,9 +1,15 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
-import { Clear } from '@mui/icons-material';
+import { 
+  Print as PrintIcon,
+  Description as DescriptionIcon,
+  Dashboard as DashboardIcon,
+  Settings as SettingsIcon,
+  Clear as ClearIcon,
+  Refresh as RefreshIcon
+} from '@mui/icons-material';
 import {
   Box,
-  Button,
   TextField,
   Select,
   MenuItem,
@@ -11,10 +17,12 @@ import {
   InputLabel,
   Typography,
   Paper,
-  Container,
-  Grid,
   IconButton,
-  SelectChangeEvent
+  SelectChangeEvent,
+  Stack,
+  Tooltip,
+  CssBaseline,
+  Divider
 } from '@mui/material';
 
 import { filterMazeCharacters, shuffleArray } from 'src/utils/array-tools';
@@ -37,19 +45,6 @@ interface PageData {
   rows: number;
   cols: number;
   mode: string;
-}
-
-interface CharMazeState {
-  userInput: string;
-  wordsPerPage: number;
-  selectedMode: number;
-  selectedTableSize: number;
-  selectedLevel: string;
-  selectedLanguage: string;
-  fullSelectedValue: string;
-  selectedBook: string;
-  pages: PageData[];
-  isGenerating: boolean;
 }
 
 const TABLE_SIZE_PRESETS: TableSizePreset[] = [
@@ -116,126 +111,55 @@ function hasChineseCharacters(characters: string[]): boolean {
   return characters.some(char => chineseRegex.test(char));
 }
 
-export class CharMazeView extends Component<object, CharMazeState> {
-  constructor(props: object) {
-    super(props);
-    this.state = {
-      userInput: '',
-      selectedMode: 0,
-      wordsPerPage: 5,
-      selectedTableSize: 0,
-      selectedLevel: '',
-      selectedLanguage: '',
-      fullSelectedValue: '',
-      selectedBook: '',
-      pages: [],
-      isGenerating: false,
-    };
-  }
+const parseSelectedMode = (selectedMode: number): Mode => 
+  Object.keys(MODE_PRESETS)[selectedMode] as Mode;
 
-  parseSelectedMode = (selectedMode: number): Mode => 
-    Object.keys(MODE_PRESETS)[selectedMode] as Mode;
+const getSplitter = (mode: Mode) => 
+  mode === 'SENTENCE' ? '\n' : ',';
 
-  getSplitter = () => {
-    const mode = this.parseSelectedMode(this.state.selectedMode);
-    return mode === 'SENTENCE' ? '\n' : ',';
+interface ControlPanelProps {
+  userInput: string;
+  setUserInput: (val: string) => void;
+  selectedMode: number;
+  setSelectedMode: (val: number) => void;
+  selectedTableSize: number;
+  setSelectedTableSize: (val: number) => void;
+  wordsPerPage: number;
+  setWordsPerPage: (val: number) => void;
+  selectedLevel: string;
+  setSelectedLevel: (val: string) => void;
+  fullSelectedValue: string;
+  setFullSelectedValue: (val: string) => void;
+  selectedBook: string;
+  setSelectedBook: (val: string) => void;
+  onGenerate: () => void;
+  onPrint: () => void;
+  isGenerating: boolean;
+}
+
+const ControlPanel: React.FC<ControlPanelProps> = ({
+  userInput, setUserInput,
+  selectedMode, setSelectedMode,
+  selectedTableSize, setSelectedTableSize,
+  wordsPerPage, setWordsPerPage,
+  selectedLevel, setSelectedLevel,
+  fullSelectedValue, setFullSelectedValue,
+  selectedBook, setSelectedBook,
+  onGenerate, onPrint,
+  isGenerating
+}) => {
+
+  const handleModeChange = (e: SelectChangeEvent<number>): void => {
+    const newMode = e.target.value as number;
+    setSelectedMode(newMode);
+    setSelectedLevel('');
+    setFullSelectedValue('');
+    setSelectedBook('');
+    setUserInput('');
   };
 
-  handleUserInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
-    const input = e.target.value;
-    if (input.length <= MAX_INPUT_LENGTH) {
-      this.setState({ userInput: input });
-    }
-  };
-
-  handleModeChange = (e: SelectChangeEvent<number>): void => {
-    const selectedMode = e.target.value as number;
-    this.setState({ 
-      selectedMode,
-      selectedLevel: '',
-      selectedLanguage: '',
-      fullSelectedValue: '',
-      selectedBook: '',
-    }, () => {
-      this.setState({ userInput: '' });
-    });
-  };
-
-  handleTableSizeChange = (e: SelectChangeEvent<number>): void => {
-    this.setState({ selectedTableSize: e.target.value as number });
-  };
-
-  handleWordsPerPageChange = (e: SelectChangeEvent<number>): void => {
-    this.setState({ wordsPerPage: e.target.value as number });
-  };
-
-  updateInput = async (): Promise<void> => {
-    const { selectedMode, selectedLevel, selectedBook, fullSelectedValue } = this.state;
-    
-    if (!selectedLevel && !fullSelectedValue) {
-      return;
-    }
-
-    const mode = this.parseSelectedMode(selectedMode);
-    let characters: string[] = [];
-    try {
-      if (selectedLevel) {
-        const levelKey = selectedLevel as keyof MiemieDetails;
-        const lessons = miemieDetailsTyped[levelKey];
-        
-        if (lessons && lessons.length > 0) {
-          if (selectedBook) {
-            const selectedLesson = lessons.find(lesson => lesson.title === selectedBook);
-            if (!selectedLesson) {
-              console.error('No lesson found with title:', selectedBook);
-              return;
-            }
-            characters = this.getDataInMiemieDetails(selectedLesson);
-          } else {
-            lessons.forEach(lesson => {
-              characters.push(...this.getDataInMiemieDetails(lesson));
-            });
-          }
-        } else if (fullSelectedValue) {
-        const [language, level] = fullSelectedValue.split('|');
-        characters = MIEMIE_PRESETS[mode][language]?.[level] || [];
-        } 
-
-        this.setState({
-          userInput: characters.join(this.getSplitter())
-        });
-      }
-    } catch (error) {
-      console.error('Error updating input:', error);
-    }
-  };
-
-  handleLevelChange = (e: SelectChangeEvent<string>) => {
-    const value = e.target.value;
-    if (value.includes('|')) {
-      const [language, level] = value.split('|');
-      this.setState({ 
-        selectedLanguage: language,
-        selectedLevel: level,
-        fullSelectedValue: value,
-        selectedBook: '',
-      }, () => {
-        this.updateInput();
-      });
-    } else {
-      this.setState({ 
-        selectedLanguage: '',
-        selectedLevel: '',
-        fullSelectedValue: '',
-        selectedBook: '',
-        userInput: '',
-      });
-    }
-  };
-
-  getDataInMiemieDetails = (selectedLesson: MiemieLesson): string[] => {
-    const { selectedMode } = this.state;
-    const mode = this.parseSelectedMode(selectedMode);
+  const getDataInMiemieDetails = (selectedLesson: MiemieLesson): string[] => {
+    const mode = parseSelectedMode(selectedMode);
     
     switch (mode) {
       case "WORD":
@@ -249,25 +173,290 @@ export class CharMazeView extends Component<object, CharMazeState> {
     }
   };
 
-  handleSelectBookChange = (e: SelectChangeEvent<string>) => {
+  const updateInput = (level: string, book: string, fullValue: string) => {
+    if (!level && !fullValue) return;
+
+    const mode = parseSelectedMode(selectedMode);
+    let characters: string[] = [];
+    
+    try {
+      if (level) {
+        const levelKey = level as keyof MiemieDetails;
+        const lessons = miemieDetailsTyped[levelKey];
+        
+        if (lessons && lessons.length > 0) {
+          if (book) {
+            const selectedLesson = lessons.find(lesson => lesson.title === book);
+            if (!selectedLesson) return;
+            characters = getDataInMiemieDetails(selectedLesson);
+          } else {
+            lessons.forEach(lesson => {
+              characters.push(...getDataInMiemieDetails(lesson));
+            });
+          }
+        }
+      } else if (fullValue) {
+        const [language, lvl] = fullValue.split('|');
+        characters = MIEMIE_PRESETS[mode][language]?.[lvl] || [];
+      } 
+
+      setUserInput(characters.join(getSplitter(mode)));
+    } catch (error) {
+      console.error('Error updating input:', error);
+    }
+  };
+
+  const handleLevelChange = (e: SelectChangeEvent<string>) => {
+    const value = e.target.value;
+    if (value.includes('|')) {
+      const [language, level] = value.split('|');
+      setFullSelectedValue(value);
+      setSelectedLevel(level);
+      setSelectedBook('');
+      updateInput(level, '', value);
+    } else {
+      setFullSelectedValue('');
+      setSelectedLevel('');
+      setSelectedBook('');
+      setUserInput('');
+    }
+  };
+
+  const handleSelectBookChange = (e: SelectChangeEvent<string>) => {
     const selectedBookTitle = e.target.value;
-    this.setState({ selectedBook: selectedBookTitle }, () => {
-      this.updateInput();
-    });
+    setSelectedBook(selectedBookTitle);
+    updateInput(selectedLevel, selectedBookTitle, fullSelectedValue);
   };
 
-  handleClearInput = (): void => {
-    this.setState({ 
-      userInput: '',
-      selectedLanguage: '',
-      selectedLevel: '',
-      selectedBook: '',
-      fullSelectedValue: '',
-      pages: [],
-    });
+  const handleClearInput = () => {
+    setUserInput('');
+    setFullSelectedValue('');
+    setSelectedLevel('');
+    setSelectedBook('');
   };
 
-  generateMaze = (chars: string[], rows: number, cols: number, mode: string): string[][] => {
+  const getWordLibSelecter = (mode: Mode): React.ReactElement => {
+    const title = SELECTER_TITLE_PRESETS[mode];
+    const miemiedata = MIEMIE_PRESETS[mode];
+
+    return (
+      <FormControl fullWidth size="small">
+        <InputLabel>{title}</InputLabel>
+        <Select
+          value={fullSelectedValue}
+          onChange={handleLevelChange}
+          label={title}
+        >
+          <MenuItem value="">请选择</MenuItem>
+          {Object.keys(miemiedata).map(language => (
+            Object.keys(miemiedata[language] || {}).map(level => (
+              <MenuItem key={`${language}-${level}`} value={`${language}|${level}`}>
+                {language} - {level}
+              </MenuItem>
+            ))
+          ))}
+        </Select>
+      </FormControl>
+    );
+  };
+
+  const renderBookOptions = () => {
+    if (!selectedLevel) {
+      return <MenuItem value="">请先选择级别</MenuItem>;
+    }
+    
+    const levelKey = selectedLevel as keyof MiemieDetails;
+    const lessons = miemieDetailsTyped[levelKey];
+    
+    if (!lessons || lessons.length === 0) {
+      return <MenuItem value="">暂无书册</MenuItem>;
+    }
+    
+    return lessons.map((lesson, index) => (
+      <MenuItem key={index} value={lesson.title}>
+        {lesson.title}
+      </MenuItem>
+    ));
+  };
+
+  return (
+    <Paper 
+      elevation={4}
+      sx={{ 
+        width: { xs: '100%', lg: 320 }, 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        zIndex: 20,
+        borderRadius: 0,
+        '@media print': { display: 'none' }
+      }}
+    >
+      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
+        <Box>
+            <Typography variant="h6" fontWeight="bold" color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              Char Maze
+            </Typography>
+            <Typography variant="caption" color="text.secondary">Maze Adventure</Typography>
+        </Box>
+        <Box>
+          <Tooltip title="Regenerate">
+            <IconButton 
+              onClick={onGenerate}
+              disabled={isGenerating}
+              sx={{ color: 'primary.main', mr: 1 }}
+            >
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Print Sheet">
+            <IconButton 
+              onClick={onPrint}
+              sx={{ bgcolor: 'warning.main', color: 'white', '&:hover': { bgcolor: 'warning.dark' }, boxShadow: 2 }}
+            >
+              <PrintIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
+
+      <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' }}>
+        
+        {/* Load Section */}
+        <Box>
+          <Stack direction="row" alignItems="center" gap={1} sx={{ color: 'warning.main', borderBottom: 1, borderColor: 'divider', pb: 1, mb: 2 }}>
+            <DescriptionIcon fontSize="small" />
+            <Typography variant="subtitle2" fontWeight="bold">Load</Typography>
+          </Stack>
+          <Stack spacing={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>模式选择</InputLabel>
+              <Select
+                value={selectedMode}
+                onChange={handleModeChange}
+                label="模式选择"
+              >
+                {Object.keys(MODE_PRESETS).map((preset, index) => (
+                  <MenuItem key={index} value={index}>
+                    {MODE_PRESETS[preset as Mode]}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            {getWordLibSelecter(parseSelectedMode(selectedMode))}
+            
+            <FormControl fullWidth size="small">
+              <InputLabel>预设书册</InputLabel>
+              <Select
+                value={selectedBook}
+                onChange={handleSelectBookChange}
+                label="预设书册"
+                disabled={!selectedLevel}
+              >
+                <MenuItem value="">全部</MenuItem>
+                {renderBookOptions()}
+              </Select>
+            </FormControl>
+          </Stack>
+        </Box>
+
+        {/* Input Section */}
+        <Box>
+          <Stack direction="row" alignItems="center" gap={1} sx={{ color: 'warning.main', borderBottom: 1, borderColor: 'divider', pb: 1, mb: 2 }}>
+              <DashboardIcon fontSize="small" />
+              <Typography variant="subtitle2" fontWeight="bold">Input Content</Typography>
+          </Stack>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+            <TextField
+              multiline
+              rows={4}
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              placeholder={`请输入最多${MAX_INPUT_LENGTH}个要练习的文字`}
+              inputProps={{ maxLength: MAX_INPUT_LENGTH }}
+              fullWidth
+              variant="outlined"
+            />
+            <IconButton 
+              onClick={handleClearInput}
+              disabled={!userInput}
+              color="error"
+              size="small"
+              sx={{ mt: 0.5 }}
+            >
+              <ClearIcon />
+            </IconButton>
+          </Box>
+          <Typography variant="caption" display="block" textAlign="right" color="text.secondary" sx={{ mt: 0.5 }}>
+              {userInput.length}/{MAX_INPUT_LENGTH} characters
+          </Typography>
+        </Box>
+
+        {/* Options Section */}
+        <Box>
+          <Stack direction="row" alignItems="center" gap={1} sx={{ color: 'warning.main', borderBottom: 1, borderColor: 'divider', pb: 1, mb: 2 }}>
+            <SettingsIcon fontSize="small" />
+            <Typography variant="subtitle2" fontWeight="bold">Options</Typography>
+          </Stack>
+          <Stack spacing={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel>迷宫尺寸</InputLabel>
+              <Select
+                value={selectedTableSize}
+                onChange={(e) => setSelectedTableSize(e.target.value as number)}
+                label="迷宫尺寸"
+              >
+                {TABLE_SIZE_PRESETS.map((preset, index) => (
+                  <MenuItem key={index} value={index}>
+                    {preset.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth size="small">
+              <InputLabel>每页字数</InputLabel>
+              <Select
+                value={wordsPerPage}
+                onChange={(e) => setWordsPerPage(e.target.value as number)}
+                label="每页字数"
+                disabled={parseSelectedMode(selectedMode) !== 'PHRASE'}
+              >
+                {[3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                  <MenuItem key={num} value={num}>
+                    {num}字/页
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Stack>
+        </Box>
+
+        <Box sx={{ pt: 4, pb: 2, textAlign: 'center' }}>
+            <Typography variant="caption" color="text.disabled">Generated by React & MUI</Typography>
+        </Box>
+      </Box>
+    </Paper>
+  );
+};
+
+export const CharMazeView: React.FC = () => {
+  const [userInput, setUserInput] = useState('');
+  const [selectedMode, setSelectedMode] = useState(0);
+  const [wordsPerPage, setWordsPerPage] = useState(5);
+  const [selectedTableSize, setSelectedTableSize] = useState(0);
+  const [selectedLevel, setSelectedLevel] = useState('');
+  const [fullSelectedValue, setFullSelectedValue] = useState('');
+  const [selectedBook, setSelectedBook] = useState('');
+  const [pages, setPages] = useState<PageData[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const generateMaze = (chars: string[], rows: number, cols: number, mode: string): string[][] => {
     const maze: string[][] = [];
     let simpleChars: string[] = [];
 
@@ -323,26 +512,20 @@ export class CharMazeView extends Component<object, CharMazeState> {
     
     return maze;
   };
-  
-  generatePages = async (): Promise<void> => {
-    const { userInput, selectedMode, selectedTableSize, wordsPerPage, isGenerating } = this.state;
-    
+
+  const generatePages = useCallback(async () => {
     if (!userInput.trim()) {
-      alert('请输入要练习的文字');
+      setPages([]);
       return;
     }
 
-    if (isGenerating) {
-      return; // Prevent multiple concurrent generations
-    }
-
-    this.setState({ isGenerating: true });
+    setIsGenerating(true);
 
     try {
       const rows = TABLE_SIZE_PRESETS[selectedTableSize].rows;
       const cols = TABLE_SIZE_PRESETS[selectedTableSize].cols;
-      const mode = this.parseSelectedMode(selectedMode);
-      const pages: PageData[] = [];
+      const mode = parseSelectedMode(selectedMode);
+      const newPages: PageData[] = [];
 
       // Split input based on mode
       let inputChars: string[] = [];
@@ -353,16 +536,15 @@ export class CharMazeView extends Component<object, CharMazeState> {
       }
 
       if (inputChars.length === 0) {
-        alert('没有有效的输入字符');
-        this.setState({ isGenerating: false });
+        setIsGenerating(false);
         return;
       }
 
       if (mode === 'WORD') {
         // One page per character
         for (let i = 0; i < inputChars.length; i++) {
-          const pageChars = this.generateMaze([inputChars[i]], rows, cols, mode);
-          pages.push({
+          const pageChars = generateMaze([inputChars[i]], rows, cols, mode);
+          newPages.push({
             refChars: [inputChars[i]],
             chars: pageChars,
             rows,
@@ -380,8 +562,8 @@ export class CharMazeView extends Component<object, CharMazeState> {
           const pageCharsSlice = inputChars.slice(startIndex, endIndex);
           
           if (pageCharsSlice.length > 0) {
-            const pageChars = this.generateMaze(pageCharsSlice, rows, cols, mode);
-            pages.push({
+            const pageChars = generateMaze(pageCharsSlice, rows, cols, mode);
+            newPages.push({
               refChars: pageCharsSlice,
               chars: pageChars,
               rows,
@@ -397,8 +579,8 @@ export class CharMazeView extends Component<object, CharMazeState> {
           // Split sentence into characters for maze generation
           const chars = sentence.split('').filter(char => char.trim() !== '');
           if (chars.length > 0) {
-            const pageChars = this.generateMaze(chars, rows, cols, mode);
-            pages.push({
+            const pageChars = generateMaze(chars, rows, cols, mode);
+            newPages.push({
               refChars: [sentence],
               chars: pageChars,
               rows,
@@ -409,238 +591,54 @@ export class CharMazeView extends Component<object, CharMazeState> {
         }
       }
 
-      this.setState({ pages, isGenerating: false });
+      setPages(newPages);
+      setIsGenerating(false);
     } catch (error) {
       console.error('Error generating pages:', error);
-      alert('生成迷宫时发生错误');
-      this.setState({ isGenerating: false });
+      setIsGenerating(false);
     }
-  };
+  }, [userInput, selectedMode, selectedTableSize, wordsPerPage]);
 
-  getWordLibSelecter = (mode: Mode): React.ReactElement => {
-    const title = SELECTER_TITLE_PRESETS[mode];
-    const miemiedata = MIEMIE_PRESETS[mode];
+  useEffect(() => {
+    generatePages();
+  }, [generatePages]);
 
-    return (
-      <FormControl fullWidth>
-        <InputLabel>{title}</InputLabel>
-        <Select
-          value={this.state.fullSelectedValue}
-          onChange={this.handleLevelChange}
-          label={title}
-        >
-          <MenuItem value="">请选择</MenuItem>
-          {Object.keys(miemiedata).map(language => (
-            Object.keys(miemiedata[language] || {}).map(level => (
-              <MenuItem key={`${language}-${level}`} value={`${language}|${level}`}>
-                {language} - {level}
-              </MenuItem>
-            ))
-          ))}
-        </Select>
-      </FormControl>
-    );
-  };
-
-  renderBookOptions = () => {
-    const { selectedLevel } = this.state;
-    
-    if (!selectedLevel) {
-      return <MenuItem value="">请先选择级别</MenuItem>;
-    }
-    
-    const levelKey = selectedLevel as keyof MiemieDetails;
-    const lessons = miemieDetailsTyped[levelKey];
-    
-    if (!lessons || lessons.length === 0) {
-      return <MenuItem value="">暂无书册</MenuItem>;
-    }
-    
-    return lessons.map((lesson, index) => (
-      <MenuItem key={index} value={lesson.title}>
-        {lesson.title}
-      </MenuItem>
-    ));
-  };
-
-  render() {
-    const { 
-      userInput, 
-      selectedMode, 
-      wordsPerPage, 
-      selectedTableSize, 
-      pages,
-      isGenerating,
-      selectedBook 
-    } = this.state;
-    
-    return (
-      <Box className="app" sx={{ p: 2 }}>
-        <Container maxWidth="lg">
-          <Grid container spacing={3}>
-            {/* Input Section */}
-            <Grid size={{ xs: 12, md: 12 }} sx={{ 
-              '@media print': { display: 'none' }
-            }}>
-              <Paper sx={{ p: 3 }}>
-                <Box sx={{ mb: 3 }}>
-                  <FormControl fullWidth>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                      <TextField
-                        multiline
-                        rows={3}
-                        value={userInput}
-                        onChange={this.handleUserInputChange}
-                        placeholder={`请输入最多${MAX_INPUT_LENGTH}个要练习的文字`}
-                        inputProps={{ maxLength: MAX_INPUT_LENGTH }}
-                        fullWidth
-                        variant="outlined"
-                      />
-                      <IconButton 
-                        onClick={this.handleClearInput}
-                        disabled={!userInput}
-                        color="error"
-                        sx={{ mt: 0.5 }}
-                      >
-                        <Clear />
-                      </IconButton>
-                    </Box>
-                    <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
-                      已输入 {userInput.length}/{MAX_INPUT_LENGTH} 字
-                    </Typography>
-                  </FormControl>
-                </Box>
-                
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid size={{ xs: 12, sm: 2 }}>
-                    <FormControl fullWidth>
-                      <InputLabel>模式选择</InputLabel>
-                      <Select
-                        value={selectedMode}
-                        onChange={this.handleModeChange}
-                        label="练习模式"
-                      >
-                        {Object.keys(MODE_PRESETS).map((preset, index) => (
-                          <MenuItem key={index} value={index}>
-                            {MODE_PRESETS[preset as Mode]}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  
-                  <Grid size={{ xs: 12, sm: 2 }}>
-                    <FormControl fullWidth>
-                      <InputLabel>迷宫尺寸</InputLabel>
-                      <Select
-                        value={selectedTableSize}
-                        onChange={this.handleTableSizeChange}
-                        label="迷宫尺寸"
-                      >
-                        {TABLE_SIZE_PRESETS.map((preset, index) => (
-                          <MenuItem key={index} value={index}>
-                            {preset.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid size={{ xs: 12, sm: 2 }}>
-                    <FormControl fullWidth>
-                      <InputLabel>每页字数</InputLabel>
-                      <Select
-                        value={wordsPerPage}
-                        onChange={this.handleWordsPerPageChange}
-                        label="每页字数"
-                        disabled={this.parseSelectedMode(selectedMode) !== 'PHRASE'}
-                      >
-                        {[3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                          <MenuItem key={num} value={num}>
-                            {num}字/页
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  
-                  <Grid size={{ xs: 12, sm: 3 }}>
-                    {this.getWordLibSelecter(this.parseSelectedMode(selectedMode))}
-                  </Grid>
-
-                  <Grid size={{ xs: 12, sm: 3 }}>
-                    <FormControl fullWidth>
-                      <InputLabel>预设书册</InputLabel>
-                      <Select
-                        value={selectedBook}
-                        onChange={this.handleSelectBookChange}
-                        disabled={!this.state.selectedLevel}
-                      >
-                        <MenuItem value="">全部</MenuItem>
-                        {this.renderBookOptions()}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                </Grid>
-                
-                <Button
-                  variant="contained"
-                  fullWidth
-                  onClick={this.generatePages}
-                  disabled={!userInput.trim() || isGenerating}
-                  size="large"
-                  sx={{ 
-                    '@media print': { display: 'none' }
-                  }}
-                >
-                  {isGenerating ? '生成中...' : '生成练习页'}
-                </Button>
-              </Paper>
-            </Grid>
-
-            {/* Preview Section */}
-            <Grid size={{ xs: 12, md: 12 }} sx={{ 
-              '@media print': {
-                width: '100%',
-                maxWidth: '100%',
-                flexBasis: '100%'
-              }
-            }}>
-              <Paper sx={{ 
-                p: 3, 
-                minHeight: 400,
-                '@media print': {
-                  boxShadow: 'none',
-                  border: 'none',
-                  minHeight: 'auto'
-                }
-              }}>
-                {pages.length > 0 ? (
-                  <PreviewSheet pages={pages.map((page, index) => ({
-                    refChars: page.refChars,
-                    characters: page.chars,
-                    rows: page.rows,
-                    cols: page.cols,
-                    mode: page.mode,
-                    pageNumber: index + 1,
-                    totalPages: pages.length
-                  }))} />
-                ) : (
-                  <Box sx={{ 
-                    textAlign: 'center', 
-                    py: 8,
-                    '@media print': { display: 'none' }
-                  }}>
-                    <Typography variant="h6" color="textSecondary">
-                      请输入文字并点击&quot;生成练习页&quot;来预览
-                    </Typography>
-                  </Box>
-                )}
-              </Paper>
-            </Grid>
-          </Grid>
-        </Container>
+  return (
+    <Box sx={{ display: 'flex', height: '100vh', width: '100%', overflow: 'hidden', '@media print': { height: 'auto', overflow: 'visible', display: 'block' } }}>
+      <CssBaseline />
+      {/* Left Config Panel */}
+      <ControlPanel 
+        userInput={userInput}
+        setUserInput={setUserInput}
+        selectedMode={selectedMode}
+        setSelectedMode={setSelectedMode}
+        selectedTableSize={selectedTableSize}
+        setSelectedTableSize={setSelectedTableSize}
+        wordsPerPage={wordsPerPage}
+        setWordsPerPage={setWordsPerPage}
+        selectedLevel={selectedLevel}
+        setSelectedLevel={setSelectedLevel}
+        fullSelectedValue={fullSelectedValue}
+        setFullSelectedValue={setFullSelectedValue}
+        selectedBook={selectedBook}
+        setSelectedBook={setSelectedBook}
+        onGenerate={generatePages}
+        onPrint={handlePrint}
+        isGenerating={isGenerating}
+      />
+      
+      {/* Right Preview Area */}
+      <Box component="main" sx={{ flex: 1, height: '100%', position: 'relative', zIndex: 10, '@media print': { height: 'auto', overflow: 'visible' } }}>
+        <PreviewSheet pages={pages.map((page, index) => ({
+          refChars: page.refChars,
+          characters: page.chars,
+          rows: page.rows,
+          cols: page.cols,
+          mode: page.mode,
+          pageNumber: index + 1,
+          totalPages: pages.length
+        }))} />
       </Box>
-    );
-  }
-}
+    </Box>
+  );
+};
