@@ -309,7 +309,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               <RefreshIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Print Sheet">
+          <Tooltip 
+            title="Print Sheet"
+            slotProps={{
+            popper: {
+              sx: { '@media print': { display: 'none' } }
+            }
+          }}
+          >
             <IconButton 
               onClick={onPrint}
               sx={{ bgcolor: 'warning.main', color: 'white', '&:hover': { bgcolor: 'warning.dark' }, boxShadow: 2 }}
