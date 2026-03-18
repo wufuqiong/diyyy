@@ -1,10 +1,10 @@
 // src/sections/math-genie/components/WorksheetPreview.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 import PrintIcon from '@mui/icons-material/Print';
 import { Box, Paper, Typography, Pagination, Stack, IconButton } from '@mui/material';
 
-import { MathProblem } from 'src/types';
+import { MathProblem, DisplayMode } from 'src/types';
 
 import ProblemVisualizer from './ProblemVisualizer';
 
@@ -13,17 +13,28 @@ interface Props {
   title: string;
   theme: string;
   showAnswers: boolean;
+  displayMode: DisplayMode;
 }
 
-const WorksheetPreview: React.FC<Props> = ({ problems, title, theme, showAnswers }) => {
+const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, showAnswers, displayMode }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const PROBLEMS_PER_PAGE = 8;
+  const PROBLEMS_PER_PAGE = displayMode === DisplayMode.TEXT ? 16 : 8;
   
-  // Calculate pages
-  const totalPages = Math.ceil(problems.length / PROBLEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * PROBLEMS_PER_PAGE;
-  const endIndex = Math.min(startIndex + PROBLEMS_PER_PAGE, problems.length);
-  const currentProblems = problems.slice(startIndex, endIndex);
+  // Memoize calculations to prevent re-calculation on every render
+  const paginationData = useMemo(() => {
+    const totalPages = Math.ceil(problems.length / PROBLEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * PROBLEMS_PER_PAGE;
+    const endIndex = Math.min(startIndex + PROBLEMS_PER_PAGE, problems.length);
+    const currentProblems = problems.slice(startIndex, endIndex);
+    return { totalPages, startIndex, endIndex, currentProblems };
+  }, [problems, currentPage]);
+
+  const { totalPages, startIndex, endIndex, currentProblems } = paginationData;
+
+  // Memoize page change handler
+  const handlePageChange = useCallback((event: React.ChangeEvent<unknown>, page: number) => {
+    setCurrentPage(page);
+  }, []);
 
   // Reset to page 1 when problems change
   useEffect(() => {
@@ -50,10 +61,6 @@ const WorksheetPreview: React.FC<Props> = ({ problems, title, theme, showAnswers
       </Box>
     );
   }
-
-  const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
-    setCurrentPage(page);
-  };
 
   return (
     <Box
@@ -134,13 +141,14 @@ const WorksheetPreview: React.FC<Props> = ({ problems, title, theme, showAnswers
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: 2,
-              gridAutoRows: 'minmax(200px, auto)',
+              gridTemplateColumns: displayMode === DisplayMode.TEXT ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)',
+              columnGap: displayMode === DisplayMode.TEXT ? '2' : 2,
+              rowGap: displayMode === DisplayMode.TEXT ? '1' : 2,
+              gridAutoRows: displayMode === DisplayMode.TEXT ? 'minmax(70px, auto)' : 'minmax(200px, auto)',
               justifyItems: 'center',
               alignItems: 'center',
               '@media (min-width: 1200px)': {
-                gridTemplateColumns: 'repeat(2, 1fr)',
+                gridTemplateColumns: displayMode === DisplayMode.TEXT ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)',
               },
             }}
           >
@@ -152,12 +160,16 @@ const WorksheetPreview: React.FC<Props> = ({ problems, title, theme, showAnswers
                   height: '100%',
                   pageBreakInside: 'avoid',
                   breakInside: 'avoid',
+                  ...(displayMode === DisplayMode.TEXT && {
+                    marginBottom: 2, // 添加垂直间距
+                  }),
                 }}
               >
                 <ProblemVisualizer 
                   problem={problem} 
                   index={startIndex + index}
                   showAnswers={showAnswers}
+                  displayMode={displayMode}
                 />
               </Box>
             ))}
@@ -249,9 +261,10 @@ const WorksheetPreview: React.FC<Props> = ({ problems, title, theme, showAnswers
               <Box
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: 2,
-                  gridAutoRows: 'minmax(200px, auto)',
+                  gridTemplateColumns: displayMode === DisplayMode.TEXT ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)',
+                  columnGap: displayMode === DisplayMode.TEXT ? '2' : 2,
+                  rowGap: displayMode === DisplayMode.TEXT ? '1' : 2,
+                  gridAutoRows: displayMode === DisplayMode.TEXT ? 'minmax(70px, auto)' : 'minmax(200px, auto)',
                   justifyItems: 'center',
                   alignItems: 'center',
                 }}
@@ -264,12 +277,16 @@ const WorksheetPreview: React.FC<Props> = ({ problems, title, theme, showAnswers
                       height: '100%',
                       pageBreakInside: 'avoid',
                       breakInside: 'avoid',
+                      ...(displayMode === DisplayMode.TEXT && {
+                        marginBottom: 2, // 添加垂直间距
+                      }),
                     }}
                   >
                     <ProblemVisualizer 
                       problem={problem} 
                       index={printStartIndex + index}
                       showAnswers={showAnswers}
+                      displayMode={displayMode}
                     />
                   </Box>
                 ))}
@@ -280,6 +297,8 @@ const WorksheetPreview: React.FC<Props> = ({ problems, title, theme, showAnswers
       </Box>
     </Box>
   );
-};
+});
+
+WorksheetPreview.displayName = 'WorksheetPreview';
 
 export default WorksheetPreview;

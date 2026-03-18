@@ -1,5 +1,5 @@
 // src/sections/math-genie/components/WorksheetSettings.tsx
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 
 import {
   Print as PrintIcon,
@@ -27,7 +27,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { DifficultyLevel, OperationType } from 'src/types';
+import { DifficultyLevel, OperationType, DisplayMode, CustomDifficultyRange, DifficultyRatios } from 'src/types';
 
 interface Props {
   theme: string;
@@ -40,9 +40,17 @@ interface Props {
   setCount: (c: number) => void;
   showAnswers: boolean; // Add this
   setShowAnswers: (s: boolean) => void; // Add this
+  displayMode: DisplayMode;
+  setDisplayMode: (d: DisplayMode) => void;
   isGenerating: boolean;
   onGenerate: () => void;
   onPrint: () => void;
+  customDifficulty?: CustomDifficultyRange;
+  setCustomDifficulty?: (c: CustomDifficultyRange) => void;
+  difficultyRatios?: DifficultyRatios;
+  setDifficultyRatios?: (r: DifficultyRatios) => void;
+  useMixMode?: boolean;
+  setUseMixMode?: (m: boolean) => void;
 }
 
 const presets = ["Animals 🐶", "Vehicles 🚗", "Fruits 🍎", "Sports ⚽", "Food 🍔", "Nature 🌸", "Weather 🌧️", "Emotions 😀"];
@@ -58,24 +66,143 @@ const WorksheetSettings: React.FC<Props> = ({
   setCount,
   showAnswers,
   setShowAnswers,
+  displayMode,
+  setDisplayMode,
   isGenerating,
   onGenerate,
   onPrint,
+  customDifficulty,
+  setCustomDifficulty,
+  difficultyRatios,
+  setDifficultyRatios,
+  useMixMode,
+  setUseMixMode,
 }) => {
+  // Get count settings based on display mode
+  const getCountSettings = () => {
+    if (displayMode === 'text') {
+      return {
+        min: 16,
+        max: 48,
+        step: 16,
+        description: 'Min 16, Max 48 (16 per page for Text Mode)'
+      };
+    } else {
+      return {
+        min: 8,
+        max: 60,
+        step: 8,
+        description: 'Min 8, Max 60 (8 per page for Emoji Mode)'
+      };
+    }
+  };
+
+  const countSettings = getCountSettings();
+
   const handleCountChange = (event: Event, newValue: number | number[]) => {
-    setCount(newValue as number);
+    // Ensure the value is a multiple of the step
+    const step = countSettings.step;
+    const roundedValue = Math.round((newValue as number) / step) * step;
+    setCount(Math.max(countSettings.min, Math.min(countSettings.max, roundedValue)));
   };
 
   const handleCountInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(event.target.value);
     if (!isNaN(val)) {
-      setCount(Math.max(1, Math.min(60, val)));
+      // Round to the nearest step
+      const step = countSettings.step;
+      const roundedValue = Math.round(val / step) * step;
+      setCount(Math.max(countSettings.min, Math.min(countSettings.max, roundedValue)));
     }
   };
 
   const handleOperationChange = (event: SelectChangeEvent) => {
     setOperation(event.target.value as OperationType);
   };
+
+  const handleMixModeToggle = (enabled: boolean) => {
+    if (setUseMixMode) {
+      setUseMixMode(enabled);
+    }
+    if (enabled && setDifficultyRatios && setUseMixMode) {
+      // When enabling mix mode, set default ratios
+      setDifficultyRatios({
+        easy: 25,
+        medium: 25,
+        hard: 25,
+        custom: 25,
+      });
+    }
+  };
+
+  const handleDifficultyChange = (newDifficulty: DifficultyLevel) => {
+    setDifficulty(newDifficulty);
+    // When selecting a specific difficulty, disable mix mode
+    if (useMixMode && setUseMixMode) {
+      setUseMixMode(false);
+    }
+  };
+
+  const handleCustomDifficultyMinChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(event.target.value);
+    if (!isNaN(val) && setCustomDifficulty && customDifficulty) {
+      const newMin = Math.max(1, Math.min(val, customDifficulty.max - 1));
+      setCustomDifficulty({ ...customDifficulty, min: newMin });
+    }
+  };
+
+  const handleCustomDifficultyMaxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(event.target.value);
+    if (!isNaN(val) && setCustomDifficulty && customDifficulty) {
+      const newMax = Math.max(val, customDifficulty.min + 1);
+      setCustomDifficulty({ ...customDifficulty, max: newMax });
+    }
+  };
+
+  const handleDifficultyRatioChange = (type: keyof DifficultyRatios, value: number) => {
+    if (setDifficultyRatios && difficultyRatios) {
+      const newRatios = { ...difficultyRatios, [type]: value };
+      setDifficultyRatios(newRatios);
+    }
+  };
+
+  // Calculate maximum possible unique problems for current settings
+  const maxPossibleProblems = useMemo(() => {
+    if (operation === OperationType.ADDITION) {
+      let uniqueCount = 0;
+      for (let a = 1; a < difficulty; a++) {
+        for (let b = 1; b <= difficulty - a; b++) {
+          uniqueCount++;
+        }
+      }
+      return uniqueCount;
+    } else if (operation === OperationType.SUBTRACTION) {
+      let uniqueCount = 0;
+      for (let a = 2; a <= difficulty; a++) {
+        for (let b = 1; b < a; b++) {
+          uniqueCount++;
+        }
+      }
+      return uniqueCount;
+    } else {
+      // Mixed
+      let additionCount = 0;
+      for (let a = 1; a < difficulty; a++) {
+        for (let b = 1; b <= difficulty - a; b++) {
+          additionCount++;
+        }
+      }
+      let subtractionCount = 0;
+      for (let a = 2; a <= difficulty; a++) {
+        for (let b = 1; b < a; b++) {
+          subtractionCount++;
+        }
+      }
+      return additionCount + subtractionCount;
+    }
+  }, [difficulty, operation]);
+
+  const isExceedingMax = count > maxPossibleProblems;
 
   return (
     <Paper
@@ -173,7 +300,7 @@ const WorksheetSettings: React.FC<Props> = ({
           </Typography>
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
             <Button
-              onClick={() => setDifficulty(DifficultyLevel.EASY)}
+              onClick={() => handleDifficultyChange(DifficultyLevel.EASY)}
               sx={(muiTheme) => ({
                 padding: muiTheme.spacing(1),
                 fontSize: '0.875rem',
@@ -194,7 +321,7 @@ const WorksheetSettings: React.FC<Props> = ({
               Easy (1-5)
             </Button>
             <Button
-              onClick={() => setDifficulty(DifficultyLevel.MEDIUM)}
+              onClick={() => handleDifficultyChange(DifficultyLevel.MEDIUM)}
               sx={(muiTheme) => ({
                 padding: muiTheme.spacing(1),
                 fontSize: '0.875rem',
@@ -215,7 +342,7 @@ const WorksheetSettings: React.FC<Props> = ({
               Medium (1-10)
             </Button>
             <Button
-              onClick={() => setDifficulty(DifficultyLevel.HARD)}
+              onClick={() => handleDifficultyChange(DifficultyLevel.HARD)}
               sx={(muiTheme) => ({
                 padding: muiTheme.spacing(1),
                 fontSize: '0.875rem',
@@ -235,8 +362,97 @@ const WorksheetSettings: React.FC<Props> = ({
             >
               Hard (1-20)
             </Button>
+            <Button
+              onClick={() => handleDifficultyChange(DifficultyLevel.CUSTOM)}
+              sx={(muiTheme) => ({
+                padding: muiTheme.spacing(1),
+                fontSize: '0.875rem',
+                textTransform: 'none',
+                borderRadius: muiTheme.shape.borderRadius,
+                border: '1px solid',
+                borderColor: difficulty === DifficultyLevel.CUSTOM ? 'primary.main' : 'grey.200',
+                backgroundColor: difficulty === DifficultyLevel.CUSTOM ? 'primary.light' : 'white',
+                color: difficulty === DifficultyLevel.CUSTOM ? 'primary.dark' : 'grey.600',
+                fontWeight: difficulty === DifficultyLevel.CUSTOM ? 600 : 400,
+                '&:hover': {
+                  backgroundColor: difficulty === DifficultyLevel.CUSTOM ? 'primary.light' : 'grey.50',
+                  borderColor: difficulty === DifficultyLevel.CUSTOM ? 'primary.main' : 'grey.300',
+                },
+                width: '100%',
+              })}
+            >
+              Custom (自选)
+            </Button>
           </Stack>
         </Box>
+
+        {/* Mix Mode Section */}
+        <Box>
+          <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
+            Difficulty Mix Mode
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={useMixMode}
+                onChange={(e) => handleMixModeToggle(e.target.checked)}
+                color="primary"
+              />
+            }
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2">
+                  Enable Mix Mode
+                </Typography>
+              </Box>
+            }
+            sx={{ ml: 0 }}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            {useMixMode ? 'Mix mode enabled - set difficulty ratios below' : 'Mix mode disabled - using single difficulty'}
+          </Typography>
+        </Box>
+
+        {/* Custom Difficulty Range Section */}
+        {difficulty === DifficultyLevel.CUSTOM && (
+          <Box>
+            <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
+              Custom Range
+            </Typography>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <TextField
+                label="Min"
+                type="number"
+                size="small"
+                value={customDifficulty?.min || 1}
+                onChange={handleCustomDifficultyMinChange}
+                inputProps={{
+                  min: 1,
+                  max: customDifficulty?.max ? customDifficulty.max - 1 : 99,
+                }}
+                sx={{ width: 100 }}
+              />
+              <Typography variant="body2" color="text.secondary">
+                to
+              </Typography>
+              <TextField
+                label="Max"
+                type="number"
+                size="small"
+                value={customDifficulty?.max || 20}
+                onChange={handleCustomDifficultyMaxChange}
+                inputProps={{
+                  min: customDifficulty?.min ? customDifficulty.min + 1 : 2,
+                  max: 100,
+                }}
+                sx={{ width: 100 }}
+              />
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+              Range: {customDifficulty?.min || 1} - {customDifficulty?.max || 20}
+            </Typography>
+          </Box>
+        )}
 
         {/* Operation Section */}
         <Box>
@@ -265,8 +481,9 @@ const WorksheetSettings: React.FC<Props> = ({
             <Slider
               value={count}
               onChange={handleCountChange}
-              min={1}
-              max={60}
+              min={countSettings.min}
+              max={countSettings.max}
+              step={countSettings.step}
               valueLabelDisplay="auto"
               sx={{ flex: 1 }}
             />
@@ -277,15 +494,186 @@ const WorksheetSettings: React.FC<Props> = ({
               size="small"
               sx={{ width: 80 }}
               inputProps={{
-                min: 1,
-                max: 60,
+                min: countSettings.min,
+                max: countSettings.max,
+                step: countSettings.step,
               }}
             />
           </Stack>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-            Min 1, Max 60 (approx 6 per page)
+            {countSettings.description}
+          </Typography>
+          {isExceedingMax && (
+            <Box
+              sx={{
+                mt: 1,
+                p: 1,
+                backgroundColor: 'warning.light',
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'warning.main',
+              }}
+            >
+              <Typography variant="caption" color="warning.dark">
+                ⚠️ Maximum unique problems for this setting: {maxPossibleProblems}
+              </Typography>
+              <Typography variant="caption" color="warning.dark" sx={{ display: 'block' }}>
+                Some problems will be repeated to reach {count}.
+              </Typography>
+            </Box>
+          )}
+        </Box>
+
+        {/* Difficulty Ratios Section */}
+        {useMixMode && (
+          <Box>
+            <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
+              Difficulty Mix (%)
+            </Typography>
+          <Stack spacing={2}>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Typography variant="body2" sx={{ width: 60 }}>
+                Easy:
+              </Typography>
+              <Slider
+                value={difficultyRatios?.easy || 20}
+                onChange={(_, value) => handleDifficultyRatioChange('easy', value as number)}
+                min={0}
+                max={100}
+                valueLabelDisplay="auto"
+                sx={{ flex: 1 }}
+              />
+              <TextField
+                value={difficultyRatios?.easy || 20}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val)) {
+                    handleDifficultyRatioChange('easy', Math.max(0, Math.min(100, val)));
+                  }
+                }}
+                type="number"
+                size="small"
+                sx={{ width: 60 }}
+                inputProps={{
+                  min: 0,
+                  max: 100,
+                }}
+              />
+              <Typography variant="body2" color="text.secondary">
+                %
+              </Typography>
+            </Stack>
+            
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Typography variant="body2" sx={{ width: 60 }}>
+                Medium:
+              </Typography>
+              <Slider
+                value={difficultyRatios?.medium || 50}
+                onChange={(_, value) => handleDifficultyRatioChange('medium', value as number)}
+                min={0}
+                max={100}
+                valueLabelDisplay="auto"
+                sx={{ flex: 1 }}
+              />
+              <TextField
+                value={difficultyRatios?.medium || 50}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val)) {
+                    handleDifficultyRatioChange('medium', Math.max(0, Math.min(100, val)));
+                  }
+                }}
+                type="number"
+                size="small"
+                sx={{ width: 60 }}
+                inputProps={{
+                  min: 0,
+                  max: 100,
+                }}
+              />
+              <Typography variant="body2" color="text.secondary">
+                %
+              </Typography>
+            </Stack>
+            
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Typography variant="body2" sx={{ width: 60 }}>
+                Hard:
+              </Typography>
+              <Slider
+                value={difficultyRatios?.hard || 20}
+                onChange={(_, value) => handleDifficultyRatioChange('hard', value as number)}
+                min={0}
+                max={100}
+                valueLabelDisplay="auto"
+                sx={{ flex: 1 }}
+              />
+              <TextField
+                value={difficultyRatios?.hard || 20}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val)) {
+                    handleDifficultyRatioChange('hard', Math.max(0, Math.min(100, val)));
+                  }
+                }}
+                type="number"
+                size="small"
+                sx={{ width: 60 }}
+                inputProps={{
+                  min: 0,
+                  max: 100,
+                }}
+              />
+              <Typography variant="body2" color="text.secondary">
+                %
+              </Typography>
+            </Stack>
+            
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Typography variant="body2" sx={{ width: 60 }}>
+                Custom:
+              </Typography>
+              <Slider
+                value={difficultyRatios?.custom || 10}
+                onChange={(_, value) => handleDifficultyRatioChange('custom', value as number)}
+                min={0}
+                max={100}
+                valueLabelDisplay="auto"
+                sx={{ flex: 1 }}
+              />
+              <TextField
+                value={difficultyRatios?.custom || 10}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val)) {
+                    handleDifficultyRatioChange('custom', Math.max(0, Math.min(100, val)));
+                  }
+                }}
+                type="number"
+                size="small"
+                sx={{ width: 60 }}
+                inputProps={{
+                  min: 0,
+                  max: 100,
+                }}
+              />
+              <Typography variant="body2" color="text.secondary">
+                %
+              </Typography>
+            </Stack>
+          </Stack>
+          
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            Total: {(difficultyRatios?.easy || 20) + (difficultyRatios?.medium || 50) + (difficultyRatios?.hard || 20) + (difficultyRatios?.custom || 10)}%
+            {(difficultyRatios?.easy || 20) + (difficultyRatios?.medium || 50) + (difficultyRatios?.hard || 20) + (difficultyRatios?.custom || 10) !== 100 && (
+              <Box component="span" sx={{ color: 'warning.main', ml: 1 }}>
+                ⚠️ Should total 100%
+              </Box>
+            )}
           </Typography>
         </Box>
+        )}
 
         {/* Show Answers Section - NEW */}
         <Box>
@@ -312,6 +700,60 @@ const WorksheetSettings: React.FC<Props> = ({
           />
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
             {showAnswers ? 'Answers are visible' : 'Answers are hidden (blank boxes)'}
+          </Typography>
+        </Box>
+
+        {/* Display Mode Section - NEW */}
+        <Box>
+          <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
+            Display Mode
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+            <Button
+              onClick={() => setDisplayMode(DisplayMode.EMOJI)}
+              sx={(muiTheme) => ({
+                padding: muiTheme.spacing(1),
+                fontSize: '0.875rem',
+                textTransform: 'none',
+                borderRadius: muiTheme.shape.borderRadius,
+                border: '1px solid',
+                borderColor: displayMode === DisplayMode.EMOJI ? 'primary.main' : 'grey.200',
+                backgroundColor: displayMode === DisplayMode.EMOJI ? 'primary.light' : 'white',
+                color: displayMode === DisplayMode.EMOJI ? 'primary.dark' : 'grey.600',
+                fontWeight: displayMode === DisplayMode.EMOJI ? 600 : 400,
+                '&:hover': {
+                  backgroundColor: displayMode === DisplayMode.EMOJI ? 'primary.light' : 'grey.50',
+                  borderColor: displayMode === DisplayMode.EMOJI ? 'primary.main' : 'grey.300',
+                },
+                width: '100%',
+              })}
+            >
+              🎨 Emoji Mode
+            </Button>
+            <Button
+              onClick={() => setDisplayMode(DisplayMode.TEXT)}
+              sx={(muiTheme) => ({
+                padding: muiTheme.spacing(1),
+                fontSize: '0.875rem',
+                textTransform: 'none',
+                borderRadius: muiTheme.shape.borderRadius,
+                border: '1px solid',
+                borderColor: displayMode === DisplayMode.TEXT ? 'primary.main' : 'grey.200',
+                backgroundColor: displayMode === DisplayMode.TEXT ? 'primary.light' : 'white',
+                color: displayMode === DisplayMode.TEXT ? 'primary.dark' : 'grey.600',
+                fontWeight: displayMode === DisplayMode.TEXT ? 600 : 400,
+                '&:hover': {
+                  backgroundColor: displayMode === DisplayMode.TEXT ? 'primary.light' : 'grey.50',
+                  borderColor: displayMode === DisplayMode.TEXT ? 'primary.main' : 'grey.300',
+                },
+                width: '100%',
+              })}
+            >
+              📝 Text Mode (Printable)
+            </Button>
+          </Stack>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            {displayMode === DisplayMode.EMOJI ? 'Visual problems with emojis' : 'Clean text problems for printing'}
           </Typography>
         </Box>
       </Stack>

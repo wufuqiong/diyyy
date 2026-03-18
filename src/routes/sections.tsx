@@ -18,6 +18,7 @@ export const CharColorPage = lazy(() => import('src/pages/charcolor'));
 export const CharMazePage = lazy(() => import('src/pages/charmaze'));
 export const CharTracePage = lazy(() => import('src/pages/chartrace'));
 export const MathGeniePage = lazy(() => import('src/pages/math-genie'));
+export const NumberCompositionPage = lazy(() => import('src/pages/number-composition'));
 
 
 const renderFallback = () => (
@@ -56,6 +57,7 @@ export const routesSection: RouteObject[] = [
       { path: 'charmaze', element: <CharMazePage />},
       { path: 'chartrace', element: <CharTracePage />},
       { path: 'math-genie', element: <MathGeniePage />},
+      { path: 'number-composition', element: <NumberCompositionPage />},
     ],
   },
 ];

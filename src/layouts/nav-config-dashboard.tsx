@@ -2,6 +2,7 @@ import DrawIcon from '@mui/icons-material/Draw';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import ExtensionIcon from '@mui/icons-material/Extension';
+import FunctionsIcon from '@mui/icons-material/Functions';
 
 import { SvgColor } from 'src/components/svg-color';
 
@@ -40,5 +41,10 @@ export const navData = [
     title: '算术天地',
     path: '/math-genie',
     icon: <CalculateIcon />,
+  },
+  {
+    title: '数的分合',
+    path: '/number-composition',
+    icon: <FunctionsIcon />,
   }
 ];

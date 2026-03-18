@@ -3,15 +3,16 @@ import React from 'react';
 
 import { Box, Paper, Typography, Stack } from '@mui/material';
 
-import { MathProblem } from 'src/types';
+import { MathProblem, DisplayMode } from 'src/types';
 
 interface Props {
   problem: MathProblem;
   index: number;
-  showAnswers: boolean; // Add this
+  showAnswers: boolean;
+  displayMode: DisplayMode;
 }
 
-const ProblemVisualizer: React.FC<Props> = ({ problem, index, showAnswers }) => {
+const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAnswers, displayMode }) => {
   const { operation, num1, num2, emoji1, emoji2, answer } = problem;
 
   const renderGroup = (count: number, emoji: string, crossedOut: boolean = false) => (
@@ -61,6 +62,131 @@ const ProblemVisualizer: React.FC<Props> = ({ problem, index, showAnswers }) => 
       )}
     </Box>
   );
+
+  // Text mode component
+  if (displayMode === DisplayMode.TEXT) {
+    return (
+      <Paper
+        elevation={0}
+        sx={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 1,
+          border: '1px solid',
+          borderColor: 'grey.300',
+          borderRadius: 2,
+          backgroundColor: 'white',
+          height: 70,
+          width: '100%',
+          breakInside: 'avoid',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Index Badge */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 1,
+            left: 1,
+            width: 24,
+            height: 24,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'grey.100',
+            borderRadius: '50%',
+            color: 'grey.600',
+            fontWeight: 'bold',
+            fontSize: '0.75rem',
+            border: '1px solid',
+            borderColor: 'grey.200',
+            zIndex: 1,
+          }}
+        >
+          {index + 1}
+        </Box>
+
+        {/* Math equation */}
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 'bold',
+              color: 'grey.800',
+              minWidth: 35,
+              textAlign: 'center',
+              fontSize: '1.5rem',
+            }}
+          >
+            {num1}
+          </Typography>
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 'bold',
+              color: 'grey.800',
+              minWidth: 20,
+              textAlign: 'center',
+              fontSize: '1.5rem',
+            }}
+          >
+            {operation}
+          </Typography>
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 'bold',
+              color: 'grey.800',
+              minWidth: 35,
+              textAlign: 'center',
+              fontSize: '1.5rem',
+            }}
+          >
+            {num2}
+          </Typography>
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 'bold',
+              color: 'grey.800',
+              fontFamily: '"Comic Neue", cursive',
+              fontSize: '1.5rem',
+            }}
+          >
+            =
+          </Typography>
+          {showAnswers ? (
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 'bold',
+                color: 'primary.main',
+                minWidth: 35,
+                textAlign: 'center',
+                borderBottom: '2px solid',
+                borderColor: 'primary.main',
+                fontSize: '1.5rem',
+              }}
+            >
+              {answer}
+            </Typography>
+          ) : (
+            <Box
+              sx={{
+                width: 50,
+                height: 40,
+                borderBottom: '2px solid',
+                borderColor: 'grey.600',
+              }}
+            />
+          )}
+        </Stack>
+      </Paper>
+    );
+  }
 
   return (
     <Paper
@@ -275,6 +401,8 @@ const ProblemVisualizer: React.FC<Props> = ({ problem, index, showAnswers }) => 
       </Box>
     </Paper>
   );
-};
+});
+
+ProblemVisualizer.displayName = 'ProblemVisualizer';
 
 export default ProblemVisualizer;

@@ -29,13 +29,19 @@ export interface PreviewSheetState {
 export enum DifficultyLevel {
   EASY = 5,
   MEDIUM = 10,
-  HARD = 20
+  HARD = 20,
+  CUSTOM = -1
 }
 
 export enum OperationType {
   ADDITION = 'addition',
   SUBTRACTION = 'subtraction',
   MIXED = 'mixed'
+}
+
+export enum DisplayMode {
+  EMOJI = 'emoji',
+  TEXT = 'text'
 }
 
 export interface MathProblem {
@@ -54,7 +60,22 @@ export interface WorksheetConfig {
   operation: OperationType;
   count: number;
   title: string;
-  showAnswers?: boolean; // Add this
+  showAnswers?: boolean;
+  displayMode: DisplayMode;
+  customDifficulty?: CustomDifficultyRange;
+  difficultyRatios?: DifficultyRatios;
+}
+
+export interface CustomDifficultyRange {
+  min: number;
+  max: number;
+}
+
+export interface DifficultyRatios {
+  easy: number;
+  medium: number;
+  hard: number;
+  custom: number;
 }
 
 export interface GenerationResponse {
