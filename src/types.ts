@@ -44,6 +44,11 @@ export enum DisplayMode {
   TEXT = 'text'
 }
 
+export enum ProblemType {
+  STANDARD = 'standard', // 7 + 3 = 10
+  FILL_BLANK = 'fill_blank' // 7 + _ = 10, _ + 3 = 10, 8 - _ = 4, _ - 10 = 2
+}
+
 export interface MathProblem {
   id: string;
   operation: '+' | '-';
@@ -52,6 +57,8 @@ export interface MathProblem {
   emoji1: string;
   emoji2: string;
   answer: number;
+  problemType?: ProblemType; // 题目类型
+  blankPosition?: 'first' | 'second'; // 填空位置
 }
 
 export interface WorksheetConfig {
@@ -64,6 +71,7 @@ export interface WorksheetConfig {
   displayMode: DisplayMode;
   customDifficulty?: CustomDifficultyRange;
   difficultyRatios?: DifficultyRatios;
+  problemType?: ProblemType; // 题目类型
 }
 
 export interface CustomDifficultyRange {

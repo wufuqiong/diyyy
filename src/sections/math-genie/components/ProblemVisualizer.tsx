@@ -3,7 +3,7 @@ import React from 'react';
 
 import { Box, Paper, Typography, Stack } from '@mui/material';
 
-import { MathProblem, DisplayMode } from 'src/types';
+import { MathProblem, DisplayMode, ProblemType } from 'src/types';
 
 interface Props {
   problem: MathProblem;
@@ -13,7 +13,7 @@ interface Props {
 }
 
 const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAnswers, displayMode }) => {
-  const { operation, num1, num2, emoji1, emoji2, answer } = problem;
+  const { operation, num1, num2, emoji1, emoji2, answer, problemType, blankPosition } = problem;
 
   const renderGroup = (count: number, emoji: string, crossedOut: boolean = false) => (
     <Box
@@ -111,77 +111,205 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
 
         {/* Math equation */}
         <Stack direction="row" spacing={1} alignItems="center">
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 'bold',
-              color: 'grey.800',
-              minWidth: 35,
-              textAlign: 'center',
-              fontSize: '1.5rem',
-            }}
-          >
-            {num1}
-          </Typography>
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 'bold',
-              color: 'grey.800',
-              minWidth: 20,
-              textAlign: 'center',
-              fontSize: '1.5rem',
-            }}
-          >
-            {operation}
-          </Typography>
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 'bold',
-              color: 'grey.800',
-              minWidth: 35,
-              textAlign: 'center',
-              fontSize: '1.5rem',
-            }}
-          >
-            {num2}
-          </Typography>
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 'bold',
-              color: 'grey.800',
-              fontFamily: '"Comic Neue", cursive',
-              fontSize: '1.5rem',
-            }}
-          >
-            =
-          </Typography>
-          {showAnswers ? (
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 'bold',
-                color: 'primary.main',
-                minWidth: 35,
-                textAlign: 'center',
-                borderBottom: '2px solid',
-                borderColor: 'primary.main',
-                fontSize: '1.5rem',
-              }}
-            >
-              {answer}
-            </Typography>
+          {problemType === ProblemType.FILL_BLANK ? (
+            <>
+              {/* First number or blank */}
+              {blankPosition === 'first' ? (
+                showAnswers ? (
+                  <Typography
+                    variant="h3"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'grey.800',
+                      minWidth: 35,
+                      textAlign: 'center',
+                      fontSize: '1.5rem',
+                    }}
+                  >
+                    {num1}
+                  </Typography>
+                ) : (
+                  <Box
+                    sx={{
+                      width: 50,
+                      height: 40,
+                      borderBottom: '2px solid',
+                      borderColor: 'grey.600',
+                    }}
+                  />
+                )
+              ) : (
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 'bold',
+                    color: 'grey.800',
+                    minWidth: 35,
+                    textAlign: 'center',
+                    fontSize: '1.5rem',
+                  }}
+                >
+                  {num1}
+                </Typography>
+              )}
+              
+              {/* Operation */}
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'grey.800',
+                  minWidth: 20,
+                  textAlign: 'center',
+                  fontSize: '1.5rem',
+                }}
+              >
+                {operation}
+              </Typography>
+              
+              {/* Second number or blank */}
+              {blankPosition === 'second' ? (
+                showAnswers ? (
+                  <Typography
+                    variant="h3"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'grey.800',
+                      minWidth: 35,
+                      textAlign: 'center',
+                      fontSize: '1.5rem',
+                    }}
+                  >
+                    {num2}
+                  </Typography>
+                ) : (
+                  <Box
+                    sx={{
+                      width: 50,
+                      height: 40,
+                      borderBottom: '2px solid',
+                      borderColor: 'grey.600',
+                    }}
+                  />
+                )
+              ) : (
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 'bold',
+                    color: 'grey.800',
+                    minWidth: 35,
+                    textAlign: 'center',
+                    fontSize: '1.5rem',
+                  }}
+                >
+                  {num2}
+                </Typography>
+              )}
+              
+              {/* Equals */}
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'grey.800',
+                  fontFamily: '"Comic Neue", cursive',
+                  fontSize: '1.5rem',
+                }}
+              >
+                =
+              </Typography>
+              
+              {/* Result - always show answer for fill blank problems */}
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'grey.800',
+                  minWidth: 35,
+                  textAlign: 'center',
+                  fontSize: '1.5rem',
+                }}
+              >
+                {answer}
+              </Typography>
+            </>
           ) : (
-            <Box
-              sx={{
-                width: 50,
-                height: 40,
-                borderBottom: '2px solid',
-                borderColor: 'grey.600',
-              }}
-            />
+            <>
+              {/* Standard problem display */}
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'grey.800',
+                  minWidth: 35,
+                  textAlign: 'center',
+                  fontSize: '1.5rem',
+                }}
+              >
+                {num1}
+              </Typography>
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'grey.800',
+                  minWidth: 20,
+                  textAlign: 'center',
+                  fontSize: '1.5rem',
+                }}
+              >
+                {operation}
+              </Typography>
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'grey.800',
+                  minWidth: 35,
+                  textAlign: 'center',
+                  fontSize: '1.5rem',
+                }}
+              >
+                {num2}
+              </Typography>
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'grey.800',
+                  fontFamily: '"Comic Neue", cursive',
+                  fontSize: '1.5rem',
+                }}
+              >
+                =
+              </Typography>
+              {showAnswers ? (
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 'bold',
+                    color: 'primary.main',
+                    minWidth: 35,
+                    textAlign: 'center',
+                    borderBottom: '2px solid',
+                    borderColor: 'primary.main',
+                    fontSize: '1.5rem',
+                  }}
+                >
+                  {answer}
+                </Typography>
+              ) : (
+                <Box
+                  sx={{
+                    width: 50,
+                    height: 40,
+                    borderBottom: '2px solid',
+                    borderColor: 'grey.600',
+                  }}
+                />
+              )}
+            </>
           )}
         </Stack>
       </Paper>

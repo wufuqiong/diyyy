@@ -1,10 +1,10 @@
 // src/sections/math-genie/view/math-genie-view.tsx
 import { v4 as uuidv4 } from 'uuid';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 import { Box, Backdrop, Paper, Alert, Typography } from '@mui/material';
 
-import { DifficultyLevel, OperationType, DisplayMode, MathProblem, WorksheetConfig, CustomDifficultyRange, DifficultyRatios } from 'src/types';
+import { DifficultyLevel, OperationType, DisplayMode, MathProblem, WorksheetConfig, CustomDifficultyRange, DifficultyRatios, ProblemType } from 'src/types';
 
 import WorksheetPreview from '../components/WorksheetPreview';
 import WorksheetSettings from '../components/WorksheetSettings';
@@ -16,6 +16,7 @@ interface RawMathProblem {
   b: number;
   emoji1: string;
   emoji2?: string;
+  blankPosition?: 'first' | 'second';
 }
 
 // Theme-emoji mapping
@@ -75,11 +76,12 @@ const generateProblemsForDifficulty = (
   difficulty: DifficultyLevel,
   operation: OperationType,
   emojis: string[],
-  usedProblems?: Set<string>
+  usedProblems?: Set<string>,
+  customDifficulty?: CustomDifficultyRange
 ): RawMathProblem[] => {
   const problems: RawMathProblem[] = [];
   const maxNumber = difficulty;
-  const allPossibleProblems = generateAllPossibleProblems(maxNumber, operation, emojis);
+  const allPossibleProblems = generateAllPossibleProblems(maxNumber, operation, emojis, customDifficulty);
   
   // Filter out already used problems
   const availableProblems = allPossibleProblems.filter(problem => {
@@ -99,7 +101,7 @@ const generateProblemsForDifficulty = (
   
   // If we need more problems, generate new ones (but still check for duplicates)
   while (problems.length < count) {
-    const problem = generateRandomProblem(maxNumber, operation, emojis);
+    const problem = generateRandomProblem(maxNumber, operation, emojis, customDifficulty);
     const problemKey = `${problem.op}-${problem.a}-${problem.b}`;
     if (!usedProblems?.has(problemKey)) {
       usedProblems?.add(problemKey);
@@ -124,17 +126,21 @@ const generateProblemsForCustomRange = (
     let problem: RawMathProblem;
     
     if (operation === OperationType.ADDITION || (operation === OperationType.MIXED && Math.random() > 0.5)) {
-      // Addition: ensure sum is within custom range
-      const maxSum = customRange.max;
-      const minSum = Math.max(2, customRange.min);
-      const targetSum = getRandomInt(minSum, maxSum);
+      // Addition: ensure the largest number is within custom range
+      // For addition, the result (sum) should be in the custom range
+      const maxResult = customRange.max;
+      const minResult = Math.max(customRange.min, 2); // Minimum sum is 2 (1+1)
+      const targetSum = getRandomInt(minResult, maxResult);
+      
+      // Generate a and b such that their sum equals targetSum
       const a = getRandomInt(1, targetSum - 1);
       const b = targetSum - a;
+      
       const { emoji1, emoji2 } = getTwoDifferentEmojis(emojis);
       problem = { op: '+', a, b, emoji1, emoji2 };
     } else {
-      // Subtraction: ensure both numbers are within custom range and result is positive
-      const a = getRandomInt(Math.max(customRange.min + 1, 2), customRange.max);
+      // Subtraction: ensure the largest number (a) is within custom range
+      const a = getRandomInt(Math.max(customRange.min, 2), customRange.max);
       const b = getRandomInt(1, Math.min(a - 1, customRange.max));
       const emoji1 = getRandomEmoji(emojis);
       problem = { op: '-', a, b, emoji1 };
@@ -150,13 +156,82 @@ const generateProblemsForCustomRange = (
   return problems;
 };
 
+// Helper function to generate fill-in-the-blank problems
+const generateFillBlankProblems = (
+  count: number,
+  difficulty: DifficultyLevel,
+  operation: OperationType,
+  emojis: string[],
+  customDifficulty?: CustomDifficultyRange,
+  usedProblems?: Set<string>
+): Array<{op: '+' | '-', a: number, b: number, emoji1: string, emoji2?: string, blankPosition: 'first' | 'second'}> => {
+  const problems: Array<{op: '+' | '-', a: number, b: number, emoji1: string, emoji2?: string, blankPosition: 'first' | 'second'}> = [];
+  let maxNumber: number;
+  
+  if (difficulty === DifficultyLevel.CUSTOM && customDifficulty) {
+    maxNumber = customDifficulty.max;
+  } else {
+    maxNumber = difficulty;
+  }
+  
+  while (problems.length < count) {
+    const blankPositions: Array<'first' | 'second'> = ['first', 'second'];
+    const blankPosition = blankPositions[Math.floor(Math.random() * blankPositions.length)];
+    
+    if (operation === OperationType.ADDITION || (operation === OperationType.MIXED && Math.random() > 0.5)) {
+      // Addition: a + b = result, ensure result is within custom range
+      const maxResult = customDifficulty?.max || maxNumber;
+      const minResult = Math.max(customDifficulty?.min || 2, 2);
+      const result = getRandomInt(minResult, maxResult);
+      let a: number, b: number;
+      
+      if (blankPosition === 'first') {
+        // _ + b = result
+        b = getRandomInt(1, Math.min(result - 1, maxNumber));
+        a = result - b;
+      } else {
+        // a + _ = result
+        a = getRandomInt(1, Math.min(result - 1, maxNumber));
+        b = result - a;
+      }
+      
+      const { emoji1, emoji2 } = getTwoDifferentEmojis(emojis);
+      problems.push({ op: '+', a, b, emoji1, emoji2, blankPosition });
+    } else {
+      // Subtraction: a - b = result, ensure a is within custom range
+      let a: number, b: number;
+      
+      const maxA = customDifficulty?.max || maxNumber;
+      const minA = Math.max(customDifficulty?.min || 2, 2);
+      
+      if (blankPosition === 'first') {
+        // _ - b = result (so a = result + b)
+        b = getRandomInt(1, Math.min(maxA - 1, maxA));
+        const result = getRandomInt(1, maxA - b);
+        a = result + b;
+      } else {
+        // a - _ = result (so b = a - result)
+        a = getRandomInt(minA, maxA);
+        const result = getRandomInt(1, a - 1);
+        b = a - result;
+      }
+      
+      const emoji1 = getRandomEmoji(emojis);
+      problems.push({ op: '-', a, b, emoji1, blankPosition });
+    }
+  }
+  
+  return problems;
+};
+
 const generateMathProblems = async (
   theme: string,
   difficulty: DifficultyLevel,
   operation: OperationType,
   count: number,
   customDifficulty?: CustomDifficultyRange,
-  difficultyRatios?: DifficultyRatios
+  difficultyRatios?: DifficultyRatios,
+  problemType?: ProblemType
 ): Promise<{ problems: RawMathProblem[], titleSuggestion: string }> => {
   try {
     // Determine the max number based on difficulty or custom range
@@ -176,6 +251,51 @@ const generateMathProblems = async (
     // Get title
     const titleInfo = THEME_TITLES[themeKey] || THEME_TITLES.default;
     const titleSuggestion = isChineseTheme(theme) ? titleInfo.zh : titleInfo.en;
+    
+    // If problem type is fill_blank, generate fill-in-the-blank problems
+    if (problemType === ProblemType.FILL_BLANK) {
+      if (difficultyRatios) {
+        const total = difficultyRatios.easy + difficultyRatios.medium + difficultyRatios.hard + difficultyRatios.custom;
+        
+        if (total === 100) {
+          // Calculate number of problems for each difficulty
+          const easyCount = Math.round(count * difficultyRatios.easy / 100);
+          const mediumCount = Math.round(count * difficultyRatios.medium / 100);
+          const hardCount = Math.round(count * difficultyRatios.hard / 100);
+          const customCount = count - easyCount - mediumCount - hardCount;
+          
+          // Generate problems for each difficulty in order: easy -> medium -> hard -> custom
+          const orderedProblems: RawMathProblem[] = [];
+          const usedProblems = new Set<string>();
+          
+          if (easyCount > 0) {
+            const easyProblems = generateFillBlankProblems(easyCount, DifficultyLevel.EASY, operation, emojis, customDifficulty, usedProblems);
+            orderedProblems.push(...easyProblems);
+          }
+          
+          if (mediumCount > 0) {
+            const mediumProblems = generateFillBlankProblems(mediumCount, DifficultyLevel.MEDIUM, operation, emojis, customDifficulty, usedProblems);
+            orderedProblems.push(...mediumProblems);
+          }
+          
+          if (hardCount > 0) {
+            const hardProblems = generateFillBlankProblems(hardCount, DifficultyLevel.HARD, operation, emojis, customDifficulty, usedProblems);
+            orderedProblems.push(...hardProblems);
+          }
+          
+          if (customCount > 0 && customDifficulty) {
+            const customProblems = generateFillBlankProblems(customCount, DifficultyLevel.CUSTOM, operation, emojis, customDifficulty, usedProblems);
+            orderedProblems.push(...customProblems);
+          }
+          
+          return { problems: orderedProblems, titleSuggestion };
+        }
+      } else {
+        // Single difficulty mode for fill blank problems
+        const fillBlankProblems = generateFillBlankProblems(count, difficulty, operation, emojis, customDifficulty);
+        return { problems: fillBlankProblems, titleSuggestion };
+      }
+    }
     
     // If difficulty ratios are provided, generate problems according to ratios
     if (difficultyRatios) {
@@ -222,7 +342,7 @@ const generateMathProblems = async (
     const targetCount = Math.min(count, maxUniqueProblems);
     
     // Pre-generate all possible problems for better performance
-    const allPossibleProblems = generateAllPossibleProblems(maxNumber, operation, emojis);
+    const allPossibleProblems = generateAllPossibleProblems(maxNumber, operation, emojis, customDifficulty);
     
     // Shuffle and take required number
     const shuffled = allPossibleProblems.sort(() => Math.random() - 0.5);
@@ -235,7 +355,7 @@ const generateMathProblems = async (
     
     // If we still need more problems (very rare case), generate with duplicates
     while (problems.length < count && problems.length < 100) { // Safety limit
-      const problem = generateRandomProblem(maxNumber, operation, emojis);
+      const problem = generateRandomProblem(maxNumber, operation, emojis, customDifficulty);
       problems.push(problem);
     }
     
@@ -288,24 +408,52 @@ const calculateMaxUniqueProblems = (maxNumber: number, operation: OperationType)
 const generateAllPossibleProblems = (
   maxNumber: number, 
   operation: OperationType, 
-  emojis: string[]
+  emojis: string[],
+  customDifficulty?: CustomDifficultyRange
 ): RawMathProblem[] => {
   const problems: RawMathProblem[] = [];
   
+  // For custom difficulty, we need to respect the range
+  const actualMax = customDifficulty ? customDifficulty.max : maxNumber;
+  const actualMin = customDifficulty ? customDifficulty.min : 1;
+  
   if (operation === OperationType.ADDITION || operation === OperationType.MIXED) {
-    for (let a = 1; a < maxNumber; a++) {
-      for (let b = 1; b <= maxNumber - a; b++) {
-        const { emoji1, emoji2 } = getTwoDifferentEmojis(emojis);
-        problems.push({ op: '+', a, b, emoji1, emoji2 });
+    if (customDifficulty) {
+      // For custom range, generate addition problems where sum is in range
+      for (let sum = Math.max(2, actualMin); sum <= actualMax; sum++) {
+        for (let a = 1; a < sum; a++) {
+          const b = sum - a;
+          const { emoji1, emoji2 } = getTwoDifferentEmojis(emojis);
+          problems.push({ op: '+', a, b, emoji1, emoji2 });
+        }
+      }
+    } else {
+      // For standard difficulty, use original logic
+      for (let a = 1; a < maxNumber; a++) {
+        for (let b = 1; b <= maxNumber - a; b++) {
+          const { emoji1, emoji2 } = getTwoDifferentEmojis(emojis);
+          problems.push({ op: '+', a, b, emoji1, emoji2 });
+        }
       }
     }
   }
   
   if (operation === OperationType.SUBTRACTION || operation === OperationType.MIXED) {
-    for (let a = 2; a <= maxNumber; a++) {
-      for (let b = 1; b < a; b++) {
-        const emoji1 = getRandomEmoji(emojis);
-        problems.push({ op: '-', a, b, emoji1 });
+    if (customDifficulty) {
+      // For custom range, ensure a is in range
+      for (let a = Math.max(2, actualMin); a <= actualMax; a++) {
+        for (let b = 1; b < a; b++) {
+          const emoji1 = getRandomEmoji(emojis);
+          problems.push({ op: '-', a, b, emoji1 });
+        }
+      }
+    } else {
+      // For standard difficulty, use original logic
+      for (let a = 2; a <= maxNumber; a++) {
+        for (let b = 1; b < a; b++) {
+          const emoji1 = getRandomEmoji(emojis);
+          problems.push({ op: '-', a, b, emoji1 });
+        }
       }
     }
   }
@@ -317,34 +465,54 @@ const generateAllPossibleProblems = (
 const generateRandomProblem = (
   maxNumber: number, 
   operation: OperationType, 
-  emojis: string[]
+  emojis: string[],
+  customDifficulty?: CustomDifficultyRange
 ): RawMathProblem => {
   const op = (operation === OperationType.MIXED) 
     ? (Math.random() > 0.5 ? '+' : '-')
     : (operation === OperationType.ADDITION ? '+' : '-');
   
   if (op === '+') {
-    const a = getRandomInt(1, maxNumber - 1);
-    const b = getRandomInt(1, maxNumber - a);
-    const { emoji1, emoji2 } = getTwoDifferentEmojis(emojis);
-    return { op: '+', a, b, emoji1, emoji2 };
+    if (customDifficulty) {
+      // For custom range, ensure sum is in range
+      const maxSum = customDifficulty.max;
+      const minSum = Math.max(customDifficulty.min, 2);
+      const targetSum = getRandomInt(minSum, maxSum);
+      const a = getRandomInt(1, targetSum - 1);
+      const b = targetSum - a;
+      const { emoji1, emoji2 } = getTwoDifferentEmojis(emojis);
+      return { op: '+', a, b, emoji1, emoji2 };
+    } else {
+      const a = getRandomInt(1, maxNumber - 1);
+      const b = getRandomInt(1, maxNumber - a);
+      const { emoji1, emoji2 } = getTwoDifferentEmojis(emojis);
+      return { op: '+', a, b, emoji1, emoji2 };
+    }
   } else {
-    const a = getRandomInt(2, maxNumber);
-    const b = getRandomInt(1, a - 1);
-    const emoji1 = getRandomEmoji(emojis);
-    return { op: '-', a, b, emoji1 };
+    if (customDifficulty) {
+      // For custom range, ensure a is in range
+      const a = getRandomInt(Math.max(customDifficulty.min, 2), customDifficulty.max);
+      const b = getRandomInt(1, a - 1);
+      const emoji1 = getRandomEmoji(emojis);
+      return { op: '-', a, b, emoji1 };
+    } else {
+      const a = getRandomInt(2, maxNumber);
+      const b = getRandomInt(1, a - 1);
+      const emoji1 = getRandomEmoji(emojis);
+      return { op: '-', a, b, emoji1 };
+    }
   }
 };
 
 export const MathGenieView: React.FC = () => {
   const [config, setConfig] = useState<WorksheetConfig>({
     theme: 'Animals',
-    difficulty: DifficultyLevel.EASY,
+    difficulty: DifficultyLevel.CUSTOM,
     operation: OperationType.ADDITION,
-    count: 8,
+    count: 16,
     title: 'Fun Math Time!',
     showAnswers: false, // Add this - default to false
-    displayMode: DisplayMode.EMOJI, // Default to emoji mode
+    displayMode: DisplayMode.TEXT, // Default to text mode
     customDifficulty: {
       min: 1,
       max: 15,
@@ -355,6 +523,7 @@ export const MathGenieView: React.FC = () => {
       hard: 20,
       custom: 10,
     },
+    problemType: ProblemType.STANDARD, // Default to standard problems
   });
 
   const [customDifficulty, setCustomDifficulty] = useState<CustomDifficultyRange>({
@@ -371,8 +540,78 @@ export const MathGenieView: React.FC = () => {
 
   const [useMixMode, setUseMixMode] = useState(false);
 
+  const [problems, setProblems] = useState<MathProblem[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const handleGenerate = useCallback(async () => {
+    setIsGenerating(true);
+    setError(null);
+    try {
+      const response = await generateMathProblems(
+        config.theme,
+        config.difficulty,
+        config.operation,
+        config.count,
+        customDifficulty,
+        useMixMode ? difficultyRatios : undefined,
+        config.problemType
+      );
+      
+      const newProblems: MathProblem[] = response.problems.map(p => {
+        // For fill blank problems, extract blank position from the problem data
+        let blankPosition: 'first' | 'second' | undefined;
+        if (config.problemType === ProblemType.FILL_BLANK && 'blankPosition' in p) {
+          blankPosition = (p as any).blankPosition as 'first' | 'second';
+        }
+        
+        return {
+          id: uuidv4(),
+          operation: p.op,
+          num1: p.a,
+          num2: p.b,
+          emoji1: p.emoji1,
+          emoji2: (p as any).emoji2 || p.emoji1, // Use emoji1 as fallback for emoji2
+          answer: p.op === '+' ? p.a + p.b : p.a - p.b,
+          problemType: config.problemType,
+          blankPosition: blankPosition
+        };
+      });
+
+      setProblems(newProblems);
+      if (response.titleSuggestion) {
+        setConfig(prev => ({ ...prev, title: response.titleSuggestion }));
+      }
+    } catch (err) {
+      console.error("Failed to generate", err);
+      setError('Failed to generate worksheet. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [config.theme, config.difficulty, config.operation, config.count, config.problemType, customDifficulty, difficultyRatios, useMixMode]);
+
+  // Generate initial preview on component mount
+  useEffect(() => {
+    if (!isGenerating && config.count > 0) {
+      handleGenerate();
+    }
+  }, [handleGenerate]); // Use handleGenerate as dependency
+
   // Track previous display mode to avoid infinite loops
   const prevDisplayMode = useRef(config.displayMode);
+
+  // Auto-generate preview when config changes
+  useEffect(() => {
+    // Debounce the auto-generation to avoid too many calls
+    const timeoutId = setTimeout(() => {
+      if (!isGenerating && config.count > 0) {
+        handleGenerate();
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [handleGenerate]); // Use handleGenerate as dependency
 
   // Adjust count when display mode changes
   useEffect(() => {
@@ -394,57 +633,11 @@ export const MathGenieView: React.FC = () => {
     }
   }, [config.displayMode, config.count]);
 
-  const [problems, setProblems] = useState<MathProblem[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
-
-  const handleGenerate = async () => {
-    setIsGenerating(true);
-    setError(null);
-    try {
-      const response = await generateMathProblems(
-        config.theme,
-        config.difficulty,
-        config.operation,
-        config.count,
-        customDifficulty,
-        useMixMode ? difficultyRatios : undefined
-      );
-      
-      const newProblems: MathProblem[] = response.problems.map(p => ({
-        id: uuidv4(),
-        operation: p.op,
-        num1: p.a,
-        num2: p.b,
-        emoji1: p.emoji1,
-        emoji2: p.emoji2 || p.emoji1, // Use emoji1 as fallback for emoji2
-        answer: p.op === '+' ? p.a + p.b : p.a - p.b
-      }));
-
-      setProblems(newProblems);
-      if (response.titleSuggestion) {
-        setConfig(prev => ({ ...prev, title: response.titleSuggestion }));
-      }
-    } catch (err) {
-      console.error("Failed to generate", err);
-      setError('Failed to generate worksheet. Please try again.');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   const handlePrint = () => {
     setTimeout(() => {
       window.print();
     }, 100);
   };
-
-  // Initial generation on mount
-  useEffect(() => {
-    handleGenerate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <Box
@@ -498,6 +691,8 @@ export const MathGenieView: React.FC = () => {
           setDifficultyRatios={setDifficultyRatios}
           useMixMode={useMixMode}
           setUseMixMode={setUseMixMode}
+          problemType={config.problemType}
+          setProblemType={(p) => setConfig({ ...config, problemType: p })}
         />
       </Paper>
 

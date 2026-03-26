@@ -27,7 +27,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { DifficultyLevel, OperationType, DisplayMode, CustomDifficultyRange, DifficultyRatios } from 'src/types';
+import { DifficultyLevel, OperationType, DisplayMode, CustomDifficultyRange, DifficultyRatios, ProblemType } from 'src/types';
 
 interface Props {
   theme: string;
@@ -51,6 +51,8 @@ interface Props {
   setDifficultyRatios?: (r: DifficultyRatios) => void;
   useMixMode?: boolean;
   setUseMixMode?: (m: boolean) => void;
+  problemType?: ProblemType;
+  setProblemType?: (p: ProblemType) => void;
 }
 
 const presets = ["Animals 🐶", "Vehicles 🚗", "Fruits 🍎", "Sports ⚽", "Food 🍔", "Nature 🌸", "Weather 🌧️", "Emotions 😀"];
@@ -77,6 +79,8 @@ const WorksheetSettings: React.FC<Props> = ({
   setDifficultyRatios,
   useMixMode,
   setUseMixMode,
+  problemType,
+  setProblemType,
 }) => {
   // Get count settings based on display mode
   const getCountSettings = () => {
@@ -239,59 +243,47 @@ const WorksheetSettings: React.FC<Props> = ({
       </Box>
 
       <Stack spacing={3}>
-        {/* Theme Section */}
-        <Box>
-          <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
-            Theme
-          </Typography>
-          <TextField
-            fullWidth
-            value={theme}
-            onChange={(e) => setTheme(e.target.value)}
-            placeholder="e.g. Pokemon, Cars, Fairies..."
-            size="small"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SparklesIcon fontSize="small" color="primary" />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                '&:hover fieldset': {
-                  borderColor: 'primary.main',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: 'primary.main',
-                  borderWidth: 2,
-                },
-              },
-            }}
-          />
-          <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap', gap: 1 }}>
-            {presets.map((preset) => (
-              <Chip
-                key={preset}
-                label={preset}
-                onClick={() => setTheme(preset.split(' ')[0])}
-                size="small"
-                sx={{
-                  fontSize: '0.75rem',
-                  padding: '2px 8px',
-                  borderRadius: 1,
-                  backgroundColor: 'grey.100',
-                  color: 'grey.600',
-                  border: '1px solid transparent',
-                  '&:hover': {
-                    backgroundColor: 'primary.light',
-                    borderColor: 'primary.light',
-                  },
-                }}
-              />
-            ))}
-          </Stack>
-        </Box>
+        {/* Theme Section - Only show in Emoji Mode */}
+        {displayMode === DisplayMode.EMOJI && (
+          <Box>
+            <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
+              Theme
+            </Typography>
+            <TextField
+              fullWidth
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+              placeholder="e.g. Pokemon, Cars, Fairies..."
+              size="small"
+              InputProps={{
+                startAdornment: <Box component="span" sx={{ mr: 1 }}>🎨</Box>,
+              }}
+            />
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+              Choose a theme for emoji illustrations. Presets include animals, vehicles, fruits, sports, food, nature, weather, and emotions.
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+              💡 Tip: Chinese themes (中文) will use Chinese titles!
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mt: 1 }}>
+              {presets.map((preset) => (
+                <Chip
+                  key={preset}
+                  label={preset}
+                  onClick={() => setTheme(preset.split(' ')[0])}
+                  size="small"
+                  sx={{
+                    fontSize: '0.75rem',
+                    height: 24,
+                    '&:hover': {
+                      backgroundColor: 'primary.light',
+                    },
+                  }}
+                />
+              ))}
+            </Stack>
+          </Box>
+        )}
 
         {/* Difficulty Section */}
         <Box>
@@ -756,6 +748,64 @@ const WorksheetSettings: React.FC<Props> = ({
             {displayMode === DisplayMode.EMOJI ? 'Visual problems with emojis' : 'Clean text problems for printing'}
           </Typography>
         </Box>
+
+        {/* Problem Type Section - Only show in Text Mode */}
+        {displayMode === DisplayMode.TEXT && (
+          <Box>
+            <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
+              Problem Type
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+              <Button
+                onClick={() => setProblemType?.(ProblemType.STANDARD)}
+                sx={(muiTheme) => ({
+                  padding: muiTheme.spacing(1),
+                  fontSize: '0.875rem',
+                  textTransform: 'none',
+                  borderRadius: muiTheme.shape.borderRadius,
+                  border: '1px solid',
+                  borderColor: problemType === ProblemType.STANDARD ? 'primary.main' : 'grey.200',
+                  backgroundColor: problemType === ProblemType.STANDARD ? 'primary.light' : 'white',
+                  color: problemType === ProblemType.STANDARD ? 'primary.dark' : 'grey.600',
+                  fontWeight: problemType === ProblemType.STANDARD ? 600 : 400,
+                  '&:hover': {
+                    backgroundColor: problemType === ProblemType.STANDARD ? 'primary.light' : 'grey.50',
+                    borderColor: problemType === ProblemType.STANDARD ? 'primary.main' : 'grey.300',
+                  },
+                  width: '100%',
+                })}
+              >
+                Standard (7 + 3 = 10)
+              </Button>
+              <Button
+                onClick={() => setProblemType?.(ProblemType.FILL_BLANK)}
+                sx={(muiTheme) => ({
+                  padding: muiTheme.spacing(1),
+                  fontSize: '0.875rem',
+                  textTransform: 'none',
+                  borderRadius: muiTheme.shape.borderRadius,
+                  border: '1px solid',
+                  borderColor: problemType === ProblemType.FILL_BLANK ? 'primary.main' : 'grey.200',
+                  backgroundColor: problemType === ProblemType.FILL_BLANK ? 'primary.light' : 'white',
+                  color: problemType === ProblemType.FILL_BLANK ? 'primary.dark' : 'grey.600',
+                  fontWeight: problemType === ProblemType.FILL_BLANK ? 600 : 400,
+                  '&:hover': {
+                    backgroundColor: problemType === ProblemType.FILL_BLANK ? 'primary.light' : 'grey.50',
+                    borderColor: problemType === ProblemType.FILL_BLANK ? 'primary.main' : 'grey.300',
+                  },
+                  width: '100%',
+                })}
+              >
+                Fill Blank (7 + _ = 10)
+              </Button>
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+              {problemType === ProblemType.STANDARD 
+                ? 'Traditional math problems with complete equations' 
+                : 'Fill-in-the-blank problems for enhanced learning'}
+            </Typography>
+          </Box>
+        )}
       </Stack>
 
       <Box sx={{ mt: 'auto', pt: 3, borderTop: 1, borderColor: 'grey.100' }}>
