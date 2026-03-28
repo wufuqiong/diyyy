@@ -70,6 +70,128 @@ function isChineseTheme(theme: string): boolean {
   return /[\u4e00-\u9fff]/.test(theme);
 }
 
+// Generate multi-operation problems (2-3 numbers)
+function generateMultiOperationProblems(
+  count: number,
+  maxNumber: number,
+  operation: OperationType,
+  emojis: string[],
+  titleSuggestion: string
+): { problems: RawMathProblem[], titleSuggestion: string } {
+  const problems: RawMathProblem[] = [];
+  const seenProblems = new Set<string>();
+  
+  while (problems.length < count && seenProblems.size < count * 10) {
+    let numbers: number[] = [];
+    let operations: ('+' | '-')[] = [];
+    let answer: number = 0;
+    
+    if (operation === OperationType.MULTI_ADDITION) {
+      // Generate 2-3 numbers for addition: a + b + c = answer
+      const numCount = getRandomInt(2, 3);
+      answer = 0;
+      
+      for (let i = 0; i < numCount; i++) {
+        const num = getRandomInt(1, Math.floor(maxNumber / numCount));
+        numbers.push(num);
+        answer += num;
+      }
+      
+      // Ensure answer doesn't exceed maxNumber
+      if (answer > maxNumber) {
+        continue;
+      }
+      
+      operations = Array(numCount - 1).fill('+');
+      
+    } else if (operation === OperationType.MULTI_SUBTRACTION) {
+      // Generate 2-3 numbers for subtraction: a - b - c = answer
+      const numCount = getRandomInt(2, 3);
+      numbers = [];
+      
+      // Start with a number that's large enough
+      const startNum = getRandomInt(Math.floor(maxNumber * 0.6), maxNumber);
+      numbers.push(startNum);
+      answer = startNum;
+      
+      for (let i = 1; i < numCount; i++) {
+        const subtractNum = getRandomInt(1, Math.floor(answer * 0.6));
+        numbers.push(subtractNum);
+        answer -= subtractNum;
+      }
+      
+      // Ensure answer is positive
+      if (answer <= 0) {
+        continue;
+      }
+      
+      operations = Array(numCount - 1).fill('-');
+      
+    } else if (operation === OperationType.MIXED_MULTI) {
+      // Generate mixed operations: a + b - c = answer or a - b + c = answer
+      const numCount = 3;
+      numbers = [];
+      operations = [];
+      
+      // Generate first number
+      const firstNum = getRandomInt(1, Math.floor(maxNumber * 0.5));
+      numbers.push(firstNum);
+      
+      // Randomly choose operation pattern
+      const pattern = getRandomInt(0, 1);
+      
+      if (pattern === 0) {
+        // a + b - c pattern
+        operations = ['+', '-'];
+        const secondNum = getRandomInt(1, Math.floor(maxNumber * 0.4));
+        numbers.push(secondNum);
+        const thirdNum = getRandomInt(1, Math.min(secondNum, Math.floor((maxNumber - firstNum - secondNum) * 0.8)));
+        numbers.push(thirdNum);
+        answer = firstNum + secondNum - thirdNum;
+      } else {
+        // a - b + c pattern
+        operations = ['-', '+'];
+        const secondNum = getRandomInt(1, Math.floor(firstNum * 0.6));
+        numbers.push(secondNum);
+        const thirdNum = getRandomInt(1, Math.floor(maxNumber * 0.4));
+        numbers.push(thirdNum);
+        answer = firstNum - secondNum + thirdNum;
+      }
+      
+      // Ensure answer is positive and within range
+      if (answer <= 0 || answer > maxNumber) {
+        continue;
+      }
+    } else {
+      // Skip if operation is not supported
+      continue;
+    }
+    
+    // Create unique key to avoid duplicates
+    const problemKey = `${operations.join('-')}-${numbers.join('-')}`;
+    
+    if (!seenProblems.has(problemKey)) {
+      seenProblems.add(problemKey);
+      
+      const problemData: any = {
+        op: operations[0] as '+' | '-', // Use first operation for compatibility
+        a: numbers[0],
+        b: numbers[1] || 0,
+        emoji1: getRandomEmoji(emojis),
+        emoji2: numbers.length > 2 ? getRandomEmoji(emojis) : undefined,
+        // Store multi-operation data for rendering - always store for multi-operations
+        numbers,
+        operations,
+        answer
+      };
+      
+      problems.push(problemData);
+    }
+  }
+  
+  return { problems, titleSuggestion };
+}
+
 // Helper function to generate problems for a specific difficulty level
 const generateProblemsForDifficulty = (
   count: number,
@@ -81,28 +203,28 @@ const generateProblemsForDifficulty = (
 ): RawMathProblem[] => {
   const problems: RawMathProblem[] = [];
   const maxNumber = difficulty;
-  const allPossibleProblems = generateAllPossibleProblems(maxNumber, operation, emojis, customDifficulty);
   
-  // Filter out already used problems
-  const availableProblems = allPossibleProblems.filter(problem => {
-    const problemKey = `${problem.op}-${problem.a}-${problem.b}`;
-    return !usedProblems?.has(problemKey);
-  });
-  
-  const shuffled = availableProblems.sort(() => Math.random() - 0.5);
-  
-  for (let i = 0; i < Math.min(count, shuffled.length); i++) {
-    if (shuffled[i]) {
-      const problemKey = `${shuffled[i].op}-${shuffled[i].a}-${shuffled[i].b}`;
-      usedProblems?.add(problemKey);
-      problems.push(shuffled[i]);
+  for (let i = 0; i < count; i++) {
+    let problem: RawMathProblem;
+    const op = (operation === OperationType.MIXED) 
+      ? (Math.random() > 0.5 ? '+' : '-')
+      : (operation === OperationType.ADDITION ? '+' : '-');
+    
+    if (op === '+') {
+      const a = getRandomInt(1, maxNumber - 1);
+      const b = getRandomInt(1, maxNumber - a);
+      const { emoji1, emoji2 } = getTwoDifferentEmojis(emojis);
+      problem = { op: '+', a, b, emoji1, emoji2 };
+    } else {
+      const a = getRandomInt(2, maxNumber);
+      const b = getRandomInt(1, a - 1);
+      const emoji1 = getRandomEmoji(emojis);
+      problem = { op: '-', a, b, emoji1 };
     }
-  }
-  
-  // If we need more problems, generate new ones (but still check for duplicates)
-  while (problems.length < count) {
-    const problem = generateRandomProblem(maxNumber, operation, emojis, customDifficulty);
-    const problemKey = `${problem.op}-${problem.a}-${problem.b}`;
+    
+    // Create a unique key to avoid duplicate problems
+    const problemKey = `${problem.op}_${problem.a}_${problem.b}`;
+    
     if (!usedProblems?.has(problemKey)) {
       usedProblems?.add(problemKey);
       problems.push(problem);
@@ -233,6 +355,7 @@ const generateMathProblems = async (
   difficultyRatios?: DifficultyRatios,
   problemType?: ProblemType
 ): Promise<{ problems: RawMathProblem[], titleSuggestion: string }> => {
+  console.log('🚀 generateMathProblems called with operation:', operation, 'type:', typeof operation);
   try {
     // Determine the max number based on difficulty or custom range
     let maxNumber: number;
@@ -506,13 +629,13 @@ const generateRandomProblem = (
 
 export const MathGenieView: React.FC = () => {
   const [config, setConfig] = useState<WorksheetConfig>({
-    theme: 'Animals',
-    difficulty: DifficultyLevel.CUSTOM,
+    theme: 'Animals 🐶',
+    difficulty: DifficultyLevel.EASY,
     operation: OperationType.ADDITION,
     count: 16,
     title: 'Fun Math Time!',
-    showAnswers: false, // Add this - default to false
-    displayMode: DisplayMode.TEXT, // Default to text mode
+    showAnswers: false, 
+    displayMode: DisplayMode.TEXT, 
     customDifficulty: {
       min: 1,
       max: 15,
@@ -523,7 +646,7 @@ export const MathGenieView: React.FC = () => {
       hard: 20,
       custom: 10,
     },
-    problemType: ProblemType.STANDARD, // Default to standard problems
+    problemType: ProblemType.STANDARD, 
   });
 
   const [customDifficulty, setCustomDifficulty] = useState<CustomDifficultyRange>({
@@ -566,6 +689,11 @@ export const MathGenieView: React.FC = () => {
           blankPosition = (p as any).blankPosition as 'first' | 'second';
         }
         
+        // Extract multi-operation data if present
+        const multiNumbers = (p as any).numbers;
+        const multiOperations = (p as any).operations;
+        const multiAnswer = (p as any).answer;
+        
         return {
           id: uuidv4(),
           operation: p.op,
@@ -573,9 +701,13 @@ export const MathGenieView: React.FC = () => {
           num2: p.b,
           emoji1: p.emoji1,
           emoji2: (p as any).emoji2 || p.emoji1, // Use emoji1 as fallback for emoji2
-          answer: p.op === '+' ? p.a + p.b : p.a - p.b,
+          answer: multiAnswer !== undefined ? multiAnswer : (p.op === '+' ? p.a + p.b : p.a - p.b),
           problemType: config.problemType,
-          blankPosition: blankPosition
+          blankPosition: blankPosition,
+          // 保留多重运算数据
+          ...(multiNumbers && { numbers: multiNumbers }),
+          ...(multiOperations && { operations: multiOperations }),
+          ...(multiAnswer !== undefined && { multiAnswer })
         };
       });
 
@@ -678,7 +810,7 @@ export const MathGenieView: React.FC = () => {
           setOperation={(o) => setConfig({ ...config, operation: o })}
           count={config.count}
           setCount={(c) => setConfig({ ...config, count: c })}
-          showAnswers={config.showAnswers || false}
+          showAnswers={config.showAnswers ?? false}
           setShowAnswers={(s) => setConfig({ ...config, showAnswers: s })}
           displayMode={config.displayMode}
           setDisplayMode={(d) => setConfig({ ...config, displayMode: d })}

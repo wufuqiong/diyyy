@@ -49,8 +49,8 @@ interface Props {
   setCustomDifficulty?: (c: CustomDifficultyRange) => void;
   difficultyRatios?: DifficultyRatios;
   setDifficultyRatios?: (r: DifficultyRatios) => void;
-  useMixMode?: boolean;
-  setUseMixMode?: (m: boolean) => void;
+  useMixMode: boolean;
+  setUseMixMode: (m: boolean) => void;
   problemType?: ProblemType;
   setProblemType?: (p: ProblemType) => void;
 }
@@ -89,16 +89,17 @@ const WorksheetSettings: React.FC<Props> = ({
         min: 16,
         max: 48,
         step: 16,
-        description: 'Min 16, Max 48 (16 per page for Text Mode)'
-      };
-    } else {
-      return {
-        min: 8,
-        max: 60,
-        step: 8,
-        description: 'Min 8, Max 60 (8 per page for Emoji Mode)'
+        marks: true,
+        label: 'Problems per page (16, 32, or 48)'
       };
     }
+    return {
+      min: 8,
+      max: 24,
+      step: 8,
+      marks: true,
+      label: 'Problems per page (8, 16, or 24)'
+    };
   };
 
   const countSettings = getCountSettings();
@@ -136,6 +137,7 @@ const WorksheetSettings: React.FC<Props> = ({
         hard: 25,
         custom: 25,
       });
+      setUseMixMode(enabled);
     }
   };
 
@@ -493,7 +495,7 @@ const WorksheetSettings: React.FC<Props> = ({
             />
           </Stack>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-            {countSettings.description}
+            {countSettings.label}
           </Typography>
           {isExceedingMax && (
             <Box

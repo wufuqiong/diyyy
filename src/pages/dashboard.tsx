@@ -11,7 +11,6 @@ import CardContent from '@mui/material/CardContent';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import ExtensionIcon from '@mui/icons-material/Extension';
-import FunctionsIcon from '@mui/icons-material/Functions';
 
 import { CONFIG } from 'src/config-global';
 
@@ -107,13 +106,6 @@ function DashboardContent() {
       icon: <CalculateIcon sx={{ fontSize: 30, color: 'info.main' }} />,
       to: '/math-genie',
       color: 'info'
-    },
-    {
-      title: 'Number Composition',
-      description: 'Learn number decomposition and composition with visual exercises. Master the relationship between numbers and their parts.',
-      icon: <FunctionsIcon sx={{ fontSize: 30, color: 'secondary.main' }} />,
-      to: '/number-composition',
-      color: 'secondary'
     }
   ];
 
@@ -129,7 +121,7 @@ function DashboardContent() {
       {/* Features Grid */}
       <Grid container spacing={3}>
         {features.map((feature, index) => (
-          <Grid key={index} size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }}>
+          <Grid key={index} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <FeatureCard {...feature} />
           </Grid>
         ))}

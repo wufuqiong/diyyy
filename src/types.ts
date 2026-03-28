@@ -36,7 +36,10 @@ export enum DifficultyLevel {
 export enum OperationType {
   ADDITION = 'addition',
   SUBTRACTION = 'subtraction',
-  MIXED = 'mixed'
+  MIXED = 'mixed',
+  MULTI_ADDITION = 'multi_addition', // 连加
+  MULTI_SUBTRACTION = 'multi_subtraction', // 连减
+  MIXED_MULTI = 'mixed_multi' // 混合加减
 }
 
 export enum DisplayMode {
@@ -59,6 +62,10 @@ export interface MathProblem {
   answer: number;
   problemType?: ProblemType; // 题目类型
   blankPosition?: 'first' | 'second'; // 填空位置
+  // 多重运算相关 - 可选字段
+  numbers?: number[]; // 多重运算的所有数字
+  operations?: ('+' | '-')[]; // 多重运算的所有操作符
+  multiAnswer?: number; // 多重运算的答案
 }
 
 export interface WorksheetConfig {
