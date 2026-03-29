@@ -108,7 +108,13 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'center' }}>
           {blankPosition === 'first' ? (
             <>
-              <Box sx={{ minWidth: 35, height: 30, borderBottom: '2px solid #333' }} />
+              {showAnswers ? (
+                <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
+                  {num1}
+                </Typography>
+              ) : (
+                <Box sx={{ minWidth: 35, height: 30, borderBottom: '2px solid #333' }} />
+              )}
               <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 20, textAlign: 'center', fontSize: '1.5rem' }}>
                 {operation}
               </Typography>
@@ -124,7 +130,13 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
               <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 20, textAlign: 'center', fontSize: '1.5rem' }}>
                 {operation}
               </Typography>
-              <Box sx={{ minWidth: 35, height: 30, borderBottom: '2px solid #333' }} />
+              {showAnswers ? (
+                <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
+                  {num2}
+                </Typography>
+              ) : (
+                <Box sx={{ minWidth: 35, height: 30, borderBottom: '2px solid #333' }} />
+              )}
             </>
           ) : (
             // Default: answer blank
@@ -143,13 +155,9 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
           <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', fontFamily: '"Comic Neue", cursive', fontSize: '1.5rem' }}>
             =
           </Typography>
-          {showAnswers ? (
-            <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
-              {answer}
-            </Typography>
-          ) : (
-            <Box sx={{ minWidth: 35, height: 30, borderBottom: '2px solid #333' }} />
-          )}
+          <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
+            {answer}
+          </Typography>
         </Box>
       ) : (
         // Standard problems
