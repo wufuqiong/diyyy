@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 import { Box, Backdrop, Paper, Alert, Typography } from '@mui/material';
 
-import { DifficultyLevel, OperationType, DisplayMode, MathProblem, WorksheetConfig, CustomDifficultyRange, DifficultyRatios, ProblemType } from 'src/types';
+import { DifficultyLevel, OperationType, DisplayMode, MathProblem, WorksheetConfig, CustomDifficultyRange, DifficultyRatios, ProblemType, MultiOperationMode, MultiOperationConfig } from 'src/types';
 
 import WorksheetPreview from '../components/WorksheetPreview';
 import WorksheetSettings from '../components/WorksheetSettings';
@@ -17,6 +17,11 @@ interface RawMathProblem {
   emoji1: string;
   emoji2?: string;
   blankPosition?: 'first' | 'second';
+  // 多重运算相关字段
+  isMultiOperation?: boolean;
+  numbers?: number[];
+  operators?: ('+' | '-')[];
+  emojis?: string[];
 }
 
 // Theme-emoji mapping
@@ -156,7 +161,123 @@ const generateProblemsForCustomRange = (
   return problems;
 };
 
-// Helper function to generate fill-in-the-blank problems
+// Helper function to generate multi-operation problems
+const generateMultiOperationProblems = (
+  count: number,
+  difficulty: DifficultyLevel,
+  mode: MultiOperationMode,
+  numberCount: number,
+  emojis: string[],
+  customDifficulty?: CustomDifficultyRange,
+  usedProblems?: Set<string>
+): RawMathProblem[] => {
+  const problems: RawMathProblem[] = [];
+  let maxNumber: number;
+  
+  if (difficulty === DifficultyLevel.CUSTOM && customDifficulty) {
+    maxNumber = customDifficulty.max;
+  } else {
+    maxNumber = difficulty;
+  }
+  
+  while (problems.length < count) {
+    let numbers: number[];
+    let operators: ('+' | '-')[];
+    let answer: number;
+    
+    if (mode === MultiOperationMode.CHAIN_ADDITION) {
+      // 连加模式: 生成numberCount个数字，所有运算符都是+
+      numbers = [];
+      operators = [];
+      
+      // 生成数字，确保总和在合理范围内
+      const targetSum = getRandomInt(numberCount, Math.min(maxNumber * numberCount / 2, maxNumber));
+      let remaining = targetSum;
+      
+      for (let i = 0; i < numberCount - 1; i++) {
+        const maxForThisNumber = Math.min(remaining - (numberCount - i - 1), maxNumber / 2);
+        const num = getRandomInt(1, maxForThisNumber);
+        numbers.push(num);
+        operators.push('+');
+        remaining -= num;
+      }
+      numbers.push(remaining); // 最后一个数字确保总和正确
+      answer = targetSum;
+      
+    } else if (mode === MultiOperationMode.CHAIN_SUBTRACTION) {
+      // 连减模式: 生成numberCount个数字，所有运算符都是-
+      numbers = [];
+      operators = [];
+      
+      // 第一个数字要足够大
+      const firstNum = getRandomInt(numberCount * 2, maxNumber);
+      numbers.push(firstNum);
+      
+      let remaining = firstNum;
+      for (let i = 1; i < numberCount; i++) {
+        const maxForThisNumber = Math.min(remaining - (numberCount - i), maxNumber / 2);
+        const num = getRandomInt(1, maxForThisNumber);
+        numbers.push(num);
+        operators.push('-');
+        remaining -= num;
+      }
+      answer = remaining;
+      
+    } else {
+      // 混合运算模式
+      numbers = [];
+      operators = [];
+      
+      // 生成数字
+      for (let i = 0; i < numberCount; i++) {
+        numbers.push(getRandomInt(1, Math.floor(maxNumber / 2)));
+      }
+      
+      // 生成运算符
+      for (let i = 0; i < numberCount - 1; i++) {
+        operators.push(Math.random() > 0.5 ? '+' : '-');
+      }
+      
+      // 计算答案
+      answer = numbers[0];
+      for (let i = 1; i < numbers.length; i++) {
+        if (operators[i - 1] === '+') {
+          answer += numbers[i];
+        } else {
+          answer -= numbers[i];
+        }
+      }
+      
+      // 确保答案为正数且在合理范围内
+      if (answer <= 0 || answer > maxNumber) {
+        continue; // 跳过这个问题，重新生成
+      }
+    }
+    
+    // 生成emoji
+    const problemEmojis = numbers.map(() => getRandomEmoji(emojis));
+    
+    // 创建唯一标识
+    const problemKey = numbers.join(',') + '|' + operators.join(',');
+    
+    if (!usedProblems?.has(problemKey)) {
+      usedProblems?.add(problemKey);
+      problems.push({
+        op: operators[0], // 使用第一个运算符作为主要运算符
+        a: numbers[0],
+        b: numbers[1],
+        emoji1: problemEmojis[0],
+        emoji2: problemEmojis[1],
+        isMultiOperation: true,
+        numbers,
+        operators,
+        emojis: problemEmojis
+      });
+    }
+  }
+  
+  return problems;
+};
 const generateFillBlankProblems = (
   count: number,
   difficulty: DifficultyLevel,
@@ -231,9 +352,35 @@ const generateMathProblems = async (
   count: number,
   customDifficulty?: CustomDifficultyRange,
   difficultyRatios?: DifficultyRatios,
-  problemType?: ProblemType
+  problemType?: ProblemType,
+  multiOperationConfig?: MultiOperationConfig
 ): Promise<{ problems: RawMathProblem[], titleSuggestion: string }> => {
   try {
+    // Check if this is multi-operation mode
+    if (operation === OperationType.MULTI_OPERATIONS && multiOperationConfig?.enabled) {
+      const problems: RawMathProblem[] = [];
+      
+      // Get emojis for theme
+      const themeKey = theme.toLowerCase();
+      const emojis = THEME_EMOJIS[themeKey] || ['⭐', '🌟', '✨', '💫', '🪐', '🌠', '🔭', '🛸'];
+      
+      // Get title
+      const titleInfo = THEME_TITLES[themeKey] || THEME_TITLES.default;
+      const titleSuggestion = isChineseTheme(theme) ? titleInfo.zh : titleInfo.en;
+      
+      // Generate multi-operation problems
+      const multiProblems = generateMultiOperationProblems(
+        count,
+        difficulty,
+        multiOperationConfig.mode,
+        multiOperationConfig.numberCount,
+        emojis,
+        customDifficulty
+      );
+      
+      return { problems: multiProblems, titleSuggestion };
+    }
+    
     // Determine the max number based on difficulty or custom range
     let maxNumber: number;
     if (difficulty === DifficultyLevel.CUSTOM && customDifficulty) {
@@ -523,7 +670,12 @@ export const MathGenieView: React.FC = () => {
       hard: 20,
       custom: 10,
     },
-    problemType: ProblemType.STANDARD, 
+    problemType: ProblemType.STANDARD,
+    multiOperationConfig: {
+      enabled: false,
+      mode: MultiOperationMode.CHAIN_ADDITION,
+      numberCount: 3
+    }
   });
 
   const [customDifficulty, setCustomDifficulty] = useState<CustomDifficultyRange>({
@@ -539,6 +691,12 @@ export const MathGenieView: React.FC = () => {
   });
 
   const [useMixMode, setUseMixMode] = useState(false);
+
+  const [multiOperationConfig, setMultiOperationConfig] = useState<MultiOperationConfig>({
+    enabled: false,
+    mode: MultiOperationMode.CHAIN_ADDITION,
+    numberCount: 3
+  });
 
   const [problems, setProblems] = useState<MathProblem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -556,7 +714,8 @@ export const MathGenieView: React.FC = () => {
         config.count,
         customDifficulty,
         useMixMode ? difficultyRatios : undefined,
-        config.problemType
+        config.problemType,
+        config.operation === OperationType.MULTI_OPERATIONS ? multiOperationConfig : undefined
       );
       
       const newProblems: MathProblem[] = response.problems.map(p => {
@@ -575,7 +734,12 @@ export const MathGenieView: React.FC = () => {
           emoji2: (p as any).emoji2 || p.emoji1, // Use emoji1 as fallback for emoji2
           answer: p.op === '+' ? p.a + p.b : p.a - p.b,
           problemType: config.problemType,
-          blankPosition: blankPosition
+          blankPosition: blankPosition,
+          // 多重运算相关字段
+          isMultiOperation: (p as any).isMultiOperation || false,
+          numbers: (p as any).numbers,
+          operators: (p as any).operators,
+          emojis: (p as any).emojis
         };
       });
 
@@ -589,7 +753,7 @@ export const MathGenieView: React.FC = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [config.theme, config.difficulty, config.operation, config.count, config.problemType, customDifficulty, difficultyRatios, useMixMode]);
+  }, [config.theme, config.difficulty, config.operation, config.count, config.problemType, customDifficulty, difficultyRatios, useMixMode, multiOperationConfig]);
 
   // Generate initial preview on component mount
   useEffect(() => {
@@ -693,6 +857,8 @@ export const MathGenieView: React.FC = () => {
           setUseMixMode={setUseMixMode}
           problemType={config.problemType}
           setProblemType={(p) => setConfig({ ...config, problemType: p })}
+          multiOperationConfig={multiOperationConfig}
+          setMultiOperationConfig={setMultiOperationConfig}
         />
       </Paper>
 

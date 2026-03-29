@@ -27,7 +27,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { DifficultyLevel, OperationType, DisplayMode, CustomDifficultyRange, DifficultyRatios, ProblemType } from 'src/types';
+import { DifficultyLevel, OperationType, DisplayMode, CustomDifficultyRange, DifficultyRatios, ProblemType, MultiOperationMode, MultiOperationConfig } from 'src/types';
 
 interface Props {
   theme: string;
@@ -53,6 +53,8 @@ interface Props {
   setUseMixMode: (m: boolean) => void;
   problemType?: ProblemType;
   setProblemType?: (p: ProblemType) => void;
+  multiOperationConfig?: MultiOperationConfig;
+  setMultiOperationConfig?: (c: MultiOperationConfig) => void;
 }
 
 const presets = ["Animals 🐶", "Vehicles 🚗", "Fruits 🍎", "Sports ⚽", "Food 🍔", "Nature 🌸", "Weather 🌧️", "Emotions 😀"];
@@ -81,6 +83,8 @@ const WorksheetSettings: React.FC<Props> = ({
   setUseMixMode,
   problemType,
   setProblemType,
+  multiOperationConfig,
+  setMultiOperationConfig,
 }) => {
   // Get count settings based on display mode
   const getCountSettings = () => {
@@ -118,6 +122,19 @@ const WorksheetSettings: React.FC<Props> = ({
       const step = countSettings.step;
       const roundedValue = Math.round(val / step) * step;
       setCount(Math.max(countSettings.min, Math.min(countSettings.max, roundedValue)));
+    }
+  };
+
+  const handleProblemTypeChange = (newProblemType: ProblemType) => {
+    if (setProblemType) {
+      setProblemType(newProblemType);
+    }
+    // When selecting fill blank type, disable multi-operation mode
+    if (newProblemType === ProblemType.FILL_BLANK && multiOperationConfig?.enabled && setMultiOperationConfig) {
+      setMultiOperationConfig({
+        ...multiOperationConfig,
+        enabled: false
+      });
     }
   };
 
@@ -462,9 +479,103 @@ const WorksheetSettings: React.FC<Props> = ({
               <MenuItem value={OperationType.ADDITION}>Addition (+)</MenuItem>
               <MenuItem value={OperationType.SUBTRACTION}>Subtraction (-)</MenuItem>
               <MenuItem value={OperationType.MIXED}>Mixed (+ / -)</MenuItem>
+              <MenuItem value={OperationType.MULTI_OPERATIONS}>Multi-Operations</MenuItem>
             </Select>
           </FormControl>
         </Box>
+
+        {/* Multi-Operation Configuration Section */}
+        {operation === OperationType.MULTI_OPERATIONS && (
+          <Box>
+            <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
+              Multi-Operation Settings
+            </Typography>
+            
+            {/* Enable Multi-Operation */}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={multiOperationConfig?.enabled || false}
+                  onChange={(e) => {
+                    if (setMultiOperationConfig) {
+                      setMultiOperationConfig({
+                        enabled: e.target.checked,
+                        mode: MultiOperationMode.CHAIN_ADDITION,
+                        numberCount: 3
+                      });
+                    }
+                  }}
+                  color="primary"
+                />
+              }
+              label={
+                <Typography variant="body2">
+                  Enable Multi-Operations
+                </Typography>
+              }
+              sx={{ ml: 0, mb: 2 }}
+            />
+
+            {multiOperationConfig?.enabled && (
+              <Stack spacing={3}>
+                {/* Multi-Operation Mode */}
+                <Box>
+                  <Typography variant="body2" fontWeight={500} gutterBottom>
+                    Operation Mode
+                  </Typography>
+                  <FormControl fullWidth size="small">
+                    <Select
+                      value={multiOperationConfig?.mode || MultiOperationMode.CHAIN_ADDITION}
+                      onChange={(e) => {
+                        if (setMultiOperationConfig && multiOperationConfig) {
+                          setMultiOperationConfig({
+                            ...multiOperationConfig,
+                            mode: e.target.value as MultiOperationMode
+                          });
+                        }
+                      }}
+                    >
+                      <MenuItem value={MultiOperationMode.CHAIN_ADDITION}>Chain Addition (2 + 3 + 4)</MenuItem>
+                      <MenuItem value={MultiOperationMode.CHAIN_SUBTRACTION}>Chain Subtraction (10 - 3 - 2)</MenuItem>
+                      <MenuItem value={MultiOperationMode.MIXED_OPERATIONS}>Mixed Operations (5 + 3 - 2)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                {/* Number Count */}
+                <Box>
+                  <Typography variant="body2" fontWeight={500} gutterBottom>
+                    Number of Operands: {multiOperationConfig?.numberCount || 3}
+                  </Typography>
+                  <Slider
+                    value={multiOperationConfig?.numberCount || 3}
+                    onChange={(_, value) => {
+                      if (setMultiOperationConfig && multiOperationConfig) {
+                        setMultiOperationConfig({
+                          ...multiOperationConfig,
+                          numberCount: value as number
+                        });
+                      }
+                    }}
+                    min={3}
+                    max={6}
+                    step={1}
+                    valueLabelDisplay="auto"
+                    marks={[
+                      { value: 3, label: '3' },
+                      { value: 4, label: '4' },
+                      { value: 5, label: '5' },
+                      { value: 6, label: '6' }
+                    ]}
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    More numbers = higher difficulty
+                  </Typography>
+                </Box>
+              </Stack>
+            )}
+          </Box>
+        )}
 
         {/* Count Section */}
         <Box>
@@ -759,7 +870,7 @@ const WorksheetSettings: React.FC<Props> = ({
             </Typography>
             <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
               <Button
-                onClick={() => setProblemType?.(ProblemType.STANDARD)}
+                onClick={() => handleProblemTypeChange(ProblemType.STANDARD)}
                 sx={(muiTheme) => ({
                   padding: muiTheme.spacing(1),
                   fontSize: '0.875rem',
@@ -780,7 +891,7 @@ const WorksheetSettings: React.FC<Props> = ({
                 Standard (7 + 3 = 10)
               </Button>
               <Button
-                onClick={() => setProblemType?.(ProblemType.FILL_BLANK)}
+                onClick={() => handleProblemTypeChange(ProblemType.FILL_BLANK)}
                 sx={(muiTheme) => ({
                   padding: muiTheme.spacing(1),
                   fontSize: '0.875rem',
@@ -805,6 +916,11 @@ const WorksheetSettings: React.FC<Props> = ({
               {problemType === ProblemType.STANDARD 
                 ? 'Traditional math problems with complete equations' 
                 : 'Fill-in-the-blank problems for enhanced learning'}
+              {problemType === ProblemType.FILL_BLANK && operation === OperationType.MULTI_OPERATIONS && (
+                <Box component="span" sx={{ color: 'info.main', ml: 1 }}>
+                  💡 Multi-operation mode is not compatible with fill-blank problems
+                </Box>
+              )}
             </Typography>
           </Box>
         )}

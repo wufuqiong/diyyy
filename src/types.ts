@@ -36,7 +36,8 @@ export enum DifficultyLevel {
 export enum OperationType {
   ADDITION = 'addition',
   SUBTRACTION = 'subtraction',
-  MIXED = 'mixed'
+  MIXED = 'mixed',
+  MULTI_OPERATIONS = 'multi_operations'
 }
 
 export enum DisplayMode {
@@ -49,6 +50,18 @@ export enum ProblemType {
   FILL_BLANK = 'fill_blank' // 7 + _ = 10, _ + 3 = 10, 8 - _ = 4, _ - 10 = 2
 }
 
+export enum MultiOperationMode {
+  CHAIN_ADDITION = 'chain_addition', // 连加: 2 + 3 + 4 = 9
+  CHAIN_SUBTRACTION = 'chain_subtraction', // 连减: 10 - 3 - 2 = 5
+  MIXED_OPERATIONS = 'mixed_operations' // 混合: 5 + 3 - 2 = 6
+}
+
+export interface MultiOperationConfig {
+  enabled: boolean;
+  mode: MultiOperationMode;
+  numberCount: number; // 参与运算的数字个数，默认3
+}
+
 export interface MathProblem {
   id: string;
   operation: '+' | '-';
@@ -59,6 +72,11 @@ export interface MathProblem {
   answer: number;
   problemType?: ProblemType; // 题目类型
   blankPosition?: 'first' | 'second'; // 填空位置
+  // 多重运算相关字段
+  isMultiOperation?: boolean; // 是否为多重运算
+  numbers?: number[]; // 多重运算的所有数字
+  operators?: ('+' | '-')[]; // 多重运算的所有运算符
+  emojis?: string[]; // 多重运算的所有emoji
 }
 
 export interface WorksheetConfig {
@@ -72,6 +90,7 @@ export interface WorksheetConfig {
   customDifficulty?: CustomDifficultyRange;
   difficultyRatios?: DifficultyRatios;
   problemType?: ProblemType; // 题目类型
+  multiOperationConfig?: MultiOperationConfig; // 多重运算配置
 }
 
 export interface CustomDifficultyRange {
