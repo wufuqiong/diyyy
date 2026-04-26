@@ -47,7 +47,13 @@ export enum DisplayMode {
 
 export enum ProblemType {
   STANDARD = 'standard', // 7 + 3 = 10
-  FILL_BLANK = 'fill_blank' // 7 + _ = 10, _ + 3 = 10, 8 - _ = 4, _ - 10 = 2
+  FILL_BLANK = 'fill_blank', // 7 + _ = 10, _ + 3 = 10, 8 - _ = 4, _ - 10 = 2
+}
+
+export enum SpecialPracticeType {
+  NONE = 'none',
+  ZERO_DRILL = 'zero_drill',
+  FACT_FAMILY = 'fact_family'
 }
 
 export enum MultiOperationMode {
@@ -71,7 +77,9 @@ export interface MathProblem {
   emoji2: string;
   answer: number;
   problemType?: ProblemType; // 题目类型
-  blankPosition?: 'first' | 'second'; // 填空位置
+  blankPosition?: 'first' | 'second' | 'result'; // 填空位置
+  equationText?: string; // 专项题的题干文本
+  equationAnswerText?: string; // 专项题展示答案时的文本
   // 多重运算相关字段
   isMultiOperation?: boolean; // 是否为多重运算
   numbers?: number[]; // 多重运算的所有数字
@@ -83,13 +91,15 @@ export interface WorksheetConfig {
   theme: string;
   difficulty: DifficultyLevel;
   operation: OperationType;
-  count: number;
+  count: number; // TEXT 模式表示页数；EMOJI 模式表示题目总数
+  textColumns?: 2 | 3 | 4;
   title: string;
   showAnswers?: boolean;
   displayMode: DisplayMode;
   customDifficulty?: CustomDifficultyRange;
   difficultyRatios?: DifficultyRatios;
   problemType?: ProblemType; // 题目类型
+  specialPracticeType?: SpecialPracticeType; // 专项练习类型
   multiOperationConfig?: MultiOperationConfig; // 多重运算配置
 }
 

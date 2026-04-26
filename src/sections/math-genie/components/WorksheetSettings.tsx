@@ -2,32 +2,38 @@
 import React, { useMemo, useState } from 'react';
 
 import {
-  Print as PrintIcon,
+  Box,
+  Button,
+  Chip,
+  Collapse,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  SelectChangeEvent,
+  Slider,
+  Stack,
+  Switch,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import {
   AutoAwesome as SparklesIcon,
   AutoFixHigh as WandIcon,
+  ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon,
+  Print as PrintIcon,
+  RestartAlt as ResetIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
-import {
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Slider,
-  SelectChangeEvent,
-  InputAdornment,
-  Chip,
-  Stack,
-  Switch,
-  FormControlLabel,
-} from '@mui/material';
 
-import { DifficultyLevel, OperationType, DisplayMode, CustomDifficultyRange, DifficultyRatios, ProblemType, MultiOperationMode, MultiOperationConfig } from 'src/types';
+import { DifficultyLevel, OperationType, DisplayMode, CustomDifficultyRange, DifficultyRatios, ProblemType, SpecialPracticeType, MultiOperationMode, MultiOperationConfig } from 'src/types';
 
 interface Props {
   theme: string;
@@ -38,6 +44,10 @@ interface Props {
   setOperation: (o: OperationType) => void;
   count: number;
   setCount: (c: number) => void;
+  textColumns?: 2 | 3 | 4;
+  setTextColumns?: (c: 2 | 3 | 4) => void;
+  excludeZeroProblems: boolean;
+  setExcludeZeroProblems: (v: boolean) => void;
   showAnswers: boolean; // Add this
   setShowAnswers: (s: boolean) => void; // Add this
   displayMode: DisplayMode;
@@ -53,11 +63,22 @@ interface Props {
   setUseMixMode: (m: boolean) => void;
   problemType?: ProblemType;
   setProblemType?: (p: ProblemType) => void;
+  specialPracticeType: SpecialPracticeType;
+  setSpecialPracticeType: (s: SpecialPracticeType) => void;
   multiOperationConfig?: MultiOperationConfig;
   setMultiOperationConfig?: (c: MultiOperationConfig) => void;
+  autoPreview: boolean;
+  setAutoPreview: (v: boolean) => void;
+  onResetConfig: () => void;
 }
 
 const presets = ["Animals 🐶", "Vehicles 🚗", "Fruits 🍎", "Sports ⚽", "Food 🍔", "Nature 🌸", "Weather 🌧️", "Emotions 😀"];
+
+const getTextRowsPerPage = (columns: 2 | 3 | 4): number => {
+  if (columns === 4) return 6;
+  if (columns === 3) return 7;
+  return 8;
+};
 
 const WorksheetSettings: React.FC<Props> = ({
   theme,
@@ -68,6 +89,10 @@ const WorksheetSettings: React.FC<Props> = ({
   setOperation,
   count,
   setCount,
+  textColumns = 2,
+  setTextColumns,
+  excludeZeroProblems,
+  setExcludeZeroProblems,
   showAnswers,
   setShowAnswers,
   displayMode,
@@ -83,18 +108,29 @@ const WorksheetSettings: React.FC<Props> = ({
   setUseMixMode,
   problemType,
   setProblemType,
+  specialPracticeType,
+  setSpecialPracticeType,
   multiOperationConfig,
   setMultiOperationConfig,
+  autoPreview,
+  setAutoPreview,
+  onResetConfig,
 }) => {
+  const activeProblemType = problemType || ProblemType.STANDARD;
+  const isSpecialPracticeSelected = specialPracticeType !== SpecialPracticeType.NONE;
+  const canUseEmojiMode = !(activeProblemType === ProblemType.FILL_BLANK && !isSpecialPracticeSelected);
+  const textRowsPerPage = getTextRowsPerPage(textColumns);
+  const textProblemsPerPage = textColumns * textRowsPerPage;
+
   // Get count settings based on display mode
   const getCountSettings = () => {
     if (displayMode === 'text') {
       return {
-        min: 16,
-        max: 48,
-        step: 16,
+        min: 1,
+        max: 10,
+        step: 1,
         marks: true,
-        label: 'Problems per page (16, 32, or 48)'
+        label: `Pages (each page up to ${textProblemsPerPage} problems at ${textColumns} columns)`
       };
     }
     return {
@@ -125,21 +161,104 @@ const WorksheetSettings: React.FC<Props> = ({
     }
   };
 
+  const handleDisplayModeChange = (newDisplayMode: DisplayMode) => {
+    if (newDisplayMode === DisplayMode.EMOJI && !canUseEmojiMode) {
+      return;
+    }
+
+    setDisplayMode(newDisplayMode);
+    
+    // If switching to emoji mode, disable multi-operations
+    if (newDisplayMode === DisplayMode.EMOJI && operation === OperationType.MULTI_OPERATIONS) {
+      setOperation(OperationType.ADDITION);
+      if (multiOperationConfig?.enabled && setMultiOperationConfig) {
+        setMultiOperationConfig({
+          ...multiOperationConfig,
+          enabled: false
+        });
+      }
+    }
+  };
+
   const handleProblemTypeChange = (newProblemType: ProblemType) => {
     if (setProblemType) {
       setProblemType(newProblemType);
     }
-    // When selecting fill blank type, disable multi-operation mode
-    if (newProblemType === ProblemType.FILL_BLANK && multiOperationConfig?.enabled && setMultiOperationConfig) {
+
+    if (
+      newProblemType === ProblemType.FILL_BLANK &&
+      multiOperationConfig?.enabled &&
+      setMultiOperationConfig
+    ) {
       setMultiOperationConfig({
         ...multiOperationConfig,
         enabled: false
       });
     }
+
+    if (newProblemType === ProblemType.FILL_BLANK && operation === OperationType.MULTI_OPERATIONS) {
+      setOperation(OperationType.ADDITION);
+    }
+  };
+
+  const handleSpecialPracticeTypeChange = (newSpecialPracticeType: SpecialPracticeType) => {
+    if (excludeZeroProblems && newSpecialPracticeType === SpecialPracticeType.ZERO_DRILL) {
+      return;
+    }
+
+    setSpecialPracticeType(newSpecialPracticeType);
+
+    if (
+      newSpecialPracticeType !== SpecialPracticeType.NONE &&
+      multiOperationConfig?.enabled &&
+      setMultiOperationConfig
+    ) {
+      setMultiOperationConfig({
+        ...multiOperationConfig,
+        enabled: false,
+      });
+    }
+
+    if (
+      newSpecialPracticeType !== SpecialPracticeType.NONE &&
+      operation === OperationType.MULTI_OPERATIONS
+    ) {
+      setOperation(OperationType.ADDITION);
+    }
   };
 
   const handleOperationChange = (event: SelectChangeEvent) => {
-    setOperation(event.target.value as OperationType);
+    const newOperation = event.target.value as OperationType;
+    
+    // Check if trying to select multi-operations in incompatible mode
+    if (newOperation === OperationType.MULTI_OPERATIONS) {
+      if (displayMode === DisplayMode.EMOJI) {
+        // Don't allow multi-operations in emoji mode
+        return;
+      }
+      if (
+        activeProblemType === ProblemType.FILL_BLANK ||
+        isSpecialPracticeSelected
+      ) {
+        // Don't allow multi-operations in fill blank/special practice modes
+        return;
+      }
+    }
+    
+    // If switching to multi-operations, disable incompatible modes
+    if (newOperation === OperationType.MULTI_OPERATIONS) {
+      if (displayMode === DisplayMode.EMOJI) {
+        setDisplayMode(DisplayMode.TEXT);
+      }
+      if (activeProblemType === ProblemType.FILL_BLANK && setProblemType) {
+        setProblemType(ProblemType.STANDARD);
+      }
+      if (isSpecialPracticeSelected) {
+        setSpecialPracticeType(SpecialPracticeType.NONE);
+      }
+    }
+    
+    setOperation(newOperation);
   };
 
   const handleMixModeToggle = (enabled: boolean) => {
@@ -191,18 +310,63 @@ const WorksheetSettings: React.FC<Props> = ({
 
   // Calculate maximum possible unique problems for current settings
   const maxPossibleProblems = useMemo(() => {
-    if (operation === OperationType.ADDITION) {
+    if (operation === OperationType.MULTI_OPERATIONS) {
+      // For multi-operations, estimate based on mode and number count
+      if (multiOperationConfig?.enabled) {
+        const numberCount = multiOperationConfig.numberCount;
+        const mode = multiOperationConfig.mode;
+        
+        // Get the actual min/max values for custom difficulty
+        let minNum = 1;
+        let maxNum = difficulty;
+        
+        if (difficulty === DifficultyLevel.CUSTOM && customDifficulty) {
+          minNum = customDifficulty.min;
+          maxNum = customDifficulty.max;
+        }
+        
+        if (mode === MultiOperationMode.CHAIN_ADDITION) {
+          // Estimate for chain addition: combinations of numbers that sum to reasonable values
+          const maxSum = Math.min(maxNum * numberCount / 2, maxNum);
+          const minSum = numberCount * minNum;
+          return Math.max(100, (maxSum - minSum + 1) * 10); // Rough estimate based on possible sums
+        } else if (mode === MultiOperationMode.CHAIN_SUBTRACTION) {
+          // Estimate for chain subtraction
+          return Math.max(50, (maxNum - minNum - numberCount * minNum + 1) * 20); // Rough estimate
+        } else {
+          // Mixed operations: most combinations
+          return Math.max(200, (maxNum - minNum + 1) * 50); // Rough estimate based on number range
+        }
+      }
+      return 100; // Default for multi-operations
+    } else if (operation === OperationType.ADDITION) {
       let uniqueCount = 0;
-      for (let a = 1; a < difficulty; a++) {
-        for (let b = 1; b <= difficulty - a; b++) {
+      let minNum = 1;
+      let maxNum = difficulty;
+      
+      if (difficulty === DifficultyLevel.CUSTOM && customDifficulty) {
+        minNum = customDifficulty.min;
+        maxNum = customDifficulty.max;
+      }
+      
+      for (let a = minNum; a < maxNum; a++) {
+        for (let b = minNum; b <= maxNum - a; b++) {
           uniqueCount++;
         }
       }
       return uniqueCount;
     } else if (operation === OperationType.SUBTRACTION) {
       let uniqueCount = 0;
-      for (let a = 2; a <= difficulty; a++) {
-        for (let b = 1; b < a; b++) {
+      let minNum = 1;
+      let maxNum = difficulty;
+      
+      if (difficulty === DifficultyLevel.CUSTOM && customDifficulty) {
+        minNum = customDifficulty.min;
+        maxNum = customDifficulty.max;
+      }
+      
+      for (let a = Math.max(minNum + 1, 2); a <= maxNum; a++) {
+        for (let b = minNum; b < a; b++) {
           uniqueCount++;
         }
       }
@@ -210,22 +374,36 @@ const WorksheetSettings: React.FC<Props> = ({
     } else {
       // Mixed
       let additionCount = 0;
-      for (let a = 1; a < difficulty; a++) {
-        for (let b = 1; b <= difficulty - a; b++) {
+      let subtractionCount = 0;
+      let minNum = 1;
+      let maxNum = difficulty;
+      
+      if (difficulty === DifficultyLevel.CUSTOM && customDifficulty) {
+        minNum = customDifficulty.min;
+        maxNum = customDifficulty.max;
+      }
+      
+      for (let a = minNum; a < maxNum; a++) {
+        for (let b = minNum; b <= maxNum - a; b++) {
           additionCount++;
         }
       }
-      let subtractionCount = 0;
-      for (let a = 2; a <= difficulty; a++) {
-        for (let b = 1; b < a; b++) {
+      for (let a = Math.max(minNum + 1, 2); a <= maxNum; a++) {
+        for (let b = minNum; b < a; b++) {
           subtractionCount++;
         }
       }
       return additionCount + subtractionCount;
     }
-  }, [difficulty, operation]);
+  }, [difficulty, operation, multiOperationConfig, customDifficulty]);
 
-  const isExceedingMax = count > maxPossibleProblems;
+  const requestedProblemCount = displayMode === DisplayMode.TEXT
+    ? count * textProblemsPerPage
+    : count;
+
+  const isExceedingMax = requestedProblemCount > maxPossibleProblems;
+
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   return (
     <Paper
@@ -261,7 +439,93 @@ const WorksheetSettings: React.FC<Props> = ({
         </Typography>
       </Box>
 
+      <Divider />
+
+      {/* Auto Preview Toggle */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          p: 1.5,
+          bgcolor: autoPreview ? 'primary.50' : 'grey.50',
+          borderRadius: 1,
+          border: '1px solid',
+          borderColor: autoPreview ? 'primary.200' : 'grey.200',
+        }}
+      >
+        <Box>
+          <Typography variant="body2" fontWeight={600}>
+            🔄 实时预览
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {autoPreview ? '配置变化自动更新' : '手动点击生成更新'}
+          </Typography>
+        </Box>
+        <Switch
+          checked={autoPreview}
+          onChange={(e) => setAutoPreview(e.target.checked)}
+          color="primary"
+          size="small"
+        />
+      </Box>
+
+      <Divider />
+
       <Stack spacing={3}>
+        <Box>
+          <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
+            Display Mode
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+            <Button
+              onClick={() => handleDisplayModeChange(DisplayMode.EMOJI)}
+              sx={(muiTheme) => ({
+                padding: muiTheme.spacing(1),
+                fontSize: '0.875rem',
+                textTransform: 'none',
+                borderRadius: muiTheme.shape.borderRadius,
+                border: '1px solid',
+                borderColor: displayMode === DisplayMode.EMOJI ? 'primary.main' : 'grey.200',
+                backgroundColor: displayMode === DisplayMode.EMOJI ? 'primary.light' : 'white',
+                color: displayMode === DisplayMode.EMOJI ? 'primary.dark' : 'grey.600',
+                fontWeight: displayMode === DisplayMode.EMOJI ? 600 : 400,
+                '&:hover': {
+                  backgroundColor: displayMode === DisplayMode.EMOJI ? 'primary.light' : 'grey.50',
+                  borderColor: displayMode === DisplayMode.EMOJI ? 'primary.main' : 'grey.300',
+                },
+                width: '100%',
+              })}
+            >
+              🎨 Emoji Mode
+            </Button>
+            <Button
+              onClick={() => handleDisplayModeChange(DisplayMode.TEXT)}
+              sx={(muiTheme) => ({
+                padding: muiTheme.spacing(1),
+                fontSize: '0.875rem',
+                textTransform: 'none',
+                borderRadius: muiTheme.shape.borderRadius,
+                border: '1px solid',
+                borderColor: displayMode === DisplayMode.TEXT ? 'primary.main' : 'grey.200',
+                backgroundColor: displayMode === DisplayMode.TEXT ? 'primary.light' : 'white',
+                color: displayMode === DisplayMode.TEXT ? 'primary.dark' : 'grey.600',
+                fontWeight: displayMode === DisplayMode.TEXT ? 600 : 400,
+                '&:hover': {
+                  backgroundColor: displayMode === DisplayMode.TEXT ? 'primary.light' : 'grey.50',
+                  borderColor: displayMode === DisplayMode.TEXT ? 'primary.main' : 'grey.300',
+                },
+                width: '100%',
+              })}
+            >
+              📝 Text Mode (Printable)
+            </Button>
+          </Stack>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            {displayMode === DisplayMode.EMOJI ? 'Visual problems with emojis' : 'Clean text problems for printing'}
+          </Typography>
+        </Box>
+
         {/* Theme Section - Only show in Emoji Mode */}
         {displayMode === DisplayMode.EMOJI && (
           <Box>
@@ -303,6 +567,28 @@ const WorksheetSettings: React.FC<Props> = ({
             </Stack>
           </Box>
         )}
+
+        {/* Advanced Settings collapsible section header */}
+        <Box
+          onClick={() => setAdvancedOpen(!advancedOpen)}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            py: 0.5,
+            borderBottom: '1px solid',
+            borderColor: 'grey.200',
+            userSelect: 'none',
+          }}
+        >
+          <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+            🎯 Advanced Settings
+          </Typography>
+          {advancedOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+        </Box>
+        <Collapse in={advancedOpen}>
+          <Stack spacing={3} sx={{ pt: 1 }}>
 
         {/* Difficulty Section */}
         <Box>
@@ -479,9 +765,45 @@ const WorksheetSettings: React.FC<Props> = ({
               <MenuItem value={OperationType.ADDITION}>Addition (+)</MenuItem>
               <MenuItem value={OperationType.SUBTRACTION}>Subtraction (-)</MenuItem>
               <MenuItem value={OperationType.MIXED}>Mixed (+ / -)</MenuItem>
-              <MenuItem value={OperationType.MULTI_OPERATIONS}>Multi-Operations</MenuItem>
+              <MenuItem 
+                value={OperationType.MULTI_OPERATIONS}
+                disabled={displayMode === DisplayMode.EMOJI || activeProblemType === ProblemType.FILL_BLANK || isSpecialPracticeSelected}
+              >
+                Multi-Operations {displayMode === DisplayMode.EMOJI || activeProblemType === ProblemType.FILL_BLANK || isSpecialPracticeSelected ? '(Unavailable)' : ''}
+              </MenuItem>
             </Select>
           </FormControl>
+          {(displayMode === DisplayMode.EMOJI || activeProblemType === ProblemType.FILL_BLANK || isSpecialPracticeSelected) && (
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+              💡 Multi-Operations only available in Text Mode with Standard problems
+            </Typography>
+          )}
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
+            Zero Rules
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={excludeZeroProblems}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setExcludeZeroProblems(checked);
+                  if (checked && specialPracticeType === SpecialPracticeType.ZERO_DRILL) {
+                    setSpecialPracticeType(SpecialPracticeType.NONE);
+                  }
+                }}
+                color="primary"
+              />
+            }
+            label={<Typography variant="body2">Exclude all problems involving 0</Typography>}
+            sx={{ ml: 0 }}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            Enabled: no operand/result/intermediate value can be 0 (e.g. x+0, x-x, x-x+y, x-a-b=0).
+          </Typography>
         </Box>
 
         {/* Multi-Operation Configuration Section */}
@@ -580,7 +902,7 @@ const WorksheetSettings: React.FC<Props> = ({
         {/* Count Section */}
         <Box>
           <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
-            Number of Problems
+            {displayMode === DisplayMode.TEXT ? 'Number of Pages' : 'Number of Problems'}
           </Typography>
           <Stack spacing={2} direction="row" alignItems="center">
             <Slider
@@ -608,6 +930,11 @@ const WorksheetSettings: React.FC<Props> = ({
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
             {countSettings.label}
           </Typography>
+          {displayMode === DisplayMode.TEXT && (
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+              Total generated: {requestedProblemCount} problems ({count} page{count > 1 ? 's' : ''} × {textProblemsPerPage} per page)
+            </Typography>
+          )}
           {isExceedingMax && (
             <Box
               sx={{
@@ -623,11 +950,48 @@ const WorksheetSettings: React.FC<Props> = ({
                 ⚠️ Maximum unique problems for this setting: {maxPossibleProblems}
               </Typography>
               <Typography variant="caption" color="warning.dark" sx={{ display: 'block' }}>
-                Some problems will be repeated to reach {count}.
+                Some problems will be repeated to reach {requestedProblemCount}.
               </Typography>
             </Box>
           )}
         </Box>
+
+        {displayMode === DisplayMode.TEXT && (
+          <Box>
+            <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
+              Columns Per Page
+            </Typography>
+            <Stack direction="row" spacing={1}>
+              {[2, 3, 4].map((col) => (
+                <Button
+                  key={col}
+                  onClick={() => setTextColumns?.(col as 2 | 3 | 4)}
+                  sx={(muiTheme) => ({
+                    padding: muiTheme.spacing(1),
+                    fontSize: '0.875rem',
+                    textTransform: 'none',
+                    borderRadius: muiTheme.shape.borderRadius,
+                    border: '1px solid',
+                    borderColor: textColumns === col ? 'primary.main' : 'grey.200',
+                    backgroundColor: textColumns === col ? 'primary.light' : 'white',
+                    color: textColumns === col ? 'primary.dark' : 'grey.600',
+                    fontWeight: textColumns === col ? 600 : 400,
+                    '&:hover': {
+                      backgroundColor: textColumns === col ? 'primary.light' : 'grey.50',
+                      borderColor: textColumns === col ? 'primary.main' : 'grey.300',
+                    },
+                    width: '100%',
+                  })}
+                >
+                  {col} Columns
+                </Button>
+              ))}
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+              Current layout max: {textProblemsPerPage} problems per page
+            </Typography>
+          </Box>
+        )}
 
         {/* Difficulty Ratios Section */}
         {useMixMode && (
@@ -780,6 +1144,9 @@ const WorksheetSettings: React.FC<Props> = ({
         </Box>
         )}
 
+          </Stack>
+        </Collapse>
+
         {/* Show Answers Section - NEW */}
         <Box>
           <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
@@ -808,122 +1175,152 @@ const WorksheetSettings: React.FC<Props> = ({
           </Typography>
         </Box>
 
-        {/* Display Mode Section - NEW */}
         <Box>
           <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
-            Display Mode
+            Problem Type
           </Typography>
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
             <Button
-              onClick={() => setDisplayMode(DisplayMode.EMOJI)}
+              onClick={() => handleProblemTypeChange(ProblemType.STANDARD)}
               sx={(muiTheme) => ({
                 padding: muiTheme.spacing(1),
                 fontSize: '0.875rem',
                 textTransform: 'none',
                 borderRadius: muiTheme.shape.borderRadius,
                 border: '1px solid',
-                borderColor: displayMode === DisplayMode.EMOJI ? 'primary.main' : 'grey.200',
-                backgroundColor: displayMode === DisplayMode.EMOJI ? 'primary.light' : 'white',
-                color: displayMode === DisplayMode.EMOJI ? 'primary.dark' : 'grey.600',
-                fontWeight: displayMode === DisplayMode.EMOJI ? 600 : 400,
+                borderColor: activeProblemType === ProblemType.STANDARD ? 'primary.main' : 'grey.200',
+                backgroundColor: activeProblemType === ProblemType.STANDARD ? 'primary.light' : 'white',
+                color: activeProblemType === ProblemType.STANDARD ? 'primary.dark' : 'grey.600',
+                fontWeight: activeProblemType === ProblemType.STANDARD ? 600 : 400,
                 '&:hover': {
-                  backgroundColor: displayMode === DisplayMode.EMOJI ? 'primary.light' : 'grey.50',
-                  borderColor: displayMode === DisplayMode.EMOJI ? 'primary.main' : 'grey.300',
+                  backgroundColor: activeProblemType === ProblemType.STANDARD ? 'primary.light' : 'grey.50',
+                  borderColor: activeProblemType === ProblemType.STANDARD ? 'primary.main' : 'grey.300',
                 },
                 width: '100%',
               })}
             >
-              🎨 Emoji Mode
+              Standard (7 + 3 = 10)
             </Button>
             <Button
-              onClick={() => setDisplayMode(DisplayMode.TEXT)}
+              onClick={() => handleProblemTypeChange(ProblemType.FILL_BLANK)}
               sx={(muiTheme) => ({
                 padding: muiTheme.spacing(1),
                 fontSize: '0.875rem',
                 textTransform: 'none',
                 borderRadius: muiTheme.shape.borderRadius,
                 border: '1px solid',
-                borderColor: displayMode === DisplayMode.TEXT ? 'primary.main' : 'grey.200',
-                backgroundColor: displayMode === DisplayMode.TEXT ? 'primary.light' : 'white',
-                color: displayMode === DisplayMode.TEXT ? 'primary.dark' : 'grey.600',
-                fontWeight: displayMode === DisplayMode.TEXT ? 600 : 400,
+                borderColor: activeProblemType === ProblemType.FILL_BLANK ? 'primary.main' : 'grey.200',
+                backgroundColor: activeProblemType === ProblemType.FILL_BLANK ? 'primary.light' : 'white',
+                color: activeProblemType === ProblemType.FILL_BLANK ? 'primary.dark' : 'grey.600',
+                fontWeight: activeProblemType === ProblemType.FILL_BLANK ? 600 : 400,
                 '&:hover': {
-                  backgroundColor: displayMode === DisplayMode.TEXT ? 'primary.light' : 'grey.50',
-                  borderColor: displayMode === DisplayMode.TEXT ? 'primary.main' : 'grey.300',
+                  backgroundColor: activeProblemType === ProblemType.FILL_BLANK ? 'primary.light' : 'grey.50',
+                  borderColor: activeProblemType === ProblemType.FILL_BLANK ? 'primary.main' : 'grey.300',
                 },
                 width: '100%',
               })}
             >
-              📝 Text Mode (Printable)
+              Fill Blank (7 + _ = 10)
             </Button>
           </Stack>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-            {displayMode === DisplayMode.EMOJI ? 'Visual problems with emojis' : 'Clean text problems for printing'}
+            {activeProblemType === ProblemType.STANDARD && 'Traditional math problems with complete equations'}
+            {activeProblemType === ProblemType.FILL_BLANK && 'Fill-in-the-blank problems for enhanced learning'}
+            {activeProblemType === ProblemType.FILL_BLANK && operation === OperationType.MULTI_OPERATIONS && (
+              <Box component="span" sx={{ color: 'info.main', ml: 1 }}>
+                💡 Multi-operation mode is not compatible with Fill Blank mode
+              </Box>
+            )}
           </Typography>
         </Box>
 
-        {/* Problem Type Section - Only show in Text Mode */}
-        {displayMode === DisplayMode.TEXT && (
-          <Box>
+        <Box>
             <Typography variant="subtitle2" fontWeight={600} color="text.primary" gutterBottom>
-              Problem Type
+              Special Practice (专项练习)
             </Typography>
             <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
               <Button
-                onClick={() => handleProblemTypeChange(ProblemType.STANDARD)}
+                onClick={() => handleSpecialPracticeTypeChange(SpecialPracticeType.NONE)}
                 sx={(muiTheme) => ({
                   padding: muiTheme.spacing(1),
                   fontSize: '0.875rem',
                   textTransform: 'none',
                   borderRadius: muiTheme.shape.borderRadius,
                   border: '1px solid',
-                  borderColor: problemType === ProblemType.STANDARD ? 'primary.main' : 'grey.200',
-                  backgroundColor: problemType === ProblemType.STANDARD ? 'primary.light' : 'white',
-                  color: problemType === ProblemType.STANDARD ? 'primary.dark' : 'grey.600',
-                  fontWeight: problemType === ProblemType.STANDARD ? 600 : 400,
+                  borderColor: specialPracticeType === SpecialPracticeType.NONE ? 'primary.main' : 'grey.200',
+                  backgroundColor: specialPracticeType === SpecialPracticeType.NONE ? 'primary.light' : 'white',
+                  color: specialPracticeType === SpecialPracticeType.NONE ? 'primary.dark' : 'grey.600',
+                  fontWeight: specialPracticeType === SpecialPracticeType.NONE ? 600 : 400,
                   '&:hover': {
-                    backgroundColor: problemType === ProblemType.STANDARD ? 'primary.light' : 'grey.50',
-                    borderColor: problemType === ProblemType.STANDARD ? 'primary.main' : 'grey.300',
+                    backgroundColor: specialPracticeType === SpecialPracticeType.NONE ? 'primary.light' : 'grey.50',
+                    borderColor: specialPracticeType === SpecialPracticeType.NONE ? 'primary.main' : 'grey.300',
                   },
                   width: '100%',
                 })}
               >
-                Standard (7 + 3 = 10)
+                None
               </Button>
               <Button
-                onClick={() => handleProblemTypeChange(ProblemType.FILL_BLANK)}
+                onClick={() => handleSpecialPracticeTypeChange(SpecialPracticeType.ZERO_DRILL)}
+                disabled={excludeZeroProblems}
                 sx={(muiTheme) => ({
                   padding: muiTheme.spacing(1),
                   fontSize: '0.875rem',
                   textTransform: 'none',
                   borderRadius: muiTheme.shape.borderRadius,
                   border: '1px solid',
-                  borderColor: problemType === ProblemType.FILL_BLANK ? 'primary.main' : 'grey.200',
-                  backgroundColor: problemType === ProblemType.FILL_BLANK ? 'primary.light' : 'white',
-                  color: problemType === ProblemType.FILL_BLANK ? 'primary.dark' : 'grey.600',
-                  fontWeight: problemType === ProblemType.FILL_BLANK ? 600 : 400,
+                  borderColor: specialPracticeType === SpecialPracticeType.ZERO_DRILL ? 'primary.main' : 'grey.200',
+                  backgroundColor: specialPracticeType === SpecialPracticeType.ZERO_DRILL ? 'primary.light' : 'white',
+                  color: specialPracticeType === SpecialPracticeType.ZERO_DRILL ? 'primary.dark' : 'grey.600',
+                  fontWeight: specialPracticeType === SpecialPracticeType.ZERO_DRILL ? 600 : 400,
                   '&:hover': {
-                    backgroundColor: problemType === ProblemType.FILL_BLANK ? 'primary.light' : 'grey.50',
-                    borderColor: problemType === ProblemType.FILL_BLANK ? 'primary.main' : 'grey.300',
+                    backgroundColor: specialPracticeType === SpecialPracticeType.ZERO_DRILL ? 'primary.light' : 'grey.50',
+                    borderColor: specialPracticeType === SpecialPracticeType.ZERO_DRILL ? 'primary.main' : 'grey.300',
+                  },
+                  width: '100%',
+                  opacity: excludeZeroProblems ? 0.5 : 1,
+                })}
+              >
+                Zero Drill (0专项)
+              </Button>
+              <Button
+                onClick={() => handleSpecialPracticeTypeChange(SpecialPracticeType.FACT_FAMILY)}
+                sx={(muiTheme) => ({
+                  padding: muiTheme.spacing(1),
+                  fontSize: '0.875rem',
+                  textTransform: 'none',
+                  borderRadius: muiTheme.shape.borderRadius,
+                  border: '1px solid',
+                  borderColor: specialPracticeType === SpecialPracticeType.FACT_FAMILY ? 'primary.main' : 'grey.200',
+                  backgroundColor: specialPracticeType === SpecialPracticeType.FACT_FAMILY ? 'primary.light' : 'white',
+                  color: specialPracticeType === SpecialPracticeType.FACT_FAMILY ? 'primary.dark' : 'grey.600',
+                  fontWeight: specialPracticeType === SpecialPracticeType.FACT_FAMILY ? 600 : 400,
+                  '&:hover': {
+                    backgroundColor: specialPracticeType === SpecialPracticeType.FACT_FAMILY ? 'primary.light' : 'grey.50',
+                    borderColor: specialPracticeType === SpecialPracticeType.FACT_FAMILY ? 'primary.main' : 'grey.300',
                   },
                   width: '100%',
                 })}
               >
-                Fill Blank (7 + _ = 10)
+                Fact Family (组合规律)
               </Button>
             </Stack>
             <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-              {problemType === ProblemType.STANDARD 
-                ? 'Traditional math problems with complete equations' 
-                : 'Fill-in-the-blank problems for enhanced learning'}
-              {problemType === ProblemType.FILL_BLANK && operation === OperationType.MULTI_OPERATIONS && (
+              {specialPracticeType === SpecialPracticeType.NONE && 'Choose a special drill for focused practice'}
+              {specialPracticeType === SpecialPracticeType.ZERO_DRILL && `含0专项：支持 ${activeProblemType === ProblemType.STANDARD ? 'Standard' : 'Fill Blank'} 模式`}
+              {specialPracticeType === SpecialPracticeType.FACT_FAMILY && `组合规律专项：支持 ${activeProblemType === ProblemType.STANDARD ? 'Standard' : 'Fill Blank'} 模式`}
+              {displayMode === DisplayMode.EMOJI && specialPracticeType !== SpecialPracticeType.NONE && (
+                <Box component="span" sx={{ color: 'success.main', ml: 1 }}>
+                  ✅ Special Practice supports Emoji mode
+                </Box>
+              )}
+              {specialPracticeType !== SpecialPracticeType.NONE && operation === OperationType.MULTI_OPERATIONS && (
                 <Box component="span" sx={{ color: 'info.main', ml: 1 }}>
-                  💡 Multi-operation mode is not compatible with fill-blank problems
+                  💡 Multi-operation mode is not compatible with special practice
                 </Box>
               )}
             </Typography>
           </Box>
-        )}
       </Stack>
 
       <Box sx={{ mt: 'auto', pt: 3, borderTop: 1, borderColor: 'grey.100' }}>
@@ -970,6 +1367,30 @@ const WorksheetSettings: React.FC<Props> = ({
           >
             Print / Save PDF
           </Button>
+
+          <Tooltip title="Reset all settings to default values" arrow>
+            <Button
+              onClick={onResetConfig}
+              variant="text"
+              startIcon={<ResetIcon />}
+              color="inherit"
+              sx={{
+                borderRadius: 2,
+                padding: 1,
+                textTransform: 'none',
+                fontWeight: 400,
+                fontSize: '0.8rem',
+                color: 'text.secondary',
+                '&:hover': {
+                  color: 'error.main',
+                  bgcolor: 'error.50',
+                },
+                width: '100%',
+              }}
+            >
+              重置为默认设置
+            </Button>
+          </Tooltip>
         </Stack>
       </Box>
     </Paper>

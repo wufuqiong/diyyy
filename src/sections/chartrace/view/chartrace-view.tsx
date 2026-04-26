@@ -13,7 +13,7 @@ export const CharTraceView: React.FC = () => {
     gridType: GridType.TIAN,
     gridColor: '#ff9c9c', // A nice light reddish color standard for zitie
     gridOpacity: 0.6,
-    gridSize: 100,
+    gridSize: 14,
     fontFamily: 'font-kaiti',
     mainTextColor: '#000000',
     traceTextColor: '#ff9c9c',

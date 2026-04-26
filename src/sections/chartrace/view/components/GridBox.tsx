@@ -11,6 +11,7 @@ interface GridBoxProps {
   content?: string;
   contentColor?: string;
   contentOpacity?: number;
+  contentFontSize?: number;
   fontFamily?: string;
   showOuterBorder?: boolean;
 }
@@ -29,6 +30,7 @@ export const GridBox: React.FC<GridBoxProps> = ({
   content,
   contentColor = '#000000',
   contentOpacity = 1,
+  contentFontSize = 85,
   fontFamily = 'font-kaiti',
   showOuterBorder = true,
 }) => (
@@ -50,20 +52,20 @@ export const GridBox: React.FC<GridBoxProps> = ({
       
       {/* Grid Lines */}
       {showOuterBorder && (
-        <rect x="0" y="0" width="100" height="100" fill="none" stroke={color} strokeWidth="1.5" opacity={opacity} />
+        <rect x="0" y="0" width="100" height="100" fill="none" stroke={color} strokeWidth="2" opacity={opacity} />
       )}
       
       {(type === GridType.TIAN || type === GridType.MI) && (
         <>
-          <line x1="50" y1="0" x2="50" y2="100" stroke={color} strokeWidth="1" strokeDasharray="4,4" opacity={opacity * 0.8} />
-          <line x1="0" y1="50" x2="100" y2="50" stroke={color} strokeWidth="1" strokeDasharray="4,4" opacity={opacity * 0.8} />
+          <line x1="50" y1="0" x2="50" y2="100" stroke={color} strokeWidth="2" strokeDasharray="4,4" opacity={opacity * 0.5} />
+          <line x1="0" y1="50" x2="100" y2="50" stroke={color} strokeWidth="2" strokeDasharray="4,4" opacity={opacity * 0.5} />
         </>
       )}
       
       {type === GridType.MI && (
         <>
-          <line x1="0" y1="0" x2="100" y2="100" stroke={color} strokeWidth="1" strokeDasharray="4,4" opacity={opacity * 0.8} />
-          <line x1="100" y1="0" x2="0" y2="100" stroke={color} strokeWidth="1" strokeDasharray="4,4" opacity={opacity * 0.8} />
+          <line x1="0" y1="0" x2="100" y2="100" stroke={color} strokeWidth="2" strokeDasharray="4,4" opacity={opacity * 0.5} />
+          <line x1="100" y1="0" x2="0" y2="100" stroke={color} strokeWidth="2" strokeDasharray="4,4" opacity={opacity * 0.5} />
         </>
       )}
 
@@ -78,8 +80,7 @@ export const GridBox: React.FC<GridBoxProps> = ({
           fillOpacity={contentOpacity}
           className={fontFamily}
           style={{ 
-              // 85px font size in a 100x100 viewBox means it fills ~85% of the box
-              fontSize: '85px', 
+              fontSize: `${contentFontSize}px`,
               fontFamily: getFontStack(fontFamily),
               // Ensure pointer events don't block interaction if needed
               pointerEvents: 'none'

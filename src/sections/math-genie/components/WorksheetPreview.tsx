@@ -14,11 +14,20 @@ interface Props {
   theme: string;
   showAnswers: boolean;
   displayMode: DisplayMode;
+  textColumns?: 2 | 3 | 4;
 }
 
-const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, showAnswers, displayMode }) => {
+const getTextRowsPerPage = (columns: 2 | 3 | 4): number => {
+  if (columns === 4) return 6;
+  if (columns === 3) return 7;
+  return 8;
+};
+
+const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, showAnswers, displayMode, textColumns = 2 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const PROBLEMS_PER_PAGE = displayMode === DisplayMode.TEXT ? 16 : 8;
+  const textRowsPerPage = getTextRowsPerPage(textColumns);
+  const textProblemsPerPage = textColumns * textRowsPerPage;
+  const PROBLEMS_PER_PAGE = displayMode === DisplayMode.TEXT ? textProblemsPerPage : 8;
   
   // Memoize calculations to prevent re-calculation on every render
   const paginationData = useMemo(() => {
@@ -27,7 +36,7 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
     const endIndex = Math.min(startIndex + PROBLEMS_PER_PAGE, problems.length);
     const currentProblems = problems.slice(startIndex, endIndex);
     return { totalPages, startIndex, endIndex, currentProblems };
-  }, [problems, currentPage]);
+  }, [problems, currentPage, PROBLEMS_PER_PAGE]);
 
   const { totalPages, startIndex, endIndex, currentProblems } = paginationData;
 
@@ -97,7 +106,7 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
             padding: '20mm',
             paddingBottom: '15mm',
             backgroundColor: 'white',
-            boxShadow: 5,
+            boxShadow: 'none',
             '&:last-child': {
               marginBottom: 0,
             },
@@ -141,14 +150,14 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: displayMode === DisplayMode.TEXT ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)',
+              gridTemplateColumns: displayMode === DisplayMode.TEXT ? `repeat(${textColumns}, 1fr)` : 'repeat(2, 1fr)',
               columnGap: displayMode === DisplayMode.TEXT ? '2' : 2,
               rowGap: displayMode === DisplayMode.TEXT ? '1' : 2,
               gridAutoRows: displayMode === DisplayMode.TEXT ? 'minmax(70px, auto)' : 'minmax(200px, auto)',
               justifyItems: 'center',
               alignItems: 'center',
               '@media (min-width: 1200px)': {
-                gridTemplateColumns: displayMode === DisplayMode.TEXT ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)',
+                gridTemplateColumns: displayMode === DisplayMode.TEXT ? `repeat(${textColumns}, 1fr)` : 'repeat(2, 1fr)',
               },
             }}
           >
@@ -222,7 +231,7 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
                 padding: '20mm',
                 paddingBottom: '15mm',
                 backgroundColor: 'white',
-                boxShadow: 5,
+                boxShadow: 'none',
                 pageBreakAfter: pageIndex < totalPages - 1 ? 'always' : 'auto',
                 pageBreakInside: 'avoid',
               }}
@@ -261,7 +270,7 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
               <Box
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: displayMode === DisplayMode.TEXT ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)',
+                  gridTemplateColumns: displayMode === DisplayMode.TEXT ? `repeat(${textColumns}, 1fr)` : 'repeat(2, 1fr)',
                   columnGap: displayMode === DisplayMode.TEXT ? '2' : 2,
                   rowGap: displayMode === DisplayMode.TEXT ? '1' : 2,
                   gridAutoRows: displayMode === DisplayMode.TEXT ? 'minmax(70px, auto)' : 'minmax(200px, auto)',
