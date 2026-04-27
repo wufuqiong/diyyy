@@ -9,6 +9,12 @@
 @import '@fontsource/barlow/700.css';
 @import '@fontsource/barlow/800.css';
 
+/* Andika: SIL literacy font with single-story `a` / `g` and full Pinyin
+   tone-mark coverage (macron + caron). Used for Pinyin tracing/labels in
+   chartrace so all tone vowels render in a single, handwriting-style family. */
+@import '@fontsource/andika/latin.css';
+@import '@fontsource/andika/latin-ext.css';
+
 /** **************************************
 * Plugins
 *************************************** */

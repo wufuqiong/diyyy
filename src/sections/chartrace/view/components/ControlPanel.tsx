@@ -258,7 +258,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                   displayEmpty
                   onChange={(e) => handleLessonChange(e.target.value)}
                 >
-                  <MenuItem value=""><em>All Lessons in Level</em></MenuItem>
+                  <MenuItem value=""><em>{}</em></MenuItem>
                   {currentLessons?.map((lesson: any, index: number) => (
                     <MenuItem key={index} value={index}>{lesson.title}</MenuItem>
                   ))}

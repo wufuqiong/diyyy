@@ -272,6 +272,11 @@
   resolved "https://registry.npmjs.org/@fontsource-variable/dm-sans/-/dm-sans-5.2.5.tgz"
   integrity sha512-ynWdb1Ncn5ywUOE6OkTsvgjkiZKj+xM/GS2iVE47MBvS3AlfOSyOy3xynfkQsM3ngaxdCamT/06hZGAgPmao0A==
 
+"@fontsource/andika@^5.2.10":
+  version "5.2.10"
+  resolved "https://registry.npmmirror.com/@fontsource/andika/-/andika-5.2.10.tgz"
+  integrity sha512-uLKWc3QjD/Pj6XixVxMmhdzhcGx/kTRK6wnzO/xkoA+a2uRhVU0RFOm9pbt3BjXKJwVeMUH/3qJh3cWj7mbv4g==
+
 "@fontsource/barlow@^5.2.5":
   version "5.2.5"
   resolved "https://registry.npmjs.org/@fontsource/barlow/-/barlow-5.2.5.tgz"

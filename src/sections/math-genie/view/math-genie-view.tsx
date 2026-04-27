@@ -2,9 +2,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-import CheckIcon from '@mui/icons-material/Check';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { Box, Backdrop, Paper, Alert, Typography, IconButton, Tooltip, LinearProgress, Chip } from '@mui/material';
+import { Box, Paper, Alert, IconButton, Tooltip, LinearProgress } from '@mui/material';
 
 import { DifficultyLevel, OperationType, DisplayMode, MathProblem, WorksheetConfig, CustomDifficultyRange, DifficultyRatios, ProblemType, SpecialPracticeType, MultiOperationMode, MultiOperationConfig } from 'src/types';
 
@@ -1208,7 +1207,6 @@ export const MathGenieView: React.FC = () => {
   const [problems, setProblems] = useState<MathProblem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateProgress, setGenerateProgress] = useState(0);
-  const [generateStage, setGenerateStage] = useState<'idle' | 'generating' | 'done'>('idle');
   const [autoPreview, setAutoPreview] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -1217,7 +1215,6 @@ export const MathGenieView: React.FC = () => {
   const handleGenerate = useCallback(async () => {
     setIsGenerating(true);
     setGenerateProgress(20);
-    setGenerateStage('generating');
     setError(null);
     try {
       const textColumns = config.textColumns || 2;
@@ -1277,12 +1274,10 @@ export const MathGenieView: React.FC = () => {
         setConfig(prev => ({ ...prev, title: response.titleSuggestion }));
       }
       setGenerateProgress(100);
-      setGenerateStage('done');
-      setTimeout(() => { setGenerateStage('idle'); setGenerateProgress(0); }, 1500);
+      setTimeout(() => { setGenerateProgress(0); }, 1500);
     } catch (err) {
       console.error("Failed to generate", err);
       setError('Failed to generate worksheet. Please try again.');
-      setGenerateStage('idle');
       setGenerateProgress(0);
     } finally {
       setIsGenerating(false);
@@ -1487,26 +1482,7 @@ export const MathGenieView: React.FC = () => {
             '@media print': { display: 'none' },
           }}
         >
-          {generateStage === 'done' && (
-            <Chip
-              icon={<CheckIcon sx={{ fontSize: '0.875rem !important' }} />}
-              label="已生成"
-              size="small"
-              color="success"
-              variant="outlined"
-              sx={{ fontSize: '0.75rem', height: 24 }}
-            />
-          )}
-          {generateStage === 'generating' && (
-            <Chip
-              label={`生成中 ${generateProgress}%`}
-              size="small"
-              color="primary"
-              variant="outlined"
-              sx={{ fontSize: '0.75rem', height: 24 }}
-            />
-          )}
-          <Tooltip title={autoPreview ? '自动预览已开启' : '点击手动生成'} arrow>
+          <Tooltip title={autoPreview ? 'Auto-preview on. Click to refresh.' : 'Click to generate'} arrow>
             <span>
               <IconButton
                 onClick={handleGenerate}
@@ -1544,77 +1520,6 @@ export const MathGenieView: React.FC = () => {
           displayMode={config.displayMode}
           textColumns={config.textColumns || 2}
         />
-        
-        {/* Loading Overlay */}
-        {isGenerating && (
-          <Backdrop
-            open
-            sx={{
-              position: 'absolute',
-              backgroundColor: 'rgba(255, 255, 255, 0.6)',
-              backdropFilter: 'blur(4px)',
-              zIndex: (muiTheme) => muiTheme.zIndex.drawer + 1,
-              '@media print': {
-                display: 'none',
-              },
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'white',
-                padding: (muiTheme) => muiTheme.spacing(2, 4),
-                borderRadius: '2rem',
-                boxShadow: 'none',
-                border: (muiTheme) => `1px solid ${muiTheme.palette.primary.light}`,
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box
-                  sx={(muiTheme) => ({
-                    position: 'relative',
-                    width: muiTheme.spacing(1.5),
-                    height: muiTheme.spacing(1.5),
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: '50%',
-                      backgroundColor: muiTheme.palette.primary.light,
-                      animation: 'pulse 1.5s ease-in-out infinite',
-                    },
-                    '&::after': {
-                      content: '""',
-                      position: 'relative',
-                      display: 'block',
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: '50%',
-                      backgroundColor: muiTheme.palette.primary.main,
-                    },
-                    '@keyframes pulse': {
-                      '0%': {
-                        transform: 'scale(1)',
-                        opacity: 0.75,
-                      },
-                      '100%': {
-                        transform: 'scale(2)',
-                        opacity: 0,
-                      },
-                    },
-                  })}
-                />
-                <Typography variant="body1" color="primary" fontWeight={500}>
-                  Generating {config.theme} problems...
-                </Typography>
-              </Box>
-            </Box>
-          </Backdrop>
-        )}
       </Box>
     </Box>
   );

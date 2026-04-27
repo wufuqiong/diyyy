@@ -515,6 +515,12 @@
             "phrase": ["North", "South", "East", "West", "Compass"],
             "word": [],
             "sentence": []
+        },
+        {
+            "title": "Shapes",
+            "phrase": ["pentagon", "hexagon", "octagon", "cube", "right angle", "sphere", "cylinder", "pyramid", "edge", "angle"],
+            "word": [],
+            "sentence": []
         }
     ]
 }

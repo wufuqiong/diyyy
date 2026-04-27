@@ -32,6 +32,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@fontsource-variable/dm-sans": "^5.2.5",
+    "@fontsource/andika": "^5.2.10",
     "@fontsource/barlow": "^5.2.5",
     "@iconify/react": "^5.2.1",
     "@mui/icons-material": "^7.3.4",

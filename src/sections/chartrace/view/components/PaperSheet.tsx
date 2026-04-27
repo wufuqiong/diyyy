@@ -42,7 +42,17 @@ const getFontStack = (fontClass: string) => {
   return undefined;
 };
 
-const getPinyinFontStack = () => '"PinYin", "Pinyin", "Comic Sans MS", "Andika", "Century Gothic", "Arial", sans-serif';
+// Andika is an SIL literacy webfont (bundled via @fontsource/andika in
+// global.css) with:
+//   - single-story `a` and `g` — the handwriting/teaching shapes used in
+//     Chinese primary-school 描红 materials, and
+//   - complete Pinyin tone-mark coverage in a SINGLE family (both macron
+//     `ā ē ī ō ū` in Latin Extended-A and caron `ǎ ě ǐ ǒ ǔ ǚ` in Latin
+//     Extended-B), so every glyph on the page is served by the same
+//     typeface — no per-glyph system fallback that previously made e.g.
+//     `bā` and `liǎng` look like different fonts.
+const getPinyinFontStack = () =>
+  '"Andika", "Comic Sans MS", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif';
 
 export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
   // Detect "Word Mode" via comma separator
