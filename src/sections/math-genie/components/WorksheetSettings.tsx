@@ -209,6 +209,8 @@ const WorksheetSettings: React.FC<Props> = ({
 
   // ---------- Derived ----------
 
+  const EMOJI_PROBLEMS_PER_PAGE = 6;
+  const perPage = displayMode === DisplayMode.TEXT ? textProblemsPerPage : EMOJI_PROBLEMS_PER_PAGE;
   const countSettings = useMemo(() => {
     if (displayMode === DisplayMode.TEXT) {
       return {
@@ -218,7 +220,12 @@ const WorksheetSettings: React.FC<Props> = ({
         label: `Pages (up to ${textProblemsPerPage} problems / page at ${textColumns} columns)`,
       };
     }
-    return { min: 8, max: 24, step: 8, label: 'Problems per page (8 / 16 / 24)' };
+    return {
+      min: 1,
+      max: 10,
+      step: 1,
+      label: `Pages (${EMOJI_PROBLEMS_PER_PAGE} problems / page)`,
+    };
   }, [displayMode, textColumns, textProblemsPerPage]);
 
   const maxPossibleProblems = useMemo(() => {
@@ -260,7 +267,7 @@ const WorksheetSettings: React.FC<Props> = ({
     return add + sub;
   }, [difficulty, operation, multiOperationConfig, customDifficulty]);
 
-  const requestedCount = displayMode === DisplayMode.TEXT ? count * textProblemsPerPage : count;
+  const requestedCount = count * perPage;
   const isExceedingMax = requestedCount > maxPossibleProblems;
 
   const ratioTotal =
@@ -479,17 +486,12 @@ const WorksheetSettings: React.FC<Props> = ({
               )}
 
               <Field
-                label={displayMode === DisplayMode.TEXT ? 'Number of Pages' : 'Number of Problems'}
+                label="Number of Pages"
                 caption={
                   <>
                     {countSettings.label}
-                    {displayMode === DisplayMode.TEXT && (
-                      <>
-                        <br />
-                        Total: {requestedCount} problems ({count} page{count > 1 ? 's' : ''} ×{' '}
-                        {textProblemsPerPage})
-                      </>
-                    )}
+                    <br />
+                    Total: {requestedCount} problems ({count} page{count > 1 ? 's' : ''} × {perPage})
                     {isExceedingMax && (
                       <Box component="span" sx={{ color: 'warning.main', display: 'block' }}>
                         ⚠️ Max unique: {maxPossibleProblems}. Some will repeat.

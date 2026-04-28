@@ -951,7 +951,7 @@ const generateMathProblems = async (
     const targetCount = Math.min(count, maxUniqueProblems);
     
     // Pre-generate all possible problems for better performance
-    const allPossibleProblems = generateAllPossibleProblems(maxNumber, operation, emojis, customDifficulty, excludeZeroProblems);
+    const allPossibleProblems = generateAllPossibleProblems(maxNumber, operation, emojis, activeCustomDifficulty, excludeZeroProblems);
 
     if (operation === OperationType.MIXED) {
       problems.push(...selectBalancedMixedProblems(allPossibleProblems, targetCount));
@@ -975,7 +975,7 @@ const generateMathProblems = async (
         fallbackOperation = currentAdditions < additionCount ? OperationType.ADDITION : OperationType.SUBTRACTION;
       }
 
-      const problem = generateRandomProblem(maxNumber, fallbackOperation, emojis, customDifficulty, excludeZeroProblems);
+      const problem = generateRandomProblem(maxNumber, fallbackOperation, emojis, activeCustomDifficulty, excludeZeroProblems);
       problems.push(problem);
     }
     
@@ -1219,10 +1219,11 @@ export const MathGenieView: React.FC = () => {
     try {
       const textColumns = config.textColumns || 2;
       const problemsPerTextPage = textColumns * getTextRowsPerPage(textColumns);
+      const EMOJI_PROBLEMS_PER_PAGE = 6;
       const targetProblemCount =
         config.displayMode === DisplayMode.TEXT
           ? config.count * problemsPerTextPage
-          : config.count;
+          : config.count * EMOJI_PROBLEMS_PER_PAGE;
 
       const response = await generateMathProblems(
         config.theme,
@@ -1314,21 +1315,12 @@ export const MathGenieView: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [handleGenerate, autoPreview]); // Use handleGenerate as dependency
 
-  // Adjust count when display mode changes
+  // Adjust count when display mode changes (both modes now use page count 1-10)
   useEffect(() => {
     if (prevDisplayMode.current !== config.displayMode) {
-      if (config.displayMode === DisplayMode.TEXT) {
-        // For Text mode, count means page count
-        const validCount = Math.max(1, Math.min(10, Math.round(config.count)));
-        if (validCount !== config.count) {
-          setConfig(prev => ({ ...prev, count: validCount }));
-        }
-      } else {
-        // For Emoji mode, ensure count is a multiple of 8 and within range
-        const validCount = Math.max(8, Math.min(60, Math.round(config.count / 8) * 8));
-        if (validCount !== config.count) {
-          setConfig(prev => ({ ...prev, count: validCount }));
-        }
+      const validCount = Math.max(1, Math.min(10, Math.round(config.count)));
+      if (validCount !== config.count) {
+        setConfig(prev => ({ ...prev, count: validCount }));
       }
       prevDisplayMode.current = config.displayMode;
     }
