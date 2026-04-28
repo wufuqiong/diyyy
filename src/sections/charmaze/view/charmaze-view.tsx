@@ -1,35 +1,36 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
-import { 
-  Print as PrintIcon,
-  Description as DescriptionIcon,
-  Dashboard as DashboardIcon,
-  Settings as SettingsIcon,
+import {
   Clear as ClearIcon,
-  Refresh as RefreshIcon
+  Print as PrintIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import {
   Box,
-  TextField,
-  Select,
-  MenuItem,
+  Button,
+  CssBaseline,
   FormControl,
-  InputLabel,
-  Typography,
-  Paper,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
   SelectChangeEvent,
   Stack,
-  Tooltip,
-  CssBaseline,
-  Divider
+  TextField,
 } from '@mui/material';
 
-import { filterMazeCharacters, shuffleArray } from 'src/utils/array-tools';
+import { shuffleArray } from 'src/utils/array-tools';
 import { generateWordMazePath, generatePhraseMazePath, generateSentenceMazePath } from 'src/utils/maze-tools';
 
 import miemieDetails from 'src/data/miemie-details.json';
 import { MiemieData, MiemieDetails, MiemieLesson } from 'src/types';
+
+import {
+  SettingsField,
+  SettingsHeader,
+  SettingsPanel,
+  SettingsSection,
+} from 'src/sections/_shared/SettingsPanel';
 
 import { PreviewSheet } from './preview-sheet';
 
@@ -104,7 +105,6 @@ const MIEMIE_PRESETS: Record<Mode, MiemieData> = {
 };
 
 const MAX_INPUT_LENGTH = 300;
-
 
 function hasChineseCharacters(characters: string[]): boolean {
   const chineseRegex = /[\u4e00-\u9fff]/;
@@ -280,112 +280,79 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   };
 
   return (
-    <Paper 
-      elevation={4}
-      sx={{ 
-        width: { xs: '100%', lg: 320 }, 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        zIndex: 20,
-        borderRadius: 0,
-        '@media print': { display: 'none' }
-      }}
-    >
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
-        <Box>
-            <Typography variant="h6" fontWeight="bold" color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              Char Maze
-            </Typography>
-            <Typography variant="caption" color="text.secondary">Maze Adventure</Typography>
-        </Box>
-        <Box>
-          <Tooltip title="Regenerate">
-            <IconButton 
-              onClick={onGenerate}
-              disabled={isGenerating}
-              sx={{ color: 'primary.main', mr: 1 }}
-            >
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip 
-            title="Print Sheet"
-            slotProps={{
-            popper: {
-              sx: { '@media print': { display: 'none' } }
-            }
-          }}
+    <SettingsPanel
+      width={320}
+      header={<SettingsHeader title="Char Maze" subtitle="Maze Adventure" />}
+      footer={
+        <Stack direction="row" spacing={1}>
+          <Button
+            onClick={onGenerate}
+            disabled={isGenerating}
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            fullWidth
+            sx={{ textTransform: 'none', fontWeight: 600 }}
           >
-            <IconButton 
-              onClick={onPrint}
-              sx={{ bgcolor: 'warning.main', color: 'white', '&:hover': { bgcolor: 'warning.dark' }, boxShadow: 2 }}
-            >
-              <PrintIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
+            Regenerate
+          </Button>
+          <Button
+            onClick={onPrint}
+            variant="contained"
+            startIcon={<PrintIcon />}
+            fullWidth
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          >
+            Print / PDF
+          </Button>
+        </Stack>
+      }
+    >
+      {/* ============= LOAD ============= */}
+      <SettingsSection title="Load">
+        <SettingsField label="模式选择">
+          <FormControl fullWidth size="small">
+            <Select value={selectedMode} onChange={handleModeChange}>
+              {Object.keys(MODE_PRESETS).map((preset, index) => (
+                <MenuItem key={index} value={index}>
+                  {MODE_PRESETS[preset as Mode]}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </SettingsField>
 
-      <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' }}>
-        
-        {/* Load Section */}
-        <Box>
-          <Stack direction="row" alignItems="center" gap={1} sx={{ color: 'warning.main', borderBottom: 1, borderColor: 'divider', pb: 1, mb: 2 }}>
-            <DescriptionIcon fontSize="small" />
-            <Typography variant="subtitle2" fontWeight="bold">Load</Typography>
-          </Stack>
-          <Stack spacing={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>模式选择</InputLabel>
-              <Select
-                value={selectedMode}
-                onChange={handleModeChange}
-                label="模式选择"
-              >
-                {Object.keys(MODE_PRESETS).map((preset, index) => (
-                  <MenuItem key={index} value={index}>
-                    {MODE_PRESETS[preset as Mode]}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            
-            {getWordLibSelecter(parseSelectedMode(selectedMode))}
-            
-            <FormControl fullWidth size="small">
-              <InputLabel>预设书册</InputLabel>
-              <Select
-                value={selectedBook}
-                onChange={handleSelectBookChange}
-                label="预设书册"
-                disabled={!selectedLevel}
-              >
-                <MenuItem value="">全部</MenuItem>
-                {renderBookOptions()}
-              </Select>
-            </FormControl>
-          </Stack>
-        </Box>
+        <SettingsField label={SELECTER_TITLE_PRESETS[parseSelectedMode(selectedMode)]}>
+          {getWordLibSelecter(parseSelectedMode(selectedMode))}
+        </SettingsField>
 
-        {/* Input Section */}
-        <Box>
-          <Stack direction="row" alignItems="center" gap={1} sx={{ color: 'warning.main', borderBottom: 1, borderColor: 'divider', pb: 1, mb: 2 }}>
-              <DashboardIcon fontSize="small" />
-              <Typography variant="subtitle2" fontWeight="bold">Input Content</Typography>
-          </Stack>
+        <SettingsField label="预设书册">
+          <FormControl fullWidth size="small" disabled={!selectedLevel}>
+            <Select value={selectedBook} onChange={handleSelectBookChange} displayEmpty>
+              <MenuItem value="">全部</MenuItem>
+              {renderBookOptions()}
+            </Select>
+          </FormControl>
+        </SettingsField>
+      </SettingsSection>
+
+      {/* ============= INPUT ============= */}
+      <SettingsSection title="Input">
+        <SettingsField
+          label="Content"
+          caption={`${userInput.length}/${MAX_INPUT_LENGTH} characters`}
+        >
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
             <TextField
               multiline
               rows={4}
+              size="small"
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               placeholder={`请输入最多${MAX_INPUT_LENGTH}个要练习的文字`}
               inputProps={{ maxLength: MAX_INPUT_LENGTH }}
               fullWidth
-              variant="outlined"
             />
-            <IconButton 
+            <IconButton
               onClick={handleClearInput}
               disabled={!userInput}
               color="error"
@@ -395,56 +362,53 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               <ClearIcon />
             </IconButton>
           </Box>
-          <Typography variant="caption" display="block" textAlign="right" color="text.secondary" sx={{ mt: 0.5 }}>
-              {userInput.length}/{MAX_INPUT_LENGTH} characters
-          </Typography>
-        </Box>
+        </SettingsField>
+      </SettingsSection>
 
-        {/* Options Section */}
-        <Box>
-          <Stack direction="row" alignItems="center" gap={1} sx={{ color: 'warning.main', borderBottom: 1, borderColor: 'divider', pb: 1, mb: 2 }}>
-            <SettingsIcon fontSize="small" />
-            <Typography variant="subtitle2" fontWeight="bold">Options</Typography>
-          </Stack>
-          <Stack spacing={3}>
-            <FormControl fullWidth size="small">
-              <InputLabel>迷宫尺寸</InputLabel>
-              <Select
-                value={selectedTableSize}
-                onChange={(e) => setSelectedTableSize(e.target.value as number)}
-                label="迷宫尺寸"
-              >
-                {TABLE_SIZE_PRESETS.map((preset, index) => (
-                  <MenuItem key={index} value={index}>
-                    {preset.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+      {/* ============= OPTIONS ============= */}
+      <SettingsSection title="Options">
+        <SettingsField label="迷宫尺寸">
+          <FormControl fullWidth size="small">
+            <Select
+              value={selectedTableSize}
+              onChange={(e) => setSelectedTableSize(e.target.value as number)}
+            >
+              {TABLE_SIZE_PRESETS.map((preset, index) => (
+                <MenuItem key={index} value={index}>
+                  {preset.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </SettingsField>
 
-            <FormControl fullWidth size="small">
-              <InputLabel>每页字数</InputLabel>
-              <Select
-                value={wordsPerPage}
-                onChange={(e) => setWordsPerPage(e.target.value as number)}
-                label="每页字数"
-                disabled={parseSelectedMode(selectedMode) !== 'PHRASE'}
-              >
-                {[3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                  <MenuItem key={num} value={num}>
-                    {num}字/页
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
-        </Box>
-
-        <Box sx={{ pt: 4, pb: 2, textAlign: 'center' }}>
-            <Typography variant="caption" color="text.disabled">Generated by React & MUI</Typography>
-        </Box>
-      </Box>
-    </Paper>
+        <SettingsField
+          label="每页字数"
+          caption={
+            parseSelectedMode(selectedMode) !== 'PHRASE'
+              ? '仅词语模式可调'
+              : undefined
+          }
+        >
+          <FormControl
+            fullWidth
+            size="small"
+            disabled={parseSelectedMode(selectedMode) !== 'PHRASE'}
+          >
+            <Select
+              value={wordsPerPage}
+              onChange={(e) => setWordsPerPage(e.target.value as number)}
+            >
+              {[3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                <MenuItem key={num} value={num}>
+                  {num} 字/页
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </SettingsField>
+      </SettingsSection>
+    </SettingsPanel>
   );
 };
 

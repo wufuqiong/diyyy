@@ -1,37 +1,37 @@
 import React, { useState, useCallback, useEffect } from 'react';
 
-import { 
-  Print as PrintIcon,
-  Description as DescriptionIcon,
-  Dashboard as DashboardIcon,
-  Palette as PaletteIcon,
+import {
   Clear as ClearIcon,
+  Print as PrintIcon,
+  Refresh as RefreshIcon,
   Shuffle as ShuffleIcon,
-  Refresh as RefreshIcon
 } from '@mui/icons-material';
 import {
   Box,
   Button,
-  TextField,
-  Select,
-  MenuItem,
+  CssBaseline,
   FormControl,
-  InputLabel,
-  Typography,
-  Paper,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
   SelectChangeEvent,
   Stack,
-  Tooltip,
-  CssBaseline,
-  Divider
+  TextField,
+  Typography,
 } from '@mui/material';
 
 import { shuffleArray } from 'src/utils/array-tools';
 
+import { MiemieData, MiemieDetails } from 'src/types';
 import miemieDetails from 'src/data/miemie-details.json';
-import { MiemieData, MiemieDetails, MiemieLesson } from 'src/types';
 
+import {
+  SettingsField,
+  SettingsHeader,
+  SettingsPanel,
+  SettingsSection,
+} from 'src/sections/_shared/SettingsPanel';
 
 // Define types for our data structures
 interface ColorPreset {
@@ -209,185 +209,148 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   };
 
   return (
-    <Paper 
-      elevation={4}
-      sx={{ 
-        width: { xs: '100%', lg: 320 }, 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        zIndex: 20,
-        borderRadius: 0,
-        '@media print': { display: 'none' }
-      }}
-    >
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
-        <Box>
-            <Typography variant="h6" fontWeight="bold" color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              Char Color
-            </Typography>
-            <Typography variant="caption" color="text.secondary">Find and Color</Typography>
-        </Box>
-        <Box>
-          <Tooltip title="Regenerate">
-            <IconButton 
-              onClick={onGenerate}
-              sx={{ color: 'primary.main', mr: 1 }}
-            >
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip 
-            title="Print Sheet"
-            slotProps={{
-            popper: {
-              sx: { '@media print': { display: 'none' } }
-            }
-          }}
+    <SettingsPanel
+      width={320}
+      header={<SettingsHeader title="Char Color" subtitle="Find and Color" />}
+      footer={
+        <Stack direction="row" spacing={1}>
+          <Button
+            onClick={onGenerate}
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            fullWidth
+            sx={{ textTransform: 'none', fontWeight: 600 }}
           >
-            <IconButton 
-              onClick={onPrint}
-              sx={{ bgcolor: 'warning.main', color: 'white', '&:hover': { bgcolor: 'warning.dark' }, boxShadow: 2 }}
-            >
-              <PrintIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
+            Regenerate
+          </Button>
+          <Button
+            onClick={onPrint}
+            variant="contained"
+            startIcon={<PrintIcon />}
+            fullWidth
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          >
+            Print / PDF
+          </Button>
+        </Stack>
+      }
+    >
+      {/* ============= LOAD ============= */}
+      <SettingsSection title="Load">
+        <SettingsField label="预设字库">
+          <FormControl fullWidth size="small">
+            <InputLabel>预设字库</InputLabel>
+            <Select value={fullSelectedValue} onChange={handleLevelChange} label="预设字库">
+              <MenuItem value="">请选择字库</MenuItem>
+              {Object.keys(miemie).map((language) =>
+                Object.keys(miemie[language]).map((level) => (
+                  <MenuItem key={`${language}-${level}`} value={`${language}|${level}`}>
+                    {language} - {level}
+                  </MenuItem>
+                ))
+              )}
+            </Select>
+          </FormControl>
+        </SettingsField>
+        <SettingsField label="预设书册">
+          <FormControl fullWidth size="small">
+            <InputLabel>预设书册</InputLabel>
+            <Select value={selectedBook} onChange={handleSelectBookChange} label="预设书册">
+              <MenuItem value="">请选择书册</MenuItem>
+              {renderBookOptions()}
+            </Select>
+          </FormControl>
+        </SettingsField>
+      </SettingsSection>
 
-      <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' }}>
-        
-        {/* Load Section */}
-        <Box>
-          <Stack direction="row" alignItems="center" gap={1} sx={{ color: 'warning.main', borderBottom: 1, borderColor: 'divider', pb: 1, mb: 2 }}>
-            <DescriptionIcon fontSize="small" />
-            <Typography variant="subtitle2" fontWeight="bold">Load</Typography>
-          </Stack>
-          <Stack spacing={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>预设字库</InputLabel>
-              <Select
-                value={fullSelectedValue}
-                onChange={handleLevelChange}
-                label="预设字库"
-              >
-                <MenuItem value="">请选择字库</MenuItem>
-                {Object.keys(miemie).map(language => (
-                  Object.keys(miemie[language]).map(level => (
-                    <MenuItem key={`${language}-${level}`} value={`${language}|${level}`}>
-                      {language} - {level}
-                    </MenuItem>
-                  ))
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth size="small">
-              <InputLabel>预设书册</InputLabel>
-              <Select
-                value={selectedBook}
-                onChange={handleSelectBookChange}
-                label="预设书册"
-              >
-                <MenuItem value="">请选择书册</MenuItem>
-                {renderBookOptions()}
-              </Select>
-            </FormControl>
-          </Stack>
-        </Box>
-
-        {/* Input Section */}
-        <Box>
-          <Stack direction="row" alignItems="center" gap={1} sx={{ color: 'warning.main', borderBottom: 1, borderColor: 'divider', pb: 1, mb: 2 }}>
-              <DashboardIcon fontSize="small" />
-              <Typography variant="subtitle2" fontWeight="bold">Input Content</Typography>
-          </Stack>
+      {/* ============= INPUT ============= */}
+      <SettingsSection title="Input">
+        <SettingsField
+          label="Content"
+          caption={`${userInput.length}/${MAX_INPUT_LENGTH} characters`}
+        >
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
             <TextField
               multiline
               rows={4}
+              size="small"
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               placeholder={`请输入最多${MAX_INPUT_LENGTH}个要练习的文字`}
               inputProps={{ maxLength: MAX_INPUT_LENGTH }}
               fullWidth
-              variant="outlined"
             />
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              <IconButton onClick={handleClearInput} disabled={!userInput} color="error" size="small">
+            <Stack direction="column" spacing={0.5}>
+              <IconButton
+                onClick={handleClearInput}
+                disabled={!userInput}
+                color="error"
+                size="small"
+              >
                 <ClearIcon />
               </IconButton>
-              <IconButton onClick={handleShuffleInput} disabled={!userInput} color="primary" size="small">
+              <IconButton
+                onClick={handleShuffleInput}
+                disabled={!userInput}
+                color="primary"
+                size="small"
+              >
                 <ShuffleIcon />
               </IconButton>
-            </Box>
+            </Stack>
           </Box>
-          <Typography variant="caption" display="block" textAlign="right" color="text.secondary" sx={{ mt: 0.5 }}>
-              {userInput.length}/{MAX_INPUT_LENGTH} characters
-          </Typography>
-        </Box>
+        </SettingsField>
+      </SettingsSection>
 
-        {/* Options Section */}
-        <Box>
-          <Stack direction="row" alignItems="center" gap={1} sx={{ color: 'warning.main', borderBottom: 1, borderColor: 'divider', pb: 1, mb: 2 }}>
-            <PaletteIcon fontSize="small" />
-            <Typography variant="subtitle2" fontWeight="bold">Options</Typography>
-          </Stack>
-          <Stack spacing={3}>
-            <FormControl fullWidth size="small">
-              <InputLabel>每页字数</InputLabel>
-              <Select
-                value={wordsPerPage}
-                onChange={(e) => setWordsPerPage(e.target.value as number)}
-                label="每页字数"
-              >
-                <MenuItem value={2}>2字/页</MenuItem>
-                <MenuItem value={3}>3字/页</MenuItem>
-                <MenuItem value={4}>4字/页</MenuItem>
-                <MenuItem value={5}>5字/页</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth size="small">
-              <InputLabel>颜色色系</InputLabel>
-              <Select
-                value={selectedPreset}
-                onChange={(e) => setSelectedPreset(e.target.value as number)}
-                label="颜色色系"
-              >
-                {COLOR_PRESETS.map((preset, index) => (
-                  <MenuItem key={index} value={index}>
-                    {preset.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            
-            {/* Color Preview */}
-            <Box>
-              <Typography variant="caption" gutterBottom display="block">当前色系预览</Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                {COLOR_PRESETS[selectedPreset].colors.map((color, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      backgroundColor: color,
-                      borderRadius: 1,
-                      border: '1px solid #ccc'
-                    }}
-                    title={color}
-                  />
-                ))}
-              </Box>
-            </Box>
-          </Stack>
-        </Box>
-
-        <Box sx={{ pt: 4, pb: 2, textAlign: 'center' }}>
-            <Typography variant="caption" color="text.disabled">Generated by React & MUI</Typography>
-        </Box>
-      </Box>
-    </Paper>
+      {/* ============= OPTIONS ============= */}
+      <SettingsSection title="Options">
+        <SettingsField label="每页字数">
+          <FormControl fullWidth size="small">
+            <Select
+              value={wordsPerPage}
+              onChange={(e) => setWordsPerPage(e.target.value as number)}
+            >
+              <MenuItem value={2}>2 字/页</MenuItem>
+              <MenuItem value={3}>3 字/页</MenuItem>
+              <MenuItem value={4}>4 字/页</MenuItem>
+              <MenuItem value={5}>5 字/页</MenuItem>
+            </Select>
+          </FormControl>
+        </SettingsField>
+        <SettingsField label="颜色色系">
+          <FormControl fullWidth size="small">
+            <Select
+              value={selectedPreset}
+              onChange={(e) => setSelectedPreset(e.target.value as number)}
+            >
+              {COLOR_PRESETS.map((preset, index) => (
+                <MenuItem key={index} value={index}>
+                  {preset.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </SettingsField>
+        <SettingsField label="当前色系预览">
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {COLOR_PRESETS[selectedPreset].colors.map((color, index) => (
+              <Box
+                key={index}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  backgroundColor: color,
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'grey.300',
+                }}
+                title={color}
+              />
+            ))}
+          </Box>
+        </SettingsField>
+      </SettingsSection>
+    </SettingsPanel>
   );
 };
 
