@@ -63,7 +63,6 @@ export enum MultiOperationMode {
 }
 
 export interface MultiOperationConfig {
-  enabled: boolean;
   mode: MultiOperationMode;
   numberCount: number; // 参与运算的数字个数，默认3
 }
@@ -134,9 +133,16 @@ export enum GridType {
   NONE = 'none'
 }
 
+export enum TraceContentMode {
+  CHARACTERS = 'characters',
+  PHRASES = 'phrases',
+  SENTENCES = 'sentences'
+}
+
 export interface SheetConfig {
   // Content
   text: string;
+  contentMode: TraceContentMode;
 
   // Grid Appearance
   gridType: GridType;

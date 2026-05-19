@@ -1,7 +1,7 @@
 // src/sections/chartrace/view/components/ControlPanel.tsx
 import React, { useState } from 'react';
 
-import { Print as PrintIcon } from '@mui/icons-material';
+import { Clear as ClearIcon, Print as PrintIcon, Shuffle as ShuffleIcon } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -19,8 +19,8 @@ import {
   Typography,
 } from '@mui/material';
 
-import { GridType, SheetConfig } from 'src/types';
 import miemieDetails from 'src/data/miemie-details.json';
+import { GridType, SheetConfig, TraceContentMode } from 'src/types';
 
 import {
   SettingsField,
@@ -38,6 +38,61 @@ interface ControlPanelProps {
 export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, onPrint }) => {
   const hasChineseInText = /[\u4e00-\u9fa5]/.test(config.text);
 
+  const getContentModeFromText = (text: string, fallback: TraceContentMode) => {
+    if (text.includes('\n')) return TraceContentMode.SENTENCES;
+    if (text.includes(',') || text.includes('，')) return TraceContentMode.PHRASES;
+    if (text.trim() === '') return fallback;
+    return fallback === TraceContentMode.SENTENCES ? TraceContentMode.SENTENCES : TraceContentMode.CHARACTERS;
+  };
+
+  const getShufflePayload = (text: string) => {
+    if (text.includes('\n')) {
+      return {
+        items: text
+          .split('\n')
+          .map((item) => item.trim())
+          .filter(Boolean),
+        joiner: '\n',
+      };
+    }
+
+    if (text.includes(',') || text.includes('，')) {
+      return {
+        items: text
+          .split(/[，,]/)
+          .map((item) => item.trim())
+          .filter(Boolean),
+        joiner: text.includes('，') ? '，' : ', ',
+      };
+    }
+
+    if (text.includes(' ')) {
+      return {
+        items: text
+          .split(/\s+/)
+          .map((item) => item.trim())
+          .filter(Boolean),
+        joiner: ' ',
+      };
+    }
+
+    return {
+      items: Array.from(text).filter((char) => char.trim() !== ''),
+      joiner: '',
+    };
+  };
+
+  const shuffleItems = <T,>(items: T[]) => {
+    const nextItems = [...items];
+
+    for (let i = nextItems.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [nextItems[i], nextItems[j]] = [nextItems[j], nextItems[i]];
+    }
+
+    return nextItems;
+  };
+
   const handleChange = (key: keyof SheetConfig, value: any) => {
     setConfig((prev) => {
       const updates: Partial<SheetConfig> = { [key]: value };
@@ -46,6 +101,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
         const newText = value as string;
         const isChinese = /[\u4e00-\u9fa5]/.test(newText);
         const isEnglish = /[a-zA-Z]/.test(newText);
+        const nextContentMode = getContentModeFromText(newText, prev.contentMode);
+
+        updates.contentMode = nextContentMode;
+
+        if (nextContentMode === TraceContentMode.SENTENCES) {
+          updates.traceCount = 1;
+        }
 
         if (isChinese) {
           if (prev.gridType === GridType.ENGLISH_LINES) updates.gridType = GridType.TIAN;
@@ -81,37 +143,32 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
   };
 
   const [selectedLevel, setSelectedLevel] = useState<string>('');
-  const [selectedLessonIndex, setSelectedLessonIndex] = useState<number | ''>('');
+  const [selectedLessonIndexes, setSelectedLessonIndexes] = useState<string[]>([]);
 
-  const currentLessons = selectedLevel ? (miemieDetails as any)[selectedLevel] : null;
-  const currentLesson =
-    currentLessons && selectedLessonIndex !== '' ? currentLessons[selectedLessonIndex] : null;
+  const currentLessons = selectedLevel ? (miemieDetails as any)[selectedLevel] || [] : [];
+  const selectedLessons =
+    selectedLessonIndexes.length > 0
+      ? selectedLessonIndexes.map((index) => currentLessons[Number(index)]).filter(Boolean)
+      : currentLessons;
 
-  const hasWords =
-    selectedLessonIndex !== ''
-      ? currentLesson && Array.isArray(currentLesson.word) && currentLesson.word.length > 0
-      : currentLessons && currentLessons.some((l: any) => Array.isArray(l.word) && l.word.length > 0);
+  const hasWords = selectedLessons.some((lesson: any) => Array.isArray(lesson.word) && lesson.word.length > 0);
 
-  const hasPhrases =
-    selectedLessonIndex !== ''
-      ? currentLesson && Array.isArray(currentLesson.phrase) && currentLesson.phrase.length > 0
-      : currentLessons &&
-        currentLessons.some((l: any) => Array.isArray(l.phrase) && l.phrase.length > 0);
+  const hasPhrases = selectedLessons.some(
+    (lesson: any) => Array.isArray(lesson.phrase) && lesson.phrase.length > 0
+  );
 
-  const hasSentences =
-    selectedLessonIndex !== ''
-      ? currentLesson && Array.isArray(currentLesson.sentence) && currentLesson.sentence.length > 0
-      : currentLessons &&
-        currentLessons.some((l: any) => Array.isArray(l.sentence) && l.sentence.length > 0);
+  const hasSentences = selectedLessons.some(
+    (lesson: any) => Array.isArray(lesson.sentence) && lesson.sentence.length > 0
+  );
+
+  const shufflePayload = getShufflePayload(config.text);
 
   const handleLoadContent = (type: 'word' | 'phrase' | 'sentence', lessonData?: any) => {
     let targetLessons: any[] = [];
     if (lessonData) {
       targetLessons = Array.isArray(lessonData) ? lessonData : [lessonData];
-    } else if (currentLesson) {
-      targetLessons = [currentLesson];
-    } else if (currentLessons && selectedLessonIndex === '') {
-      targetLessons = currentLessons;
+    } else {
+      targetLessons = selectedLessons;
     }
 
     if (targetLessons.length === 0) return;
@@ -127,7 +184,20 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
 
     const title = targetLessons.length === 1 ? targetLessons[0].title : selectedLevel;
 
-    const updates: Partial<SheetConfig> = { headerTitle: title, text: content };
+    const updates: Partial<SheetConfig> = {
+      headerTitle: title,
+      text: content,
+      contentMode:
+        type === 'sentence'
+          ? TraceContentMode.SENTENCES
+          : type === 'phrase'
+            ? TraceContentMode.PHRASES
+            : TraceContentMode.CHARACTERS,
+    };
+
+    if (type === 'sentence') {
+      updates.traceCount = 1;
+    }
 
     const isChinese = /[\u4e00-\u9fa5]/.test(content);
     const isEnglish = /[a-zA-Z]/.test(content);
@@ -153,14 +223,17 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
     handleBatchChange(updates);
   };
 
-  const handleLessonChange = (val: number | string) => {
-    if (val === '') {
-      setSelectedLessonIndex('');
+  const handleLessonChange = (values: string[]) => {
+    if (values.includes('__all__')) {
+      setSelectedLessonIndexes([]);
       return;
     }
-    const index = Number(val);
-    setSelectedLessonIndex(index);
-    const lesson = currentLessons[index];
+
+    setSelectedLessonIndexes(values);
+
+    if (values.length !== 1) return;
+
+    const lesson = currentLessons[Number(values[0])];
     if (lesson) {
       const w = Array.isArray(lesson.word) && lesson.word.length > 0;
       const p = Array.isArray(lesson.phrase) && lesson.phrase.length > 0;
@@ -175,7 +248,17 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
     }
   };
 
+  const handleShuffleText = () => {
+    if (shufflePayload.items.length < 2) return;
+    handleChange('text', shuffleItems(shufflePayload.items).join(shufflePayload.joiner));
+  };
+
+  const handleClearText = () => {
+    handleChange('text', '');
+  };
+
   const isEnglishLines = config.gridType === GridType.ENGLISH_LINES;
+  const isSentenceMode = !isEnglishLines && config.contentMode === TraceContentMode.SENTENCES;
 
   return (
     <SettingsPanel
@@ -204,7 +287,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                 label="Level"
                 onChange={(e) => {
                   setSelectedLevel(e.target.value);
-                  setSelectedLessonIndex('');
+                  setSelectedLessonIndexes([]);
                 }}
               >
                 {Object.keys(miemieDetails).map((level) => {
@@ -225,16 +308,38 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
             >
               <InputLabel>Lesson</InputLabel>
               <Select
-                value={selectedLessonIndex}
+                multiple
+                value={selectedLessonIndexes}
                 label="Lesson"
                 displayEmpty
-                onChange={(e) => handleLessonChange(e.target.value)}
+                renderValue={(selected) => {
+                  const values = selected as string[];
+
+                  if (values.length === 0) {
+                    return 'All Lessons';
+                  }
+
+                  return values
+                    .map((index) => currentLessons[Number(index)]?.title)
+                    .filter(Boolean)
+                    .join(', ');
+                }}
+                onChange={(e) =>
+                  handleLessonChange(
+                    typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                  )
+                }
               >
-                <MenuItem value="">
-                  <em>{}</em>
+                <MenuItem value="__all__">
+                  <Checkbox size="small" checked={selectedLessonIndexes.length === 0} />
+                  All Lessons
                 </MenuItem>
                 {currentLessons?.map((lesson: any, index: number) => (
-                  <MenuItem key={index} value={index}>
+                  <MenuItem key={index} value={String(index)}>
+                    <Checkbox
+                      size="small"
+                      checked={selectedLessonIndexes.includes(String(index))}
+                    />
                     {lesson.title}
                   </MenuItem>
                 ))}
@@ -317,21 +422,45 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
         </SettingsField>
 
         <SettingsField label="Manual Input" caption={`${config.text.length} characters`}>
-          <TextField
-            multiline
-            rows={4}
-            fullWidth
-            size="small"
-            value={config.text}
-            onChange={(e) => handleChange('text', e.target.value)}
-            placeholder="Enter text here..."
-            inputProps={{
-              style: {
-                fontFamily: 'KaiTi, STKaiti, "Kaiti SC", "SimKai", serif',
-                fontSize: '1.1rem',
-              },
-            }}
-          />
+          <Stack spacing={1}>
+            <TextField
+              multiline
+              rows={4}
+              fullWidth
+              size="small"
+              value={config.text}
+              onChange={(e) => handleChange('text', e.target.value)}
+              placeholder="Enter text here..."
+              inputProps={{
+                style: {
+                  fontFamily: 'KaiTi, STKaiti, "Kaiti SC", "SimKai", serif',
+                  fontSize: '1.1rem',
+                },
+              }}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ClearIcon />}
+                onClick={handleClearText}
+                disabled={!config.text}
+                sx={{ textTransform: 'none' }}
+              >
+                Clear
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ShuffleIcon />}
+                onClick={handleShuffleText}
+                disabled={shufflePayload.items.length < 2}
+                sx={{ textTransform: 'none' }}
+              >
+                Shuffle
+              </Button>
+            </Box>
+          </Stack>
         </SettingsField>
       </SettingsSection>
 
@@ -421,7 +550,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
         </Stack>
 
         <SettingsField
-          label={isEnglishLines ? `Repeat Count: ${config.traceCount}` : `Trace Copies: ${config.traceCount}`}
+          label={
+            isSentenceMode
+              ? 'Trace Copies: 1'
+              : isEnglishLines
+                ? `Repeat Count: ${config.traceCount}`
+                : `Trace Copies: ${config.traceCount}`
+          }
         >
           <Slider
             value={config.traceCount}
@@ -431,6 +566,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
             marks
             onChange={(_, val) => handleChange('traceCount', val)}
             valueLabelDisplay="auto"
+            disabled={isSentenceMode}
           />
         </SettingsField>
       </SettingsSection>

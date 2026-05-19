@@ -4,13 +4,13 @@ import {
   Clear as ClearIcon,
   Print as PrintIcon,
   Refresh as RefreshIcon,
+  Shuffle as ShuffleIcon,
 } from '@mui/icons-material';
 import {
   Box,
   Button,
   CssBaseline,
   FormControl,
-  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -235,6 +235,28 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     setSelectedBook('');
   };
 
+  const getShuffleInputItems = () => {
+    const mode = parseSelectedMode(selectedMode);
+    const splitPattern = mode === 'SENTENCE' ? /[\n]+/ : /[\s,;，；、]+/;
+
+    return userInput
+      .split(splitPattern)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  };
+
+  const handleShuffleInput = () => {
+    const mode = parseSelectedMode(selectedMode);
+    const joiner = mode === 'SENTENCE' ? '\n' : ', ';
+    const items = getShuffleInputItems();
+
+    if (items.length < 2) return;
+
+    setUserInput(shuffleArray(items).join(joiner));
+  };
+
+  const shuffleInputItems = getShuffleInputItems();
+
   const getWordLibSelecter = (mode: Mode): React.ReactElement => {
     const title = SELECTER_TITLE_PRESETS[mode];
     const miemiedata = MIEMIE_PRESETS[mode];
@@ -336,12 +358,12 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       </SettingsSection>
 
       {/* ============= INPUT ============= */}
-      <SettingsSection title="Input">
+      <SettingsSection title="Content">
         <SettingsField
-          label="Content"
+          label="Manual Input"
           caption={`${userInput.length}/${MAX_INPUT_LENGTH} characters`}
         >
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+          <Stack spacing={1}>
             <TextField
               multiline
               rows={4}
@@ -352,16 +374,29 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               inputProps={{ maxLength: MAX_INPUT_LENGTH }}
               fullWidth
             />
-            <IconButton
-              onClick={handleClearInput}
-              disabled={!userInput}
-              color="error"
-              size="small"
-              sx={{ mt: 0.5 }}
-            >
-              <ClearIcon />
-            </IconButton>
-          </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ClearIcon />}
+                onClick={handleClearInput}
+                disabled={!userInput}
+                sx={{ textTransform: 'none' }}
+              >
+                Clear
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ShuffleIcon />}
+                onClick={handleShuffleInput}
+                disabled={shuffleInputItems.length < 2}
+                sx={{ textTransform: 'none' }}
+              >
+                Shuffle
+              </Button>
+            </Box>
+          </Stack>
         </SettingsField>
       </SettingsSection>
 

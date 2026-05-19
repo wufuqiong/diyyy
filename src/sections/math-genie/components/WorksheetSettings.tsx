@@ -237,7 +237,7 @@ const WorksheetSettings: React.FC<Props> = ({
     }
 
     if (operation === OperationType.MULTI_OPERATIONS) {
-      if (multiOperationConfig?.enabled) {
+      if (multiOperationConfig) {
         const { numberCount, mode } = multiOperationConfig;
         if (mode === MultiOperationMode.CHAIN_ADDITION) {
           const maxSum = Math.min((maxNum * numberCount) / 2, maxNum);
@@ -296,9 +296,6 @@ const WorksheetSettings: React.FC<Props> = ({
     setDisplayMode(next);
     if (next === DisplayMode.EMOJI && isMultiOp) {
       setOperation(OperationType.ADDITION);
-      if (multiOperationConfig?.enabled && setMultiOperationConfig) {
-        setMultiOperationConfig({ ...multiOperationConfig, enabled: false });
-      }
       notify('Switched to Addition: Multi-Operations not available in Emoji mode.');
     }
   };
@@ -328,9 +325,6 @@ const WorksheetSettings: React.FC<Props> = ({
     if (!next || !setProblemType || next === activeProblemType) return;
     setProblemType(next);
     if (next === ProblemType.FILL_BLANK) {
-      if (multiOperationConfig?.enabled && setMultiOperationConfig) {
-        setMultiOperationConfig({ ...multiOperationConfig, enabled: false });
-      }
       if (isMultiOp) {
         setOperation(OperationType.ADDITION);
         notify('Switched to Addition: Fill Blank not compatible with Multi-Operations.');
@@ -346,9 +340,6 @@ const WorksheetSettings: React.FC<Props> = ({
     }
     setSpecialPracticeType(next);
     if (next !== SpecialPracticeType.NONE) {
-      if (multiOperationConfig?.enabled && setMultiOperationConfig) {
-        setMultiOperationConfig({ ...multiOperationConfig, enabled: false });
-      }
       if (isMultiOp) {
         setOperation(OperationType.ADDITION);
         notify('Switched to Addition: Special Practice not compatible with Multi-Operations.');
@@ -644,7 +635,7 @@ const WorksheetSettings: React.FC<Props> = ({
                 </ToggleButtonGroup>
               </Field>
 
-              {isMultiOp && (
+              {isMultiOp && multiOperationConfig && (
                 <Box
                   sx={{
                     p: 1.5,
@@ -655,75 +646,48 @@ const WorksheetSettings: React.FC<Props> = ({
                   }}
                 >
                   <Stack spacing={2}>
-                    <FormControlLabel
-                      sx={{ ml: 0 }}
-                      control={
-                        <Switch
-                          checked={multiOperationConfig?.enabled || false}
-                          onChange={(e) => {
+                    <Field label="Mode">
+                      <FormControl fullWidth size="small">
+                        <Select
+                          value={multiOperationConfig.mode}
+                          onChange={(e) =>
                             setMultiOperationConfig?.({
-                              enabled: e.target.checked,
-                              mode:
-                                multiOperationConfig?.mode || MultiOperationMode.CHAIN_ADDITION,
-                              numberCount: multiOperationConfig?.numberCount || 3,
-                            });
-                          }}
-                          color="primary"
-                          size="small"
-                        />
-                      }
-                      label={
-                        <Typography variant="body2" fontWeight={600}>
-                          Enable Multi-Operations
-                        </Typography>
-                      }
-                    />
-                    {multiOperationConfig?.enabled && (
-                      <>
-                        <Field label="Mode">
-                          <FormControl fullWidth size="small">
-                            <Select
-                              value={multiOperationConfig.mode}
-                              onChange={(e) =>
-                                setMultiOperationConfig?.({
-                                  ...multiOperationConfig,
-                                  mode: e.target.value as MultiOperationMode,
-                                })
-                              }
-                            >
-                              <MenuItem value={MultiOperationMode.CHAIN_ADDITION}>
-                                Chain Addition (2 + 3 + 4)
-                              </MenuItem>
-                              <MenuItem value={MultiOperationMode.CHAIN_SUBTRACTION}>
-                                Chain Subtraction (10 − 3 − 2)
-                              </MenuItem>
-                              <MenuItem value={MultiOperationMode.MIXED_OPERATIONS}>
-                                Mixed (5 + 3 − 2)
-                              </MenuItem>
-                            </Select>
-                          </FormControl>
-                        </Field>
-                        <Field
-                          label={`Operands: ${multiOperationConfig.numberCount}`}
-                          caption="More numbers = harder."
+                              ...multiOperationConfig,
+                              mode: e.target.value as MultiOperationMode,
+                            })
+                          }
                         >
-                          <Slider
-                            value={multiOperationConfig.numberCount}
-                            onChange={(_, v) =>
-                              setMultiOperationConfig?.({
-                                ...multiOperationConfig,
-                                numberCount: v as number,
-                              })
-                            }
-                            min={3}
-                            max={6}
-                            step={1}
-                            marks
-                            valueLabelDisplay="auto"
-                          />
-                        </Field>
-                      </>
-                    )}
+                          <MenuItem value={MultiOperationMode.CHAIN_ADDITION}>
+                            Chain Addition (2 + 3 + 4)
+                          </MenuItem>
+                          <MenuItem value={MultiOperationMode.CHAIN_SUBTRACTION}>
+                            Chain Subtraction (10 − 3 − 2)
+                          </MenuItem>
+                          <MenuItem value={MultiOperationMode.MIXED_OPERATIONS}>
+                            Mixed (5 + 3 − 2)
+                          </MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Field>
+                    <Field
+                      label={`Operands: ${multiOperationConfig.numberCount}`}
+                      caption="More numbers = harder."
+                    >
+                      <Slider
+                        value={multiOperationConfig.numberCount}
+                        onChange={(_, v) =>
+                          setMultiOperationConfig?.({
+                            ...multiOperationConfig,
+                            numberCount: v as number,
+                          })
+                        }
+                        min={3}
+                        max={6}
+                        step={1}
+                        marks
+                        valueLabelDisplay="auto"
+                      />
+                    </Field>
                   </Stack>
                 </Box>
               )}

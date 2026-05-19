@@ -11,7 +11,6 @@ import {
   Button,
   CssBaseline,
   FormControl,
-  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -264,12 +263,12 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       </SettingsSection>
 
       {/* ============= INPUT ============= */}
-      <SettingsSection title="Input">
+      <SettingsSection title="Content">
         <SettingsField
-          label="Content"
+          label="Manual Input"
           caption={`${userInput.length}/${MAX_INPUT_LENGTH} characters`}
         >
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+          <Stack spacing={1}>
             <TextField
               multiline
               rows={4}
@@ -280,25 +279,29 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               inputProps={{ maxLength: MAX_INPUT_LENGTH }}
               fullWidth
             />
-            <Stack direction="column" spacing={0.5}>
-              <IconButton
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ClearIcon />}
                 onClick={handleClearInput}
                 disabled={!userInput}
-                color="error"
-                size="small"
+                sx={{ textTransform: 'none' }}
               >
-                <ClearIcon />
-              </IconButton>
-              <IconButton
+                Clear
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ShuffleIcon />}
                 onClick={handleShuffleInput}
-                disabled={!userInput}
-                color="primary"
-                size="small"
+                disabled={userInputToinputChars(userInput).length < 2}
+                sx={{ textTransform: 'none' }}
               >
-                <ShuffleIcon />
-              </IconButton>
-            </Stack>
-          </Box>
+                Shuffle
+              </Button>
+            </Box>
+          </Stack>
         </SettingsField>
       </SettingsSection>
 

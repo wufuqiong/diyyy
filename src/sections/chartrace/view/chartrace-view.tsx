@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { Box, CssBaseline } from '@mui/material';
 
-import { SheetConfig, GridType } from 'src/types';
+import { SheetConfig, GridType, TraceContentMode } from 'src/types';
 
 import { PaperSheet } from './components/PaperSheet';
 import { ControlPanel } from './components/ControlPanel';
@@ -10,6 +10,7 @@ import { ControlPanel } from './components/ControlPanel';
 export const CharTraceView: React.FC = () => {
   const [config, setConfig] = useState<SheetConfig>({
     text: '一起来练习吧',
+    contentMode: TraceContentMode.CHARACTERS,
     gridType: GridType.TIAN,
     gridColor: '#ff9c9c', // A nice light reddish color standard for zitie
     gridOpacity: 0.6,

@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { SheetConfig, GridType } from 'src/types';
+import { SheetConfig, GridType, TraceContentMode } from 'src/types';
 
 import { GridBox } from './GridBox';
 import { getCharData } from '../utils/charData';
@@ -55,8 +55,8 @@ const getPinyinFontStack = () =>
   '"Andika", "Comic Sans MS", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif';
 
 export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
-  // Detect "Word Mode" via comma separator
-  const isWordMode = config.text.includes(',') || config.text.includes('，');
+  const isSentenceMode = config.contentMode === TraceContentMode.SENTENCES;
+  const isWordMode = config.contentMode === TraceContentMode.PHRASES;
   const isEnglishMode = config.gridType === GridType.ENGLISH_LINES;
   
   // Calculate dynamic styles
@@ -86,6 +86,8 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
   // Pinyin Y Offset ~ -4px * colScale
   // Hanzi Font Size ~ 75% of grid width
   const hanziFontSize = 75; // SVG viewBox is 100x100, 75 represents 75%
+  const punctuationPattern = /^[，。！？；：、,.!?;:（）()《》〈〉【】「」『』“”‘’'"…—-]$/;
+  const cornerPunctuationPattern = /^[，。！？；：、,.!?;:]$/;
 
   const renderPinyinStaff = (pinyinText: string, isTrace: boolean) => (
     <Box sx={{ width: '100%', aspectRatio: '2 / 1', position: 'relative', overflow: 'visible' }}>
@@ -114,6 +116,61 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
       </svg>
     </Box>
   );
+
+  const renderSentenceCell = (char: string | undefined, isTrace: boolean) => {
+    const contentColor = isTrace ? config.traceTextColor : config.mainTextColor;
+    const contentOpacity = isTrace ? config.traceOpacity : 1;
+
+    if (!char || !punctuationPattern.test(char)) {
+      return (
+        <GridBox
+          type={config.gridType}
+          color={config.gridColor}
+          opacity={config.gridOpacity}
+          content={char}
+          contentColor={contentColor}
+          contentOpacity={contentOpacity}
+          contentFontSize={hanziFontSize}
+          fontFamily={config.fontFamily}
+          showOuterBorder={false}
+        />
+      );
+    }
+
+    const isCornerPunctuation = cornerPunctuationPattern.test(char);
+
+    return (
+      <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+        <GridBox
+          type={config.gridType}
+          color={config.gridColor}
+          opacity={config.gridOpacity}
+          contentColor={contentColor}
+          contentOpacity={contentOpacity}
+          contentFontSize={hanziFontSize}
+          fontFamily={config.fontFamily}
+          showOuterBorder={false}
+        />
+        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+          <text
+            x={isCornerPunctuation ? '68' : '50'}
+            y={isCornerPunctuation ? '68' : '52'}
+            dominantBaseline="central"
+            textAnchor="middle"
+            fill={contentColor}
+            fillOpacity={contentOpacity}
+            className={config.fontFamily}
+            style={{
+              fontSize: `${isCornerPunctuation ? 44 : 52}px`,
+              fontFamily: getFontStack(config.fontFamily),
+            }}
+          >
+            {char}
+          </text>
+        </svg>
+      </Box>
+    );
+  };
 
   // Shared styles for the outer scrolling container
   const containerStyle = {
@@ -283,133 +340,296 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
     );
   }
 
-  // --- Render Mode 2: Chinese Word/Phrase List ---
-  if (isWordMode) {
-    const words = config.text.split(/[,，]/).filter(w => w.trim() !== '');
-    
-    // Calculate max items based on physical space to prevent overflow when colsPerRow changes
+  if (isSentenceMode) {
+    type SentenceCell = {
+      char?: string;
+      pinyin: string;
+      isTrace: boolean;
+    };
+
+    type SentenceBlock = {
+      sampleRows: SentenceCell[][];
+      traceRows: SentenceCell[][];
+      rowUnits: number;
+      heightMm: number;
+    };
+
+    const sentences = config.text.split('\n').map((sentence) => sentence.trim()).filter((sentence) => sentence !== '');
     const cellHeightMm = A4_CONTENT_WIDTH_MM / config.colsPerRow;
-    // Height = Pinyin + Grid(cell) + Pinyin + Grid(cell) + Gap + MarginOfError
-    const blockHeightMm = (cellHeightMm * 2) + 20;
-    const maxItemsPhysically = Math.max(1, Math.floor(A4_CONTENT_HEIGHT_MM / blockHeightMm));
-    
-    const itemsPerPage = Math.max(1, Math.min(Math.floor(config.rowsPerPage / 2), maxItemsPhysically));
-    
-    let pages = chunk(words, itemsPerPage);
-    if (pages.length === 0) pages = [[]];
+    const pinyinHeightMm = config.showPinyin ? cellHeightMm / 2 : 0;
+    const practiceRowHeightMm = cellHeightMm + pinyinHeightMm;
+    const blockGapMm = 8;
+
+    const sentenceBlocks: SentenceBlock[] = sentences.map((sentence) => {
+      const charDataList = Array.from(sentence)
+        .filter((char) => char.trim() !== '')
+        .map((char) => ({
+          char,
+          pinyin: punctuationPattern.test(char) ? '' : getCharData(char).pinyin,
+        }));
+      const rowsPerPass = Math.max(1, Math.ceil(charDataList.length / config.colsPerRow));
+      const paddedCellCount = rowsPerPass * config.colsPerRow;
+      const buildRows = (isTrace: boolean) => {
+        const cells: SentenceCell[] = Array.from({ length: paddedCellCount }, (_, cellIndex) => {
+          if (cellIndex >= charDataList.length) {
+            return { char: undefined, pinyin: '', isTrace };
+          }
+
+          const charData = charDataList[cellIndex];
+
+          return {
+            char: charData.char,
+            pinyin: charData.pinyin,
+            isTrace,
+          };
+        });
+
+        return chunk(cells, config.colsPerRow);
+      };
+
+      return {
+        sampleRows: buildRows(false),
+        traceRows: buildRows(true),
+        rowUnits: rowsPerPass * 2,
+        heightMm: rowsPerPass * practiceRowHeightMm * 2,
+      };
+    });
+
+    const maxRowsPhysically = Math.max(1, Math.floor(A4_CONTENT_HEIGHT_MM / Math.max(practiceRowHeightMm, 1)));
+    const rowBudgetPerPage = Math.max(1, Math.min(config.rowsPerPage, maxRowsPhysically));
+    const pages: SentenceBlock[][] = [];
+    let currentPage: SentenceBlock[] = [];
+    let currentRowUnits = 0;
+    let currentHeightMm = 0;
+
+    sentenceBlocks.forEach((block) => {
+      const nextHeightMm = currentPage.length === 0 ? block.heightMm : currentHeightMm + blockGapMm + block.heightMm;
+      const exceedsRowBudget = currentRowUnits + block.rowUnits > rowBudgetPerPage;
+      const exceedsHeightBudget = nextHeightMm > A4_CONTENT_HEIGHT_MM;
+
+      if ((exceedsRowBudget || exceedsHeightBudget) && currentPage.length > 0) {
+        pages.push(currentPage);
+        currentPage = [block];
+        currentRowUnits = block.rowUnits;
+        currentHeightMm = block.heightMm;
+        return;
+      }
+
+      currentPage.push(block);
+      currentRowUnits += block.rowUnits;
+      currentHeightMm = nextHeightMm;
+    });
+
+    if (currentPage.length > 0) {
+      pages.push(currentPage);
+    }
+
+    if (pages.length === 0) {
+      pages.push([]);
+    }
 
     return (
-        <Box sx={containerStyle}>
-          {pages.map((pageWords, pageIndex) => (
-          <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': { 
-              ...a4PageStyle['@media print'], 
-              breakAfter: pageIndex === pages.length - 1 ? 'auto' : 'page' 
+      <Box sx={containerStyle}>
+        {pages.map((pageBlocks, pageIndex) => (
+          <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': {
+            ...a4PageStyle['@media print'],
+            breakAfter: pageIndex === pages.length - 1 ? 'auto' : 'page'
           } }}>
             <Box component="header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid', borderColor: 'orange.200', pb: 1, mb: 3 }}>
-                 <Typography variant="h6" className="font-kaiti" sx={{ fontWeight: 'bold', color: 'text.primary' }}>{config.headerTitle}</Typography>
-                 <Typography variant="body2" className="font-kaiti" sx={{ color: 'text.secondary' }}>{config.headerContent}</Typography>
+              <Typography variant="h6" className="font-kaiti" sx={{ fontWeight: 'bold', color: 'text.primary' }}>{config.headerTitle}</Typography>
+              <Typography variant="body2" className="font-kaiti" sx={{ color: 'text.secondary' }}>{config.headerContent}</Typography>
             </Box>
-    
+
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {pageWords.map((word, wordIndex) => (
-                    <Box key={wordIndex} sx={{ width: '100%', display: 'flex', flexDirection: 'column', ...wrapperStyle }}>
-                            {/* Row 1: Guide with Pinyin & Info */}
-                            <Box sx={{ display: 'flex', width: '100%' }}>
-                                {/* Character Columns */}
-                                {(Array.from(word) as string[]).map((char, charIdx) => {
-                                    const cData = getCharData(char);
-                                    return (
-                                        <Box key={charIdx} sx={{ display: 'flex', flexDirection: 'column', width: cellWidthPercent }}>
-                                            {/* Pinyin Box */}
-                                            {config.showPinyin && (
-                                                <Box sx={{ position: 'relative', bgcolor: 'white', overflow: 'hidden', ...cellStyle }}>
-                                                    {renderPinyinStaff(cData.pinyin || '', false)}
-                                                </Box>
-                                            )}
-                                            {/* Solid Character Grid */}
-                                            <Box sx={{ aspectRatio: '1/1', position: 'relative', ...cellStyle }}>
-                                                <GridBox 
-                                                    type={config.gridType} 
-                                                    color={config.gridColor} 
-                                                    opacity={config.gridOpacity}
-                                                    content={char}
-                                                    contentColor={config.mainTextColor}
-                                                    contentFontSize={hanziFontSize}
-                                                    fontFamily={config.fontFamily}
-                                                    showOuterBorder={false} 
-                                                />
-                                            </Box>
-                                        </Box>
-                                    );
-                                })}
-
-                                {/* Info Area (Right side) - Spans the rest of the row */}
-                                <Box sx={{ flex: 1, p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', bgcolor: 'white', ...cellStyle }}>
-                                    {/* Completely empty info area for Word Mode as requested */}
+              {pageBlocks.map((block, sentenceIndex) => (
+                <Box key={sentenceIndex} sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  {[block.sampleRows, block.traceRows].map((passRows, passIndex) => (
+                    <Box key={passIndex} sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      {passRows.map((rowCells, rowIndex) => (
+                        <Box key={rowIndex} sx={{ width: '100%' }}>
+                          {config.showPinyin && (
+                            <Box sx={{ display: 'flex', width: '100%', ...wrapperStyle }}>
+                              {rowCells.map((cell, colIndex) => (
+                                <Box
+                                  key={colIndex}
+                                  sx={{ position: 'relative', bgcolor: 'white', overflow: 'hidden', width: cellWidthPercent, ...cellStyle }}
+                                >
+                                  {renderPinyinStaff(cell.pinyin, cell.isTrace)}
                                 </Box>
+                              ))}
                             </Box>
+                          )}
 
-                            {config.showPinyin && (
-                                <Box sx={{ display: 'flex', width: '100%' }}>
-                                    {Array.from({ length: config.colsPerRow }).map((_, colIndex) => {
-                                        const charAtPos = word[colIndex % word.length];
-                                        const pinyinAtPos = getCharData(charAtPos).pinyin;
-                                        const totalCharsToTrace = word.length * config.traceCount;
-                                        const isTrace = colIndex < totalCharsToTrace;
-
-                                        return (
-                                            <Box
-                                                key={colIndex}
-                                                sx={{ position: 'relative', bgcolor: 'white', overflow: 'hidden', width: cellWidthPercent, ...cellStyle }}
-                                            >
-                                                {renderPinyinStaff(isTrace ? pinyinAtPos : '', true)}
-                                            </Box>
-                                        );
-                                    })}
-                                </Box>
-                            )}
-
-                            {/* Row 2: Practice (Trace + Empty) */}
-                            <Box sx={{ display: 'flex', width: '100%' }}>
-                                {Array.from({ length: config.colsPerRow }).map((_, colIndex) => {
-                                    // Logic: Repeat the word pattern across the row
-                                    const charAtPos = word[colIndex % word.length];
-                                    
-                                    // Logic: traceCount = Number of word repetitions.
-                                    // If word is "abc" (3 chars) and traceCount is 2, we trace 6 cells.
-                                    const totalCharsToTrace = word.length * config.traceCount;
-                                    const isTrace = colIndex < totalCharsToTrace;
-
-                                    return (
-                                        <Box key={colIndex} 
-                                             sx={{ aspectRatio: '1/1', position: 'relative', width: cellWidthPercent, ...cellStyle }}
-                                        >
-                                            <GridBox 
-                                                type={config.gridType} 
-                                                color={config.gridColor} 
-                                                opacity={config.gridOpacity}
-                                                content={isTrace ? charAtPos : undefined}
-                                                contentColor={config.traceTextColor}
-                                                contentOpacity={config.traceOpacity}
-                                                contentFontSize={hanziFontSize}
-                                                fontFamily={config.fontFamily}
-                                                showOuterBorder={false}
-                                            />
-                                        </Box>
-                                    );
-                                })}
-                            </Box>
+                          <Box sx={{ display: 'flex', width: '100%', ...wrapperStyle }}>
+                            {rowCells.map((cell, colIndex) => (
+                              <Box
+                                key={colIndex}
+                                sx={{ aspectRatio: '1/1', position: 'relative', bgcolor: 'white', width: cellWidthPercent, ...cellStyle }}
+                              >
+                                {renderSentenceCell(cell.char, cell.isTrace)}
+                              </Box>
+                            ))}
+                          </Box>
                         </Box>
-                ))}
+                      ))}
+                    </Box>
+                  ))}
+                </Box>
+              ))}
             </Box>
-    
+
             <Box component="footer" sx={{ mt: 'auto', borderTop: 1, borderColor: 'grey.100', pt: 1, textAlign: 'center', color: 'grey.400', fontSize: '0.75rem' }} className="font-kaiti">
-                 Page {pageIndex + 1}
+              Page {pageIndex + 1}
             </Box>
           </Box>
-          ))}
-        </Box>
-      );
+        ))}
+      </Box>
+    );
+  }
+
+  if (isWordMode) {
+    type WordCell = {
+      char?: string;
+      pinyin: string;
+      isTrace: boolean;
+    };
+
+    type WordBlock = {
+      rows: WordCell[][];
+      rowUnits: number;
+      heightMm: number;
+    };
+
+    const words = config.text.split(/[,，]/).map((word) => word.trim()).filter((word) => word !== '');
+    const cellHeightMm = A4_CONTENT_WIDTH_MM / config.colsPerRow;
+    const pinyinHeightMm = config.showPinyin ? cellHeightMm / 2 : 0;
+    const practiceRowHeightMm = cellHeightMm + pinyinHeightMm;
+    const blockGapMm = 6;
+
+    const wordBlocks: WordBlock[] = words.map((word) => {
+      const charDataList = Array.from(word).map((char) => ({ char, pinyin: getCharData(char).pinyin }));
+      const totalCells = charDataList.length * (config.traceCount + 1);
+      const rowUnits = Math.max(1, Math.ceil(totalCells / config.colsPerRow));
+      const paddedCellCount = rowUnits * config.colsPerRow;
+      const cells: WordCell[] = Array.from({ length: paddedCellCount }, (_, cellIndex) => {
+        if (cellIndex >= totalCells) {
+          return { char: undefined, pinyin: '', isTrace: false };
+        }
+
+        const charIndex = cellIndex % charDataList.length;
+        const copyIndex = Math.floor(cellIndex / charDataList.length);
+        const charData = charDataList[charIndex];
+
+        return {
+          char: charData.char,
+          pinyin: charData.pinyin,
+          isTrace: copyIndex > 0,
+        };
+      });
+
+      return {
+        rows: chunk(cells, config.colsPerRow),
+        rowUnits,
+        heightMm: rowUnits * practiceRowHeightMm,
+      };
+    });
+
+    const maxRowsPhysically = Math.max(1, Math.floor(A4_CONTENT_HEIGHT_MM / Math.max(practiceRowHeightMm, 1)));
+    const rowBudgetPerPage = Math.max(1, Math.min(config.rowsPerPage, maxRowsPhysically));
+    const pages: WordBlock[][] = [];
+    let currentPage: WordBlock[] = [];
+    let currentRowUnits = 0;
+    let currentHeightMm = 0;
+
+    wordBlocks.forEach((block) => {
+      const nextHeightMm = currentPage.length === 0 ? block.heightMm : currentHeightMm + blockGapMm + block.heightMm;
+      const exceedsRowBudget = currentRowUnits + block.rowUnits > rowBudgetPerPage;
+      const exceedsHeightBudget = nextHeightMm > A4_CONTENT_HEIGHT_MM;
+
+      if ((exceedsRowBudget || exceedsHeightBudget) && currentPage.length > 0) {
+        pages.push(currentPage);
+        currentPage = [block];
+        currentRowUnits = block.rowUnits;
+        currentHeightMm = block.heightMm;
+        return;
+      }
+
+      currentPage.push(block);
+      currentRowUnits += block.rowUnits;
+      currentHeightMm = nextHeightMm;
+    });
+
+    if (currentPage.length > 0) {
+      pages.push(currentPage);
+    }
+
+    if (pages.length === 0) {
+      pages.push([]);
+    }
+
+    return (
+      <Box sx={containerStyle}>
+        {pages.map((pageBlocks, pageIndex) => (
+          <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': {
+            ...a4PageStyle['@media print'],
+            breakAfter: pageIndex === pages.length - 1 ? 'auto' : 'page'
+          } }}>
+            <Box component="header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid', borderColor: 'orange.200', pb: 1, mb: 3 }}>
+              <Typography variant="h6" className="font-kaiti" sx={{ fontWeight: 'bold', color: 'text.primary' }}>{config.headerTitle}</Typography>
+              <Typography variant="body2" className="font-kaiti" sx={{ color: 'text.secondary' }}>{config.headerContent}</Typography>
+            </Box>
+
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {pageBlocks.map((block, wordIndex) => (
+                <Box key={wordIndex} sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  {block.rows.map((rowCells, rowIndex) => (
+                    <Box key={rowIndex} sx={{ width: '100%' }}>
+                      {config.showPinyin && (
+                        <Box sx={{ display: 'flex', width: '100%', ...wrapperStyle }}>
+                          {rowCells.map((cell, colIndex) => (
+                            <Box
+                              key={colIndex}
+                              sx={{ position: 'relative', bgcolor: 'white', overflow: 'hidden', width: cellWidthPercent, ...cellStyle }}
+                            >
+                              {renderPinyinStaff(cell.pinyin, cell.isTrace)}
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
+
+                      <Box sx={{ display: 'flex', width: '100%', ...wrapperStyle }}>
+                        {rowCells.map((cell, colIndex) => (
+                          <Box
+                            key={colIndex}
+                            sx={{ aspectRatio: '1/1', position: 'relative', bgcolor: 'white', width: cellWidthPercent, ...cellStyle }}
+                          >
+                            <GridBox
+                              type={config.gridType}
+                              color={config.gridColor}
+                              opacity={config.gridOpacity}
+                              content={cell.char}
+                              contentColor={cell.isTrace ? config.traceTextColor : config.mainTextColor}
+                              contentOpacity={cell.isTrace ? config.traceOpacity : 1}
+                              contentFontSize={hanziFontSize}
+                              fontFamily={config.fontFamily}
+                              showOuterBorder={false}
+                            />
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              ))}
+            </Box>
+
+            <Box component="footer" sx={{ mt: 'auto', borderTop: 1, borderColor: 'grey.100', pt: 1, textAlign: 'center', color: 'grey.400', fontSize: '0.75rem' }} className="font-kaiti">
+              Page {pageIndex + 1}
+            </Box>
+          </Box>
+        ))}
+      </Box>
+    );
   }
 
   // --- Render Mode 3: Standard Chinese Character Practice ---

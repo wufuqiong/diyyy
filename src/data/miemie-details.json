@@ -521,6 +521,12 @@
             "phrase": ["pentagon", "hexagon", "octagon", "cube", "right angle", "sphere", "cylinder", "pyramid", "edge", "angle"],
             "word": [],
             "sentence": []
+        },
+        {
+            "title": "Clothes",
+            "phrase":["shirt", "dress", "jeans", "trousers", "skirt", "socks", "cap", "umbrella", "swimsuit", "gloves", "high heal shoes", "glasses", "mittens", "necklace", "ring", "bracelet", "belt"],
+            "word": [],
+            "sentence": []
         }
     ]
 }

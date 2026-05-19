@@ -790,7 +790,7 @@ const generateMathProblems = async (
   try {
     const activeCustomDifficulty = difficulty === DifficultyLevel.CUSTOM ? customDifficulty : undefined;
     // Check if this is multi-operation mode
-    if (operation === OperationType.MULTI_OPERATIONS && multiOperationConfig?.enabled) {
+    if (operation === OperationType.MULTI_OPERATIONS && multiOperationConfig) {
       // Get emojis for theme
       const themeKey = theme.toLowerCase();
       const emojis = THEME_EMOJIS[themeKey] || ['⭐', '🌟', '✨', '💫', '🪐', '🌠', '🔭', '🛸'];
@@ -1177,7 +1177,6 @@ export const MathGenieView: React.FC = () => {
     problemType: ProblemType.STANDARD,
     specialPracticeType: SpecialPracticeType.NONE,
     multiOperationConfig: {
-      enabled: false,
       mode: MultiOperationMode.CHAIN_ADDITION,
       numberCount: 3
     }
@@ -1198,7 +1197,6 @@ export const MathGenieView: React.FC = () => {
   const [useMixMode, setUseMixMode] = useState(false);
 
   const [multiOperationConfig, setMultiOperationConfig] = useState<MultiOperationConfig>({
-    enabled: false,
     mode: MultiOperationMode.CHAIN_ADDITION,
     numberCount: 3
   });
@@ -1410,12 +1408,12 @@ export const MathGenieView: React.FC = () => {
               difficultyRatios: { easy: 20, medium: 50, hard: 20, custom: 10 },
               problemType: ProblemType.STANDARD,
               specialPracticeType: SpecialPracticeType.NONE,
-              multiOperationConfig: { enabled: false, mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 3 }
+              multiOperationConfig: { mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 3 }
             });
             setCustomDifficulty({ min: 1, max: 15 });
             setDifficultyRatios({ easy: 20, medium: 50, hard: 20, custom: 10 });
             setUseMixMode(false);
-            setMultiOperationConfig({ enabled: false, mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 3 });
+            setMultiOperationConfig({ mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 3 });
             setExcludeZeroProblems(false);
           }}
         />
