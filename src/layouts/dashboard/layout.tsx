@@ -8,11 +8,8 @@ import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 
-import { _langs, _notifications } from 'src/_mock';
-
 import { NavMobile, NavDesktop } from './nav';
 import { layoutClasses } from '../core/classes';
-import { _account } from '../nav-config-account';
 import { dashboardLayoutVars } from './css-vars';
 import { navData } from '../nav-config-dashboard';
 import { MainSection } from '../core/main-section';
