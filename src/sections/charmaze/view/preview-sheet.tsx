@@ -1,20 +1,11 @@
 import React from 'react';
 
-import { Print, NavigateBefore, NavigateNext, Flag, Star } from '@mui/icons-material';
+import { Print, NavigateNext, NavigateBefore } from '@mui/icons-material';
 import {
   Box,
   Button,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Typography,
-  Paper,
-  Container,
-  Grid,
-  IconButton,
-  SelectChangeEvent
+  IconButton
 } from '@mui/material';
 
 import { useRandomIcon } from 'src/components/iconify/random-icon';

@@ -1,31 +1,33 @@
+import type { SheetConfig} from 'src/types';
+
 // src/sections/chartrace/view/components/ControlPanel.tsx
 import React, { useState } from 'react';
 
 import { Clear as ClearIcon, Print as PrintIcon, Shuffle as ShuffleIcon } from '@mui/icons-material';
 import {
   Box,
+  Stack,
   Button,
-  Checkbox,
-  FormControl,
-  FormControlLabel,
-  InputLabel,
-  MenuItem,
   Select,
   Slider,
-  Stack,
+  Checkbox,
+  MenuItem,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
+  InputLabel,
   Typography,
+  FormControl,
+  ToggleButton,
+  FormControlLabel,
+  ToggleButtonGroup,
 } from '@mui/material';
 
+import { GridType, TraceContentMode } from 'src/types';
 import miemieDetails from 'src/data/miemie-details.json';
-import { GridType, SheetConfig, TraceContentMode } from 'src/types';
 
 import {
   SettingsField,
-  SettingsHeader,
   SettingsPanel,
+  SettingsHeader,
   SettingsSection,
 } from 'src/sections/_shared/SettingsPanel';
 
@@ -311,7 +313,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                 multiple
                 value={selectedLessonIndexes}
                 label="Lesson"
-                displayEmpty
                 renderValue={(selected) => {
                   const values = selected as string[];
 

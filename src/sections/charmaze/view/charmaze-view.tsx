@@ -1,3 +1,7 @@
+import type {
+  SelectChangeEvent} from '@mui/material';
+import type { MiemieData, MiemieLesson, MiemieDetails } from 'src/types';
+
 import React, { useState, useEffect, useCallback } from 'react';
 
 import {
@@ -8,27 +12,28 @@ import {
 } from '@mui/icons-material';
 import {
   Box,
+  Stack,
   Button,
+  Select,
+  MenuItem,
+  TextField,
+  InputLabel,
   CssBaseline,
   FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  TextField,
 } from '@mui/material';
+
+import { usePersistedConfig } from 'src/hooks/use-persisted-config';
 
 import { shuffleArray } from 'src/utils/array-tools';
 import { generateWordMazePath, generatePhraseMazePath, generateSentenceMazePath } from 'src/utils/maze-tools';
 
 import miemieDetails from 'src/data/miemie-details.json';
-import { MiemieData, MiemieDetails, MiemieLesson } from 'src/types';
 
+import { ResponsiveWorkbench } from 'src/sections/_shared/ResponsiveWorkbench';
 import {
   SettingsField,
-  SettingsHeader,
   SettingsPanel,
+  SettingsHeader,
   SettingsSection,
 } from 'src/sections/_shared/SettingsPanel';
 
@@ -448,15 +453,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
 };
 
 export const CharMazeView: React.FC = () => {
-  const [userInput, setUserInput] = useState('');
-  const [selectedMode, setSelectedMode] = useState(0);
-  const [wordsPerPage, setWordsPerPage] = useState(5);
-  const [selectedTableSize, setSelectedTableSize] = useState(0);
-  const [selectedLevel, setSelectedLevel] = useState('');
-  const [fullSelectedValue, setFullSelectedValue] = useState('');
-  const [selectedBook, setSelectedBook] = useState('');
+  const [userInput, setUserInput] = usePersistedConfig('charmaze.userInput', '');
+  const [selectedMode, setSelectedMode] = usePersistedConfig('charmaze.selectedMode', 0);
+  const [wordsPerPage, setWordsPerPage] = usePersistedConfig('charmaze.wordsPerPage', 5);
+  const [selectedTableSize, setSelectedTableSize] = usePersistedConfig('charmaze.selectedTableSize', 0);
+  const [selectedLevel, setSelectedLevel] = usePersistedConfig('charmaze.selectedLevel', '');
+  const [fullSelectedValue, setFullSelectedValue] = usePersistedConfig('charmaze.fullSelectedValue', '');
+  const [selectedBook, setSelectedBook] = usePersistedConfig('charmaze.selectedBook', '');
   const [pages, setPages] = useState<PageData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const pageTitle = '识字迷宫 - DIYYY';
+  const pageDescription = '免费的识字迷宫练习工具，通过走迷宫的方式帮助孩子认识汉字和词语，寓教于乐。';
 
   const handlePrint = () => {
     window.print();
@@ -610,31 +618,33 @@ export const CharMazeView: React.FC = () => {
   }, [generatePages]);
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', width: '100%', overflow: 'hidden', '@media print': { height: 'auto', overflow: 'visible', display: 'block' } }}>
+    <>
+      <title>{pageTitle}</title>
+      <meta name="description" content={pageDescription} />
       <CssBaseline />
-      {/* Left Config Panel */}
-      <ControlPanel 
-        userInput={userInput}
-        setUserInput={setUserInput}
-        selectedMode={selectedMode}
-        setSelectedMode={setSelectedMode}
-        selectedTableSize={selectedTableSize}
-        setSelectedTableSize={setSelectedTableSize}
-        wordsPerPage={wordsPerPage}
-        setWordsPerPage={setWordsPerPage}
-        selectedLevel={selectedLevel}
-        setSelectedLevel={setSelectedLevel}
-        fullSelectedValue={fullSelectedValue}
-        setFullSelectedValue={setFullSelectedValue}
-        selectedBook={selectedBook}
-        setSelectedBook={setSelectedBook}
-        onGenerate={generatePages}
-        onPrint={handlePrint}
-        isGenerating={isGenerating}
-      />
-      
-      {/* Right Preview Area */}
-      <Box component="main" sx={{ flex: 1, height: '100%', position: 'relative', zIndex: 10, '@media print': { height: 'auto', overflow: 'visible' } }}>
+      <ResponsiveWorkbench
+        sidebar={
+          <ControlPanel 
+            userInput={userInput}
+            setUserInput={setUserInput}
+            selectedMode={selectedMode}
+            setSelectedMode={setSelectedMode}
+            selectedTableSize={selectedTableSize}
+            setSelectedTableSize={setSelectedTableSize}
+            wordsPerPage={wordsPerPage}
+            setWordsPerPage={setWordsPerPage}
+            selectedLevel={selectedLevel}
+            setSelectedLevel={setSelectedLevel}
+            fullSelectedValue={fullSelectedValue}
+            setFullSelectedValue={setFullSelectedValue}
+            selectedBook={selectedBook}
+            setSelectedBook={setSelectedBook}
+            onGenerate={generatePages}
+            onPrint={handlePrint}
+            isGenerating={isGenerating}
+          />
+        }
+      >
         <PreviewSheet pages={pages.map((page, index) => ({
           refChars: page.refChars,
           characters: page.chars,
@@ -644,7 +654,7 @@ export const CharMazeView: React.FC = () => {
           pageNumber: index + 1,
           totalPages: pages.length
         }))} />
-      </Box>
-    </Box>
+      </ResponsiveWorkbench>
+    </>
   );
 };

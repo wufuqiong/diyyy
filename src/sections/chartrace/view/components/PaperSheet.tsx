@@ -1,8 +1,10 @@
+import type { SheetConfig} from 'src/types';
+
 import React from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { SheetConfig, GridType, TraceContentMode } from 'src/types';
+import { GridType, TraceContentMode } from 'src/types';
 
 import { GridBox } from './GridBox';
 import { getCharData } from '../utils/charData';
@@ -64,13 +66,13 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
   
   // "Border Collapse" strategy for Chinese Grid
   const wrapperStyle = {
-    borderColor: borderColor,
+    borderColor,
     borderWidth: '1px 0 0 1px', // Top Left
     borderStyle: 'solid',
   };
   
   const cellStyle = {
-    borderColor: borderColor,
+    borderColor,
     borderWidth: '0 1px 1px 0', // Bottom Right
     borderStyle: 'solid',
   };

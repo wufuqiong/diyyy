@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
+import type { SheetConfig} from 'src/types';
 
-import { Box, CssBaseline } from '@mui/material';
+import React from 'react';
 
-import { SheetConfig, GridType, TraceContentMode } from 'src/types';
+import { CssBaseline } from '@mui/material';
+
+import { usePersistedConfig } from 'src/hooks/use-persisted-config';
+
+import { GridType, TraceContentMode } from 'src/types';
+
+import { ResponsiveWorkbench } from 'src/sections/_shared/ResponsiveWorkbench';
 
 import { PaperSheet } from './components/PaperSheet';
 import { ControlPanel } from './components/ControlPanel';
 
 export const CharTraceView: React.FC = () => {
-  const [config, setConfig] = useState<SheetConfig>({
+  const pageTitle = '汉字描红 - DIYYY';
+  const pageDescription = '免费的汉字描红练习工具，支持田字格、米字格等多种格式，帮助孩子练习汉字书写。';
+
+  const [config, setConfig] = usePersistedConfig<SheetConfig>('chartrace.config', {
     text: '一起来练习吧',
     contentMode: TraceContentMode.CHARACTERS,
     gridType: GridType.TIAN,
@@ -34,19 +43,21 @@ export const CharTraceView: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', width: '100%', overflow: 'hidden', '@media print': { height: 'auto', overflow: 'visible', display: 'block' } }}>
+    <>
+      <title>{pageTitle}</title>
+      <meta name="description" content={pageDescription} />
       <CssBaseline />
-      {/* Left Config Panel */}
-      <ControlPanel 
-        config={config} 
-        setConfig={setConfig} 
-        onPrint={handlePrint} 
-      />
-      
-      {/* Right Preview Area */}
-      <Box component="main" sx={{ flex: 1, height: '100%', position: 'relative', zIndex: 10, '@media print': { height: 'auto', overflow: 'visible' } }}>
+      <ResponsiveWorkbench
+        sidebar={
+          <ControlPanel 
+            config={config} 
+            setConfig={setConfig} 
+            onPrint={handlePrint} 
+          />
+        }
+      >
         <PaperSheet config={config} />
-      </Box>
-    </Box>
+      </ResponsiveWorkbench>
+    </>
   );
 };

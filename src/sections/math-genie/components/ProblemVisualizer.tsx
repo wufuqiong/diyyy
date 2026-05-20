@@ -1,8 +1,10 @@
+import type { MathProblem} from 'src/types';
+
 import React from 'react';
 
-import { Box, Typography, Paper } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 
-import { DisplayMode, MathProblem, ProblemType } from 'src/types';
+import { DisplayMode, ProblemType } from 'src/types';
 
 interface Props {
   problem: MathProblem;

@@ -1,10 +1,12 @@
+import type { MathProblem} from 'src/types';
+
 // src/sections/math-genie/components/WorksheetPreview.tsx
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import PrintIcon from '@mui/icons-material/Print';
-import { Box, Paper, Typography, Pagination, Stack, IconButton } from '@mui/material';
+import { Box, Paper, Typography, Pagination, IconButton } from '@mui/material';
 
-import { MathProblem, DisplayMode } from 'src/types';
+import { DisplayMode } from 'src/types';
 
 import ProblemVisualizer from './ProblemVisualizer';
 

@@ -1,47 +1,49 @@
+import type {
+  DifficultyRatios,
+  MultiOperationConfig,
+  CustomDifficultyRange} from 'src/types';
+
 // src/sections/math-genie/components/WorksheetSettings.tsx
 import React, { useMemo, useState } from 'react';
 
 import {
-  AutoFixHigh as WandIcon,
-  Balance as BalanceIcon,
   Print as PrintIcon,
+  Balance as BalanceIcon,
+  AutoFixHigh as WandIcon,
   RestartAlt as ResetIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
 import {
-  Alert,
-  Autocomplete,
   Box,
-  Button,
-  Divider,
-  FormControl,
-  FormControlLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Slider,
-  Snackbar,
-  Stack,
-  Switch,
   Tab,
   Tabs,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
+  Alert,
+  Paper,
+  Stack,
+  Button,
+  Select,
+  Slider,
+  Switch,
+  Divider,
   Tooltip,
+  MenuItem,
+  Snackbar,
+  TextField,
   Typography,
+  FormControl,
+  Autocomplete,
+  ToggleButton,
+  FormControlLabel,
+  ToggleButtonGroup,
 } from '@mui/material';
 
 import {
-  CustomDifficultyRange,
-  DifficultyLevel,
-  DifficultyRatios,
   DisplayMode,
-  MultiOperationConfig,
-  MultiOperationMode,
-  OperationType,
   ProblemType,
+  OperationType,
+  DifficultyLevel,
+  MultiOperationMode,
   SpecialPracticeType,
 } from 'src/types';
 

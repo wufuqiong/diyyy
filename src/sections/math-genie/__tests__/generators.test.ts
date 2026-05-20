@@ -1,0 +1,338 @@
+import { it, expect, describe } from 'vitest';
+
+import { DisplayMode, ProblemType, OperationType, DifficultyLevel, MultiOperationMode, SpecialPracticeType } from 'src/types';
+
+describe('Math Genie Generators', () => {
+  describe('1. MIXED mode addition/subtraction balance', () => {
+    it('should generate balanced +/- counts with difference ≤ 1', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      
+      const testCases = [
+        { count: 10, expectedDiff: 0 },
+        { count: 11, expectedDiff: 1 },
+      ];
+
+      for (const { count, expectedDiff } of testCases) {
+        const { problems } = await generateMathProblems(
+          'Animals 🐶',
+          DifficultyLevel.EASY,
+          OperationType.MIXED,
+          count,
+          undefined,
+          undefined,
+          ProblemType.STANDARD,
+          SpecialPracticeType.NONE,
+          undefined,
+          false,
+          DisplayMode.TEXT
+        );
+
+        const additions = problems.filter((p: any) => p.op === '+').length;
+        const subtractions = problems.filter((p: any) => p.op === '-').length;
+        const diff = Math.abs(additions - subtractions);
+
+        expect(diff).toBeLessThanOrEqual(expectedDiff);
+        expect(additions + subtractions).toBe(count);
+      }
+    }, 10000);
+  });
+
+  describe('2. CHAIN_SUBTRACTION intermediate results', () => {
+    it('should ensure no intermediate result is negative', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+
+      const { problems } = await generateMathProblems(
+        'Animals 🐶',
+        DifficultyLevel.MEDIUM,
+        OperationType.MULTI_OPERATIONS,
+        20,
+        undefined,
+        undefined,
+        ProblemType.STANDARD,
+        SpecialPracticeType.NONE,
+        { mode: MultiOperationMode.CHAIN_SUBTRACTION, numberCount: 3 },
+        false,
+        DisplayMode.TEXT
+      );
+
+      problems.forEach(problem => {
+        if (problem.isMultiOperation && problem.numbers && problem.operators) {
+          let current = problem.numbers[0];
+          expect(current).toBeGreaterThanOrEqual(0);
+
+          for (let i = 1; i < problem.numbers.length; i++) {
+            if (problem.operators[i - 1] === '-') {
+              current -= problem.numbers[i];
+              expect(current).toBeGreaterThanOrEqual(0);
+            }
+          }
+        }
+      });
+    });
+  });
+
+  describe('3. CHAIN_ADDITION number range', () => {
+    it('should ensure all numbers fall within [min, max]', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+
+      const customDifficulty = { min: 5, max: 15 };
+
+      const { problems } = await generateMathProblems(
+        'Animals 🐶',
+        DifficultyLevel.CUSTOM,
+        OperationType.MULTI_OPERATIONS,
+        20,
+        customDifficulty,
+        undefined,
+        ProblemType.STANDARD,
+        SpecialPracticeType.NONE,
+        { mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 3 },
+        false,
+        DisplayMode.TEXT
+      );
+
+      problems.forEach(problem => {
+        if (problem.isMultiOperation && problem.numbers) {
+          problem.numbers.forEach(num => {
+            expect(num).toBeGreaterThanOrEqual(customDifficulty.min);
+            expect(num).toBeLessThanOrEqual(customDifficulty.max);
+          });
+        }
+      });
+    });
+  });
+
+  describe('4. FACT_FAMILY outputs 4 equations', () => {
+    it('should generate 4 related equations (a+b, b+a, c-a, c-b) per family', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+
+      const { problems } = await generateMathProblems(
+        'Animals 🐶',
+        DifficultyLevel.EASY,
+        OperationType.ADDITION,
+        12,
+        undefined,
+        undefined,
+        ProblemType.STANDARD,
+        SpecialPracticeType.FACT_FAMILY,
+        undefined,
+        false,
+        DisplayMode.TEXT
+      );
+
+      expect(problems.length % 4).toBe(0);
+
+      for (let i = 0; i < problems.length; i += 4) {
+        const family = problems.slice(i, i + 4);
+        
+        const p1 = family[0];
+        const p2 = family[1];
+        const p3 = family[2];
+        const p4 = family[3];
+
+        expect(p1.op).toBe('+');
+        expect(p2.op).toBe('+');
+        expect(p3.op).toBe('-');
+        expect(p4.op).toBe('-');
+
+        const a = p1.a;
+        const b = p1.b;
+        const c = a + b;
+
+        expect(p2.a).toBe(b);
+        expect(p2.b).toBe(a);
+        expect(p3.a).toBe(c);
+        expect(p3.b).toBe(a);
+        expect(p4.a).toBe(c);
+        expect(p4.b).toBe(b);
+      }
+    });
+  });
+
+  describe('5. FILL_BLANK + EMOJI mode excludes result blank', () => {
+    it('should not have blankPosition="result" in EMOJI mode', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+
+      const { problems } = await generateMathProblems(
+        'Animals 🐶',
+        DifficultyLevel.EASY,
+        OperationType.ADDITION,
+        30,
+        undefined,
+        undefined,
+        ProblemType.FILL_BLANK,
+        SpecialPracticeType.NONE,
+        undefined,
+        false,
+        DisplayMode.EMOJI
+      );
+
+      problems.forEach(problem => {
+        if (problem.blankPosition) {
+          expect(problem.blankPosition).not.toBe('result');
+          expect(['first', 'second']).toContain(problem.blankPosition);
+        }
+      });
+    });
+  });
+
+  describe('6. excludeZeroProblems constraint', () => {
+    it('should not contain any zero when excludeZeroProblems=true', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+
+      const { problems } = await generateMathProblems(
+        'Animals 🐶',
+        DifficultyLevel.MEDIUM,
+        OperationType.MIXED,
+        30,
+        undefined,
+        undefined,
+        ProblemType.STANDARD,
+        SpecialPracticeType.NONE,
+        undefined,
+        true,
+        DisplayMode.TEXT
+      );
+
+      problems.forEach(problem => {
+        expect(problem.a).not.toBe(0);
+        expect(problem.b).not.toBe(0);
+        const result = problem.op === '+' ? problem.a + problem.b : problem.a - problem.b;
+        expect(result).not.toBe(0);
+      });
+    });
+
+    it('should not hang with narrow range and excludeZeroProblems=true', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+
+      const startTime = Date.now();
+      
+      const { problems } = await generateMathProblems(
+        'Animals 🐶',
+        DifficultyLevel.CUSTOM,
+        OperationType.ADDITION,
+        5,
+        { min: 1, max: 2 },
+        undefined,
+        ProblemType.STANDARD,
+        SpecialPracticeType.NONE,
+        undefined,
+        true,
+        DisplayMode.TEXT
+      );
+
+      const duration = Date.now() - startTime;
+      
+      expect(duration).toBeLessThan(5000);
+      expect(problems.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('7. CUSTOM difficulty range enforcement', () => {
+    it('should strictly enforce custom difficulty range', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+
+      const customDifficulty = { min: 10, max: 20 };
+
+      const { problems } = await generateMathProblems(
+        'Animals 🐶',
+        DifficultyLevel.CUSTOM,
+        OperationType.ADDITION,
+        30,
+        customDifficulty,
+        undefined,
+        ProblemType.STANDARD,
+        SpecialPracticeType.NONE,
+        undefined,
+        false,
+        DisplayMode.TEXT
+      );
+
+      problems.forEach(problem => {
+        const result = problem.a + problem.b;
+        expect(result).toBeGreaterThanOrEqual(customDifficulty.min);
+        expect(result).toBeLessThanOrEqual(customDifficulty.max);
+      });
+    });
+
+    it('should enforce custom range for subtraction', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+
+      const customDifficulty = { min: 15, max: 25 };
+
+      const { problems } = await generateMathProblems(
+        'Animals 🐶',
+        DifficultyLevel.CUSTOM,
+        OperationType.SUBTRACTION,
+        30,
+        customDifficulty,
+        undefined,
+        ProblemType.STANDARD,
+        SpecialPracticeType.NONE,
+        undefined,
+        false,
+        DisplayMode.TEXT
+      );
+
+      problems.forEach(problem => {
+        expect(problem.a).toBeGreaterThanOrEqual(customDifficulty.min);
+        expect(problem.a).toBeLessThanOrEqual(customDifficulty.max);
+      });
+    });
+  });
+
+  describe('8. generateRandomProblem narrow range handling', () => {
+    it('should not throw stack overflow in narrow range', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+
+      const narrowRanges = [
+        { min: 0, max: 0 },
+        { min: 1, max: 1 },
+        { min: 5, max: 5 },
+      ];
+
+      for (const customDifficulty of narrowRanges) {
+        await expect(
+          generateMathProblems(
+            'Animals 🐶',
+            DifficultyLevel.CUSTOM,
+            OperationType.ADDITION,
+            10,
+            customDifficulty,
+            undefined,
+            ProblemType.STANDARD,
+            SpecialPracticeType.NONE,
+            undefined,
+            true,
+            DisplayMode.TEXT
+          )
+        ).resolves.toBeDefined();
+      }
+    });
+
+    it('should return valid problems even in edge cases', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+
+      const { problems } = await generateMathProblems(
+        'Animals 🐶',
+        DifficultyLevel.CUSTOM,
+        OperationType.MIXED,
+        10,
+        { min: 2, max: 3 },
+        undefined,
+        ProblemType.STANDARD,
+        SpecialPracticeType.NONE,
+        undefined,
+        false,
+        DisplayMode.TEXT
+      );
+
+      expect(problems.length).toBeGreaterThan(0);
+      problems.forEach(problem => {
+        expect(problem.a).toBeDefined();
+        expect(problem.b).toBeDefined();
+        expect(problem.op).toMatch(/^[+-]$/);
+      });
+    });
+  });
+});

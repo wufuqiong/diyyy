@@ -6,7 +6,7 @@
 
 import React from 'react';
 
-import { Box, Divider, Paper, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Paper, Stack, Divider, Tooltip, Typography } from '@mui/material';
 
 // ---------- SettingsPanel ----------
 

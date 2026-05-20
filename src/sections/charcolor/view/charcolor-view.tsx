@@ -1,4 +1,8 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import type {
+  SelectChangeEvent} from '@mui/material';
+import type { MiemieData, MiemieDetails } from 'src/types';
+
+import React, { useState, useEffect, useCallback } from 'react';
 
 import {
   Clear as ClearIcon,
@@ -8,27 +12,28 @@ import {
 } from '@mui/icons-material';
 import {
   Box,
+  Stack,
   Button,
+  Select,
+  MenuItem,
+  TextField,
+  InputLabel,
+  Typography,
   CssBaseline,
   FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  TextField,
-  Typography,
 } from '@mui/material';
+
+import { usePersistedConfig } from 'src/hooks/use-persisted-config';
 
 import { shuffleArray } from 'src/utils/array-tools';
 
-import { MiemieData, MiemieDetails } from 'src/types';
 import miemieDetails from 'src/data/miemie-details.json';
 
+import { ResponsiveWorkbench } from 'src/sections/_shared/ResponsiveWorkbench';
 import {
   SettingsField,
-  SettingsHeader,
   SettingsPanel,
+  SettingsHeader,
   SettingsSection,
 } from 'src/sections/_shared/SettingsPanel';
 
@@ -358,13 +363,16 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
 };
 
 export const CharColorView: React.FC = () => {
-  const [userInput, setUserInput] = useState('');
-  const [wordsPerPage, setWordsPerPage] = useState(3);
-  const [selectedPreset, setSelectedPreset] = useState(0);
-  const [selectedLevel, setSelectedLevel] = useState('');
-  const [fullSelectedValue, setFullSelectedValue] = useState('');
-  const [selectedBook, setSelectedBook] = useState('');
+  const [userInput, setUserInput] = usePersistedConfig('charcolor.userInput', '');
+  const [wordsPerPage, setWordsPerPage] = usePersistedConfig('charcolor.wordsPerPage', 3);
+  const [selectedPreset, setSelectedPreset] = usePersistedConfig('charcolor.selectedPreset', 0);
+  const [selectedLevel, setSelectedLevel] = usePersistedConfig('charcolor.selectedLevel', '');
+  const [fullSelectedValue, setFullSelectedValue] = usePersistedConfig('charcolor.fullSelectedValue', '');
+  const [selectedBook, setSelectedBook] = usePersistedConfig('charcolor.selectedBook', '');
   const [pages, setPages] = useState<PageData[]>([]);
+
+  const pageTitle = '识字涂色 - DIYYY';
+  const pageDescription = '免费的识字涂色练习工具，帮助孩子通过涂色认识汉字，支持自定义内容和预设课程。';
 
   const handlePrint = () => {
     window.print();
@@ -412,31 +420,33 @@ export const CharColorView: React.FC = () => {
   }, [generatePages]);
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', width: '100%', overflow: 'hidden', '@media print': { height: 'auto', overflow: 'visible', display: 'block' } }}>
+    <>
+      <title>{pageTitle}</title>
+      <meta name="description" content={pageDescription} />
       <CssBaseline />
-      {/* Left Config Panel */}
-      <ControlPanel 
-        userInput={userInput}
-        setUserInput={setUserInput}
-        wordsPerPage={wordsPerPage}
-        setWordsPerPage={setWordsPerPage}
-        selectedPreset={selectedPreset}
-        setSelectedPreset={setSelectedPreset}
-        selectedLevel={selectedLevel}
-        setSelectedLevel={setSelectedLevel}
-        fullSelectedValue={fullSelectedValue}
-        setFullSelectedValue={setFullSelectedValue}
-        selectedBook={selectedBook}
-        setSelectedBook={setSelectedBook}
-        onGenerate={generatePages}
-        onPrint={handlePrint}
-      />
-      
-      {/* Right Preview Area */}
-      <Box component="main" sx={{ flex: 1, height: '100%', position: 'relative', zIndex: 10, '@media print': { height: 'auto', overflow: 'visible' } }}>
+      <ResponsiveWorkbench
+        sidebar={
+          <ControlPanel 
+            userInput={userInput}
+            setUserInput={setUserInput}
+            wordsPerPage={wordsPerPage}
+            setWordsPerPage={setWordsPerPage}
+            selectedPreset={selectedPreset}
+            setSelectedPreset={setSelectedPreset}
+            selectedLevel={selectedLevel}
+            setSelectedLevel={setSelectedLevel}
+            fullSelectedValue={fullSelectedValue}
+            setFullSelectedValue={setFullSelectedValue}
+            selectedBook={selectedBook}
+            setSelectedBook={setSelectedBook}
+            onGenerate={generatePages}
+            onPrint={handlePrint}
+          />
+        }
+      >
         <PreviewSheet pages={pages} />
-      </Box>
-    </Box>
+      </ResponsiveWorkbench>
+    </>
   );
 };
 
