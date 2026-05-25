@@ -3,6 +3,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 
 import { GridType } from 'src/types';
+import { colors } from 'src/theme/tokens';
 
 interface GridBoxProps {
   type: GridType;
@@ -28,7 +29,7 @@ export const GridBox: React.FC<GridBoxProps> = ({
   color,
   opacity,
   content,
-  contentColor = '#000000',
+  contentColor = colors.ink,
   contentOpacity = 1,
   contentFontSize = 85,
   fontFamily = 'font-kaiti',

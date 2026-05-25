@@ -2,11 +2,13 @@ import type { DifficultyRatios, MultiOperationConfig, CustomDifficultyRange } fr
 
 import { ProblemType, DisplayMode, OperationType, DifficultyLevel, SpecialPracticeType } from 'src/types';
 
+import { generateWordProblems } from './word-problem';
 import { generateFillBlankProblems } from './fill-blank';
 import { generateMultiOperationProblems } from './multi-op';
 import { generateZeroDrillProblems } from './special-practice/zero-drill';
 import { THEME_EMOJIS, THEME_TITLES, isChineseTheme } from './shared/types';
 import { generateFactFamilyProblems } from './special-practice/fact-family';
+import { generateNumberBondProblems } from './special-practice/number-bond';
 import { getMixedTargetCounts, selectBalancedMixedProblems } from './shared/mixed-balance';
 import { generateProblemsForDifficulty, generateProblemsForCustomRange } from './standard';
 
@@ -30,6 +32,47 @@ async function generateMathProblems(
 ): Promise<{ problems: RawMathProblem[]; titleSuggestion: string }> {
   try {
     const activeCustomDifficulty = difficulty === DifficultyLevel.CUSTOM ? customDifficulty : undefined;
+
+    // Word problem mode — short-circuit before standard generation
+    if (displayMode === DisplayMode.WORD_PROBLEM) {
+      const wpRange: [number, number] = activeCustomDifficulty
+        ? [activeCustomDifficulty.min, activeCustomDifficulty.max]
+        : difficulty === DifficultyLevel.EASY ? [1, 5]
+        : difficulty === DifficultyLevel.MEDIUM ? [1, 10]
+        : [1, 20];
+
+      const wpOperation = operation === OperationType.MULTI_OPERATIONS
+        ? 'mixed' as const
+        : operation === OperationType.ADDITION ? 'addition' as const
+        : operation === OperationType.SUBTRACTION ? 'subtraction' as const
+        : 'mixed' as const;
+
+      const wordProblems = generateWordProblems({
+        operation: wpOperation,
+        range: wpRange,
+        count,
+        excludeZero: excludeZeroProblems,
+      });
+
+      const titleSuggestion = isChineseTheme(theme)
+        ? '应用题练习'
+        : 'Word Problems';
+
+      return {
+        problems: wordProblems.map((wp) => ({
+          op: wp.operation === 'addition' ? '+' as const : '-' as const,
+          a: wp.n1,
+          b: wp.n2,
+          emoji1: '📝',
+          equationText: wp.text,
+          isWordProblem: true,
+          wordProblemText: wp.text,
+          wordProblemOperation: wp.operation,
+          wordProblemMeasure: wp.measure,
+        })),
+        titleSuggestion,
+      };
+    }
 
     if (operation === OperationType.MULTI_OPERATIONS && multiOperationConfig) {
       const themeKey = theme.toLowerCase();
@@ -94,6 +137,19 @@ async function generateMathProblems(
         excludeZeroProblems
       );
       return { problems: familyProblems, titleSuggestion };
+    }
+
+    if (specialPracticeType === SpecialPracticeType.NUMBER_BOND) {
+      const usedBonds = new Set<string>();
+      const bondProblems = generateNumberBondProblems(
+        count,
+        difficulty,
+        emojis,
+        activeCustomDifficulty,
+        usedBonds,
+        excludeZeroProblems
+      );
+      return { problems: bondProblems, titleSuggestion };
     }
 
     if (problemType === ProblemType.FILL_BLANK) {

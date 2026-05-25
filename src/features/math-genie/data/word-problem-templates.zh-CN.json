@@ -1,0 +1,177 @@
+{
+  "version": 2,
+  "meta": {
+    "description": "小学加减法应用题生成模板 v2 — 基于语义标签系统，确保所有组合语义合理",
+    "tagDefs": {
+      "living"           : "有生命体（不能被'放进/拿走/买'等对待物品的方式处理）",
+      "animal"           : "动物",
+      "person"           : "人物",
+      "object"           : "无生命物体",
+      "edible"           : "可食用，适用'吃掉了'动作",
+      "pickable"         : "可从植株上摘取，适用'摘了'动作（限苹果、花）",
+      "portable"         : "可被人拿取、赠送、携带的物品",
+      "buyable"          : "可在商店购买的物品",
+      "containerFriendly": "自然存放于容器中的物品，适用'放进/拿走'的容器类模板",
+      "windBlown"        : "可被风吹走（轻盈、可漂浮）"
+    },
+    "templateVarDefs": {
+      "{location}"  : "主体的自然场景，来自 subject.location",
+      "{verb_appear}": "主体出现时的动词（含'了'），来自 subject.verbs.appear",
+      "{verb_leave}" : "主体离开时的动词（含'了'），来自 subject.verbs.leave",
+      "{noun}"      : "主体名词",
+      "{measure}"   : "量词",
+      "{n1}"        : "较大的数字（初始数量）",
+      "{n2}"        : "较小的数字（变化数量）",
+      "{name1}"     : "人物1，来自 names 列表",
+      "{name2}"     : "人物2，来自 names 列表（与 name1 不同）"
+    }
+  },
+
+  "subjects": [
+    {
+      "noun"    : "小鸟",
+      "measure" : "只",
+      "verbs"   : { "appear": "飞来了", "leave": "飞走了" },
+      "location": "树上",
+      "tags"    : ["living", "animal"]
+    },
+    {
+      "noun"    : "苹果",
+      "measure" : "个",
+      "verbs"   : { "appear": "放上了", "leave": "拿走了" },
+      "location": "盘子里",
+      "tags"    : ["object", "edible", "pickable", "portable", "buyable", "containerFriendly"]
+    },
+    {
+      "noun"    : "小朋友",
+      "measure" : "个",
+      "verbs"   : { "appear": "来了", "leave": "走了" },
+      "location": "教室里",
+      "tags"    : ["living", "person"]
+    },
+    {
+      "noun"    : "小鱼",
+      "measure" : "条",
+      "verbs"   : { "appear": "游来了", "leave": "游走了" },
+      "location": "池塘里",
+      "tags"    : ["living", "animal"]
+    },
+    {
+      "noun"    : "花",
+      "measure" : "朵",
+      "verbs"   : { "appear": "开了", "leave": "谢了" },
+      "location": "花坛里",
+      "tags"    : ["object", "pickable", "portable", "buyable"]
+    },
+    {
+      "noun"    : "铅笔",
+      "measure" : "支",
+      "verbs"   : { "appear": "放进了", "leave": "拿走了" },
+      "location": "笔筒里",
+      "tags"    : ["object", "portable", "buyable", "containerFriendly"]
+    },
+    {
+      "noun"    : "糖果",
+      "measure" : "颗",
+      "verbs"   : { "appear": "放进了", "leave": "吃掉了" },
+      "location": "盒子里",
+      "tags"    : ["object", "edible", "portable", "buyable", "containerFriendly"]
+    },
+    {
+      "noun"    : "气球",
+      "measure" : "个",
+      "verbs"   : { "appear": "带来了", "leave": "飞走了" },
+      "location": "房间里",
+      "tags"    : ["object", "portable", "buyable", "windBlown"]
+    },
+    {
+      "noun"    : "小鸡",
+      "measure" : "只",
+      "verbs"   : { "appear": "跑来了", "leave": "跑走了" },
+      "location": "院子里",
+      "tags"    : ["living", "animal"]
+    }
+  ],
+
+  "names": ["明明", "聪聪", "小华", "小丽", "小刚", "JoJo", "元元", "珍珍", "小明", "小红", "爸爸", "妈妈"],
+
+  "templates": {
+    "addition": [
+      {
+        "id"         : "add_natural_flow",
+        "desc"       : "主体自然出现在原有场景里（使用各主体专属的出现动词）",
+        "pattern"    : "{location}有{n1}{measure}{noun}，又{verb_appear}{n2}{measure}，现在{location}一共有多少{measure}{noun}？",
+        "requiresTags": []
+      },
+      {
+        "id"         : "add_container",
+        "desc"       : "把物品放入容器（仅适用于自然存放于容器的物品）",
+        "pattern"    : "{location}原来有{n1}{measure}{noun}，{name1}又放进去{n2}{measure}，现在一共有多少{measure}{noun}？",
+        "requiresTags": ["containerFriendly"]
+      },
+      {
+        "id"         : "add_give",
+        "desc"       : "别人赠送可携带物品",
+        "pattern"    : "{name1}有{n1}{measure}{noun}，{name2}又给了他{n2}{measure}，他现在一共有多少{measure}{noun}？",
+        "requiresTags": ["portable"]
+      },
+      {
+        "id"         : "add_pick_together",
+        "desc"       : "两人分别摘取可摘取的植物",
+        "pattern"    : "{name1}摘了{n1}{measure}{noun}，{name2}也摘了{n2}{measure}，他们一共摘了多少{measure}{noun}？",
+        "requiresTags": ["pickable"]
+      },
+      {
+        "id"         : "add_basket",
+        "desc"       : "把食物放入篮子（仅食物适合放篮子）",
+        "pattern"    : "篮子里原来有{n1}{measure}{noun}，{name1}又放进去{n2}{measure}，现在一共有多少{measure}{noun}？",
+        "requiresTags": ["edible"]
+      },
+      {
+        "id"         : "add_buy",
+        "desc"       : "购买物品（仅可在商店购买的物品）",
+        "pattern"    : "{name1}买了{n1}{measure}{noun}，又买了{n2}{measure}，一共买了多少{measure}{noun}？",
+        "requiresTags": ["buyable"]
+      }
+    ],
+
+    "subtraction": [
+      {
+        "id"         : "sub_natural_flow",
+        "desc"       : "主体自然离开场景（使用各主体专属的离开动词）",
+        "pattern"    : "{location}原来有{n1}{measure}{noun}，{verb_leave}{n2}{measure}，现在还剩多少{measure}{noun}？",
+        "requiresTags": []
+      },
+      {
+        "id"         : "sub_give_away",
+        "desc"       : "把可携带物品送给他人",
+        "pattern"    : "{name1}有{n1}{measure}{noun}，给了{name2}{n2}{measure}，他还剩多少{measure}{noun}？",
+        "requiresTags": ["portable"]
+      },
+      {
+        "id"         : "sub_eat",
+        "desc"       : "吃掉可食用物品",
+        "pattern"    : "{name1}有{n1}{measure}{noun}，吃掉了{n2}{measure}，还剩多少{measure}{noun}？",
+        "requiresTags": ["edible"]
+      },
+      {
+        "id"         : "sub_table",
+        "desc"       : "从桌子上拿走可携带物品",
+        "pattern"    : "桌子上原来有{n1}{measure}{noun}，{name1}拿走了{n2}{measure}，还剩多少{measure}{noun}？",
+        "requiresTags": ["portable"]
+      },
+      {
+        "id"         : "sub_send",
+        "desc"       : "把可携带物品送给朋友",
+        "pattern"    : "{name1}有{n1}{measure}{noun}，送给朋友{n2}{measure}，他还剩多少{measure}{noun}？",
+        "requiresTags": ["portable"]
+      },
+      {
+        "id"         : "sub_wind",
+        "desc"       : "被风吹走（仅适用于轻盈可漂浮物体）",
+        "pattern"    : "{location}原来有{n1}{measure}{noun}，被风吹走了{n2}{measure}，还剩多少{measure}{noun}？",
+        "requiresTags": ["windBlown"]
+      }
+    ]
+  }
+}

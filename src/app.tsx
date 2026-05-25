@@ -1,3 +1,4 @@
+import 'src/i18n/config';
 import 'src/global.css';
 
 import { useEffect } from 'react';

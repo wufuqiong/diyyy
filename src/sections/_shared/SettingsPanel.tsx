@@ -8,6 +8,8 @@ import React from 'react';
 
 import { Box, Paper, Stack, Divider, Tooltip, Typography } from '@mui/material';
 
+import { colors } from 'src/theme/tokens';
+
 // ---------- SettingsPanel ----------
 
 interface SettingsPanelProps {
@@ -23,7 +25,7 @@ interface SettingsPanelProps {
  * `SettingsHeader` / `SettingsSection` / `SettingsField` for consistent style.
  */
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
-  width = 320,
+  width = 300,
   header,
   footer,
   children,
@@ -82,7 +84,7 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({ title, subtitle 
       variant="h5"
       sx={{
         fontWeight: 'bold',
-        background: 'linear-gradient(135deg, #2563eb, #4f46e5)',
+        background: `linear-gradient(135deg, ${colors.primaryGradientStart}, ${colors.primaryGradientEnd})`,
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
         mb: 0.5,

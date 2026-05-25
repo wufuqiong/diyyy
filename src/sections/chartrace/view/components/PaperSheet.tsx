@@ -5,6 +5,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { GridType, TraceContentMode } from 'src/types';
+import { colors, sansStack, kaitiStack, pinyinStack, englishHandStack, englishPrintStack } from 'src/theme/tokens';
 
 import { GridBox } from './GridBox';
 import { getCharData } from '../utils/charData';
@@ -39,7 +40,7 @@ const chunk = <T,>(arr: T[], size: number): T[][] => {
 
 const getFontStack = (fontClass: string) => {
   if (fontClass === 'font-kaiti') {
-    return 'KaiTi, STKaiti, "Kaiti SC", "SimKai", serif';
+    return kaitiStack;
   }
   return undefined;
 };
@@ -53,8 +54,7 @@ const getFontStack = (fontClass: string) => {
 //     Extended-B), so every glyph on the page is served by the same
 //     typeface — no per-glyph system fallback that previously made e.g.
 //     `bā` and `liǎng` look like different fonts.
-const getPinyinFontStack = () =>
-  '"Andika", "Comic Sans MS", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif';
+const getPinyinFontStack = () => pinyinStack;
 
 export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
   const isSentenceMode = config.contentMode === TraceContentMode.SENTENCES;
@@ -301,9 +301,9 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', gap: `${rowMarginPx}px` }}>
                 {pageRows.map((staffRow, idx) => {
                     let englishFontStack = getPinyinFontStack(); // fallback
-                    if (config.fontFamily === 'font-english-print') englishFontStack = '"Fredoka", "Comic Sans MS", "Andika", sans-serif';
-                    else if (config.fontFamily === 'font-english-hand') englishFontStack = '"Patrick Hand", "Comic Sans MS", cursive';
-                    else if (config.fontFamily === 'font-sans') englishFontStack = 'Arial, Helvetica, sans-serif';
+                    if (config.fontFamily === 'font-english-print') englishFontStack = englishPrintStack;
+                    else if (config.fontFamily === 'font-english-hand') englishFontStack = englishHandStack;
+                    else if (config.fontFamily === 'font-sans') englishFontStack = sansStack;
                     
                     return (
                         <Box key={idx} sx={{ width: '100%', position: 'relative', height: `${rowHeightPx}px` }}>
@@ -312,7 +312,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
                                 {/* 4 Lines (Red line #ef5350 is specifically the baseline for English!) */}
                                 <line x1="0" y1={y1} x2="100%" y2={y1} stroke={borderColor} strokeWidth="1.5" />
                                 <line x1="0" y1={y2} x2="100%" y2={y2} stroke={borderColor} strokeWidth="1" strokeDasharray="3,3" opacity={0.6} />
-                                <line x1="0" y1={y3} x2="100%" y2={y3} stroke="#ef5350" strokeWidth="2" />
+                                <line x1="0" y1={y3} x2="100%" y2={y3} stroke={colors.englishBaseline} strokeWidth="2" />
                                 <line x1="0" y1={y4} x2="100%" y2={y4} stroke={borderColor} strokeWidth="1.5" />
 
                                 {/* Precise Text Rendering */}

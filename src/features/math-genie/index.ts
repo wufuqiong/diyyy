@@ -1,0 +1,1 @@
+export { mathGenieTool } from './config';

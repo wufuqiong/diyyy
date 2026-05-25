@@ -4,6 +4,7 @@ import React from 'react';
 
 import { Box, Paper, Typography } from '@mui/material';
 
+import { colors } from 'src/theme/tokens';
 import { DisplayMode, ProblemType } from 'src/types';
 
 interface Props {
@@ -13,13 +14,33 @@ interface Props {
   displayMode: DisplayMode;
 }
 
-const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, showAnswers, displayMode }) => {
-  const { operation, num1, num2, emoji1, emoji2, answer, problemType, blankPosition, isMultiOperation, numbers, operators, emojis } = problem;
+const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAnswers, displayMode }) => {
+  const { operation, num1, num2, emoji1, emoji2, answer, problemType, blankPosition, isMultiOperation, numbers, operators, emojis, isNumberBond, numberBondWhole, numberBondParts, numberBondBlankIndex, isWordProblem, wordProblemText, wordProblemOperation, wordProblemMeasure } = problem;
+
+  if (isNumberBond && numberBondWhole !== undefined && numberBondParts) {
+    return <NumberBondNode whole={numberBondWhole} parts={numberBondParts} blankIndex={numberBondBlankIndex} showAnswers={showAnswers} />;
+  }
+
+  if (isWordProblem) {
+    const wpText = wordProblemText || '';
+    const wpOp = wordProblemOperation || (operation === '+' ? 'addition' : 'subtraction');
+    const wpMeasure = wordProblemMeasure || '个';
+    return (
+      <WordProblemCard
+        index={index}
+        text={wpText}
+        operation={wpOp}
+        answer={answer}
+        showAnswers={showAnswers}
+        measure={wpMeasure}
+      />
+    );
+  }
 
   const blankSquareSx = {
     width: 34,
     height: 34,
-    border: '2px solid #333',
+    border: `2px solid ${colors.inkSecondary}`,
     borderRadius: 0.5,
     boxSizing: 'border-box' as const,
     flexShrink: 0,
@@ -169,7 +190,7 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, showAnswers, d
 
   const renderUnknownGroup = () => (
     <Box sx={unknownGroupSx}>
-      <Typography sx={{ fontSize: 64, lineHeight: 1, fontWeight: 700, color: '#d32f2f' }}>
+      <Typography sx={{ fontSize: 64, lineHeight: 1, fontWeight: 700, color: colors.errorRed }}>
         ?
       </Typography>
     </Box>
@@ -179,7 +200,7 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, showAnswers, d
     <Typography
       sx={{
         fontWeight: 'bold',
-        color: value === '?' ? '#d32f2f' : '#000',
+        color: value === '?' ? colors.errorRed : colors.ink,
         fontSize: 24,
         mt: 0.5,
         display: 'flex',
@@ -188,7 +209,7 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, showAnswers, d
       }}
     >
       {value}
-      <Typography component="span" sx={{ color: '#000', fontSize: 20, fontWeight: 'bold' }}>个</Typography>
+      <Typography component="span" sx={{ color: colors.ink, fontSize: 20, fontWeight: 'bold' }}>个</Typography>
     </Typography>
   );
 
@@ -200,7 +221,7 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, showAnswers, d
       </Box>
       <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <svg width="100%" height="24" viewBox="0 0 100 24" preserveAspectRatio="none" style={{ overflow: 'visible', display: 'block' }}>
-          <path d="M 0 0 C 0 16, 50 16, 50 24 C 50 16, 100 16, 100 0" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          <path d="M 0 0 C 0 16, 50 16, 50 24 C 50 16, 100 16, 100 0" fill="none" stroke={colors.ink} strokeWidth="2.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
         </svg>
         {renderBraceLabel(braceValue)}
       </Box>
@@ -209,20 +230,20 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, showAnswers, d
 
   const renderEquationBoxes = (operatorSymbol: '+' | '-') => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <Box sx={{ width: 44, height: 44, border: '3px solid #80cbc4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: '#333' }}>
+      <Box sx={{ width: 44, height: 44, border: `3px solid ${colors.fillBlankBox}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: colors.inkSecondary }}>
         {showAnswers ? num1 : ''}
       </Box>
-      <Box sx={{ width: 44, height: 44, border: '3px solid #fff59d', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: '#333' }}>
+      <Box sx={{ width: 44, height: 44, border: `3px solid ${colors.emojiCircle}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: colors.inkSecondary }}>
         {showAnswers ? operatorSymbol : ''}
       </Box>
-      <Box sx={{ width: 44, height: 44, border: '3px solid #80cbc4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: '#333' }}>
+      <Box sx={{ width: 44, height: 44, border: `3px solid ${colors.fillBlankBox}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: colors.inkSecondary }}>
         {showAnswers ? num2 : ''}
       </Box>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', mx: 0.5 }}>
-        <Box sx={{ width: 24, height: 8, backgroundColor: '#ce93d8', border: '2px solid #000', borderRadius: '4px' }} />
-        <Box sx={{ width: 24, height: 8, backgroundColor: '#ce93d8', border: '2px solid #000', borderRadius: '4px' }} />
+        <Box sx={{ width: 24, height: 8, backgroundColor: colors.factFamilyBar, border: `2px solid ${colors.ink}`, borderRadius: '4px' }} />
+        <Box sx={{ width: 24, height: 8, backgroundColor: colors.factFamilyBar, border: `2px solid ${colors.ink}`, borderRadius: '4px' }} />
       </Box>
-      <Box sx={{ width: 44, height: 44, border: '3px solid #80cbc4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: '#333' }}>
+      <Box sx={{ width: 44, height: 44, border: `3px solid ${colors.fillBlankBox}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: colors.inkSecondary }}>
         {showAnswers ? answer : ''}
       </Box>
     </Box>
@@ -241,9 +262,9 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, showAnswers, d
         sx={{
           p: 2,
           mb: 1,
-          border: '1px solid #e0e0e0',
+          border: `1px solid ${colors.borderLight}`,
           borderRadius: 2,
-          backgroundColor: '#fafafa',
+          backgroundColor: colors.paper,
           boxShadow: 'none',
           '@media print': {
             backgroundColor: 'white !important',
@@ -274,7 +295,7 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, showAnswers, d
                   {answer}
                 </Typography>
               ) : (
-                <Box sx={{ minWidth: 30, height: 20, borderBottom: '2px solid #333', flexShrink: 0 }} />
+                <Box sx={{ minWidth: 30, height: 20, borderBottom: `2px solid ${colors.inkSecondary}`, flexShrink: 0 }} />
               )}
             </>
           ) : problemType === ProblemType.FILL_BLANK ? (
@@ -331,9 +352,9 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, showAnswers, d
       sx={{
         p: 2,
         mb: 1,
-        border: '1px solid #e0e0e0',
+        border: `1px solid ${colors.borderLight}`,
         borderRadius: 2,
-        backgroundColor: '#fafafa',
+        backgroundColor: colors.paper,
         boxShadow: 'none',
         '@media print': {
           backgroundColor: 'white !important',
@@ -423,7 +444,7 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, showAnswers, d
                   {answer}
                 </Typography>
               ) : (
-                <Box sx={{ minWidth: 25, height: 20, borderBottom: '2px solid #333', flexShrink: 0 }} />
+                <Box sx={{ minWidth: 25, height: 20, borderBottom: `2px solid ${colors.inkSecondary}`, flexShrink: 0 }} />
               )}
             </>
           ) : (
@@ -445,7 +466,7 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, showAnswers, d
                   {answer}
                 </Typography>
               ) : (
-                <Box sx={{ minWidth: 35, height: 30, borderBottom: '2px solid #333' }} />
+                <Box sx={{ minWidth: 35, height: 30, borderBottom: `2px solid ${colors.inkSecondary}` }} />
               )}
             </>
           )}
@@ -456,5 +477,94 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, showAnswers, d
 });
 
 ProblemVisualizer.displayName = 'ProblemVisualizer';
+
+// ---------- Word Problem Card ----------
+
+const WordProblemCard: React.FC<{
+  index: number;
+  text: string;
+  operation: string;
+  answer: number;
+  showAnswers: boolean;
+  measure: string;
+}> = ({ index, text, answer, showAnswers, measure }) => (
+
+  <Box sx={{ width: '100%', px: 2, py: 1.5 }}>
+    <Typography
+      variant="body1"
+      sx={{ lineHeight: 1.8, mb: 5, textAlign: 'left', fontWeight: 500 }}
+    >
+      {index + 1}. {text}
+    </Typography>
+    {showAnswers && (
+      <Box sx={{ ml: 1 }}>
+        <Typography variant="body2" fontWeight="bold" color={colors.errorRed}>
+          {answer}（{measure}）
+        </Typography>
+      </Box>
+    )}
+  </Box>
+);
+
+// ---------- Number Bond Node ----------
+
+const NumberBondNode: React.FC<{
+  whole: number;
+  parts: [number, number];
+  blankIndex?: 0 | 1 | 'whole';
+  showAnswers: boolean;
+}> = ({ whole, parts, blankIndex, showAnswers }) => {
+  const wholeIsBlank = blankIndex === 'whole';
+  const partsAreBlank = [!showAnswers && blankIndex === 0, !showAnswers && blankIndex === 1];
+  const wholeValue = showAnswers || !wholeIsBlank ? String(whole) : '?';
+  const partValues = [
+    showAnswers || !partsAreBlank[0] ? String(parts[0]) : '?',
+    showAnswers || !partsAreBlank[1] ? String(parts[1]) : '?',
+  ];
+
+  const circleSx = {
+    width: 48,
+    height: 48,
+    borderRadius: '50%',
+    border: `3px solid ${colors.fillBlankBox}`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.inkSecondary,
+    backgroundColor: 'white',
+  };
+
+  const blankCircleSx = {
+    ...circleSx,
+    borderStyle: 'dashed',
+    color: colors.errorRed,
+  };
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, py: 1 }}>
+      {/* Whole circle */}
+      <Box sx={wholeIsBlank && !showAnswers ? blankCircleSx : circleSx}>
+        {wholeValue}
+      </Box>
+
+      {/* Connecting lines + parts */}
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 4, position: 'relative' }}>
+        {/* SVG lines */}
+        <svg width="60" height="30" style={{ position: 'absolute', top: -5, left: 20 }}>
+          <line x1="30" y1="0" x2="5" y2="25" stroke={colors.inkSecondary} strokeWidth="1.5" />
+          <line x1="30" y1="0" x2="55" y2="25" stroke={colors.inkSecondary} strokeWidth="1.5" />
+        </svg>
+        <Box sx={(blankIndex === 0 && !showAnswers) ? blankCircleSx : circleSx}>
+          {partValues[0]}
+        </Box>
+        <Box sx={(blankIndex === 1 && !showAnswers) ? blankCircleSx : circleSx}>
+          {partValues[1]}
+        </Box>
+      </Box>
+    </Box>
+  );
+};
 
 export default ProblemVisualizer;

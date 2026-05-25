@@ -2,6 +2,8 @@ import React from 'react';
 
 import { Box } from '@mui/material';
 
+import { colors } from 'src/theme/tokens';
+
 interface PrintFrameProps {
   children: React.ReactNode;
   paperSize?: 'A4' | 'letter';
@@ -23,7 +25,7 @@ export const PrintFrame: React.FC<PrintFrameProps> = ({
       sx={{
         width: '100%',
         minHeight: '100%',
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.paperDark,
         padding: { xs: 2, sm: 3 },
         '@media print': {
           padding: 0,

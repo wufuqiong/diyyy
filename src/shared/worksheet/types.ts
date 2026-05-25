@@ -11,6 +11,6 @@ export interface WorksheetTool<Config = any, Problem = any> {
   defaultConfig: Config;
   generate: (config: Config) => Problem[] | Promise<Problem[]>;
   Preview: React.FC<{ config: Config; problems: Problem[] }>;
-  Settings: React.FC<{ config: Config; onChange: (c: Config) => void }>;
+  Settings: React.FC<{ config: Config; onChange: (c: Config) => void; onGenerate?: () => void; isGenerating?: boolean }>;
   meta: WorksheetToolMeta;
 }

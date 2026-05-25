@@ -7,6 +7,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import { Box, Paper, Typography, Pagination, IconButton } from '@mui/material';
 
 import { DisplayMode } from 'src/types';
+import { derivePageLayout } from 'src/features/math-genie/shared/layout';
 
 import ProblemVisualizer from './ProblemVisualizer';
 
@@ -16,21 +17,18 @@ interface Props {
   theme: string;
   showAnswers: boolean;
   displayMode: DisplayMode;
-  textColumns?: 2 | 3 | 4;
+  textColumns?: 2 | 3 | 4 | 5;
+  problemsPerPage?: number;
 }
 
-const getTextRowsPerPage = (columns: 2 | 3 | 4): number => {
-  if (columns === 4) return 6;
-  if (columns === 3) return 7;
-  return 8;
-};
-
-const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, showAnswers, displayMode, textColumns = 2 }) => {
+const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, showAnswers, displayMode, textColumns = 2, problemsPerPage: ppp = 16 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const textRowsPerPage = getTextRowsPerPage(textColumns);
-  const textProblemsPerPage = textColumns * textRowsPerPage;
+  const layout = derivePageLayout({ columns: textColumns, problemsPerPage: ppp });
   const EMOJI_PROBLEMS_PER_PAGE = 6;
-  const PROBLEMS_PER_PAGE = displayMode === DisplayMode.TEXT ? textProblemsPerPage : EMOJI_PROBLEMS_PER_PAGE;
+  const WORD_PROBLEMS_PER_PAGE = 4;
+  const PROBLEMS_PER_PAGE =
+    displayMode === DisplayMode.WORD_PROBLEM ? WORD_PROBLEMS_PER_PAGE :
+    displayMode === DisplayMode.TEXT ? layout.problemsPerPage : EMOJI_PROBLEMS_PER_PAGE;
   
   // Memoize calculations to prevent re-calculation on every render
   const paginationData = useMemo(() => {
@@ -130,7 +128,7 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
                 >
                   {title || `${theme} Math Worksheet`}
                 </Typography>
-                <IconButton onClick={() => window.print()} color="primary">
+                <IconButton onClick={() => window.print()} color="primary" aria-label="Print worksheet">
                   <PrintIcon />
                 </IconButton>
               </Box>
@@ -153,15 +151,12 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: displayMode === DisplayMode.TEXT ? `repeat(${textColumns}, 1fr)` : 'repeat(2, 1fr)',
-              columnGap: displayMode === DisplayMode.TEXT ? '2' : 2,
-              rowGap: displayMode === DisplayMode.TEXT ? '1' : 2,
-              gridAutoRows: displayMode === DisplayMode.TEXT ? 'minmax(70px, auto)' : 'minmax(200px, auto)',
+              gridTemplateColumns: displayMode === DisplayMode.WORD_PROBLEM ? '1fr' : displayMode === DisplayMode.TEXT ? `repeat(${textColumns}, 1fr)` : 'repeat(2, 1fr)',
+              columnGap: `${layout.columnGap}mm`,
+              rowGap: `${layout.rowGap}mm`,
+              gridAutoRows: displayMode === DisplayMode.WORD_PROBLEM ? 'minmax(48mm, auto)' : `minmax(${layout.rowHeight}mm, auto)`,
               justifyItems: 'center',
               alignItems: 'center',
-              '@media (min-width: 1200px)': {
-                gridTemplateColumns: displayMode === DisplayMode.TEXT ? `repeat(${textColumns}, 1fr)` : 'repeat(2, 1fr)',
-              },
             }}
           >
             {currentProblems.map((problem, index) => (
@@ -273,10 +268,10 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
               <Box
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: displayMode === DisplayMode.TEXT ? `repeat(${textColumns}, 1fr)` : 'repeat(2, 1fr)',
-                  columnGap: displayMode === DisplayMode.TEXT ? '2' : 2,
+                  gridTemplateColumns: displayMode === DisplayMode.WORD_PROBLEM ? '1fr' : displayMode === DisplayMode.TEXT ? `repeat(${textColumns}, 1fr)` : 'repeat(2, 1fr)',
+                  columnGap: displayMode === DisplayMode.WORD_PROBLEM ? '0' : displayMode === DisplayMode.TEXT ? '2' : 2,
                   rowGap: displayMode === DisplayMode.TEXT ? '1' : 2,
-                  gridAutoRows: displayMode === DisplayMode.TEXT ? 'minmax(70px, auto)' : 'minmax(200px, auto)',
+                  gridAutoRows: displayMode === DisplayMode.WORD_PROBLEM ? 'minmax(48mm, auto)' : `minmax(${layout.rowHeight}mm, auto)`,
                   justifyItems: 'center',
                   alignItems: 'center',
                 }}

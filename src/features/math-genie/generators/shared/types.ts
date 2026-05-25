@@ -11,6 +11,16 @@ export interface RawMathProblem {
   numbers?: number[];
   operators?: ('+' | '-')[];
   emojis?: string[];
+  // Number bond fields
+  isNumberBond?: boolean;
+  numberBondWhole?: number;
+  numberBondParts?: [number, number];
+  numberBondBlankIndex?: 0 | 1 | 'whole';
+  // Word problem fields
+  isWordProblem?: boolean;
+  wordProblemText?: string;
+  wordProblemOperation?: 'addition' | 'subtraction';
+  wordProblemMeasure?: string;
 }
 
 export const THEME_EMOJIS: Record<string, string[]> = {

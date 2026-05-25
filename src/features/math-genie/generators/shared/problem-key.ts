@@ -6,7 +6,7 @@ export function getTextRowsPerPage(columns: 2 | 3 | 4): number {
 
 export function reorderProblemsByColumnPerPage<T>(
   problems: T[],
-  columns: 2 | 3 | 4,
+  columns: number,
   rowsPerPage: number
 ): T[] {
   const pageSize = columns * rowsPerPage;

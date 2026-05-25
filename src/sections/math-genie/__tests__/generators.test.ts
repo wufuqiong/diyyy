@@ -335,4 +335,138 @@ describe('Math Genie Generators', () => {
       });
     });
   });
+
+  // ---------- Number Bond tests ----------
+  describe('NUMBER_BOND', () => {
+    it('all problems satisfy parts[0] + parts[1] === whole', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      const { problems } = await generateMathProblems(
+        'Animals 🐶', DifficultyLevel.MEDIUM, OperationType.ADDITION, 20,
+        undefined, undefined, ProblemType.STANDARD,
+        SpecialPracticeType.NUMBER_BOND, undefined, false, DisplayMode.TEXT
+      );
+      expect(problems.length).toBe(20);
+      problems.forEach((p) => {
+        expect(p.isNumberBond).toBe(true);
+        expect(p.numberBondWhole).toBeDefined();
+        expect(p.numberBondParts).toBeDefined();
+        expect(p.numberBondParts![0] + p.numberBondParts![1]).toBe(p.numberBondWhole);
+      });
+    });
+
+    it('excludeZeroProblems prevents zeros in parts', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      const { problems } = await generateMathProblems(
+        'Animals 🐶', DifficultyLevel.EASY, OperationType.ADDITION, 20,
+        undefined, undefined, ProblemType.STANDARD,
+        SpecialPracticeType.NUMBER_BOND, undefined, true, DisplayMode.TEXT
+      );
+      expect(problems.length).toBeGreaterThan(0);
+      problems.forEach((p) => {
+        expect(p.numberBondParts![0]).not.toBe(0);
+        expect(p.numberBondParts![1]).not.toBe(0);
+      });
+    });
+
+    it('no duplicate problems within a batch', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      const { problems } = await generateMathProblems(
+        'Animals 🐶', DifficultyLevel.EASY, OperationType.ADDITION, 30,
+        undefined, undefined, ProblemType.STANDARD,
+        SpecialPracticeType.NUMBER_BOND, undefined, false, DisplayMode.TEXT
+      );
+      const keys = new Set<string>();
+      problems.forEach((p) => {
+        const key = `${p.numberBondWhole}:${p.numberBondParts![0]}:${p.numberBondParts![1]}:${p.numberBondBlankIndex}`;
+        expect(keys.has(key)).toBe(false);
+        keys.add(key);
+      });
+    });
+
+    it('produces various blankIndex values', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      const { problems } = await generateMathProblems(
+        'Animals 🐶', DifficultyLevel.MEDIUM, OperationType.ADDITION, 50,
+        undefined, undefined, ProblemType.STANDARD,
+        SpecialPracticeType.NUMBER_BOND, undefined, false, DisplayMode.TEXT
+      );
+      const blanks = new Set(problems.map((p) => p.numberBondBlankIndex));
+      expect(blanks.size).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  // ---------- Page Layout tests ----------
+  describe('derivePageLayout', () => {
+    it('fontSize decreases monotonically as problemsPerPage increases', async () => {
+      const { derivePageLayout } = await import('src/features/math-genie/shared/layout');
+      const a = derivePageLayout({ columns: 3, problemsPerPage: 8 });
+      const b = derivePageLayout({ columns: 3, problemsPerPage: 20 });
+      const c = derivePageLayout({ columns: 3, problemsPerPage: 30 });
+      expect(a.fontSize).toBeGreaterThanOrEqual(b.fontSize);
+      expect(b.fontSize).toBeGreaterThanOrEqual(c.fontSize);
+    });
+
+    it('rowHeight >= 12mm for all boundary values', async () => {
+      const { derivePageLayout } = await import('src/features/math-genie/shared/layout');
+      for (const pp of [8, 15, 24, 30]) {
+        const layout = derivePageLayout({ columns: 3, problemsPerPage: pp });
+        expect(layout.rowHeight).toBeGreaterThanOrEqual(12);
+      }
+    });
+
+    it('rows = ceil(problemsPerPage / columns)', async () => {
+      const { derivePageLayout } = await import('src/features/math-genie/shared/layout');
+      expect(derivePageLayout({ columns: 3, problemsPerPage: 15 }).rows).toBe(5);
+      expect(derivePageLayout({ columns: 4, problemsPerPage: 15 }).rows).toBe(4);
+      expect(derivePageLayout({ columns: 2, problemsPerPage: 10 }).rows).toBe(5);
+    });
+  });
+
+  // ---------- Word Problem tests ----------
+  describe('WORD_PROBLEM', () => {
+    it('generates word problems in WORD_PROBLEM display mode', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      const { problems } = await generateMathProblems(
+        'Animals 🐶', DifficultyLevel.MEDIUM, OperationType.MIXED, 10,
+        undefined, undefined, ProblemType.STANDARD,
+        SpecialPracticeType.NONE, undefined, false, DisplayMode.WORD_PROBLEM
+      );
+      expect(problems.length).toBe(10);
+      problems.forEach((p) => {
+        expect(p.isWordProblem).toBe(true);
+        expect(p.wordProblemText).toBeTruthy();
+        expect(p.wordProblemText!.length).toBeGreaterThan(5);
+        // No template placeholders left
+        expect(p.wordProblemText).not.toMatch(/\{[^}]+\}/);
+        expect(p.wordProblemText).not.toContain('undefined');
+      });
+    });
+
+    it('subtraction problems have n1 >= n2', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      const { problems } = await generateMathProblems(
+        'Animals 🐶', DifficultyLevel.EASY, OperationType.SUBTRACTION, 20,
+        undefined, undefined, ProblemType.STANDARD,
+        SpecialPracticeType.NONE, undefined, false, DisplayMode.WORD_PROBLEM
+      );
+      problems.forEach((p) => {
+        if (p.op === '-') {
+          expect(p.a).toBeGreaterThanOrEqual(p.b);
+        }
+      });
+    });
+
+    it('excludeZeroProblems prevents zeros', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      const { problems } = await generateMathProblems(
+        'Animals 🐶', DifficultyLevel.EASY, OperationType.ADDITION, 20,
+        undefined, undefined, ProblemType.STANDARD,
+        SpecialPracticeType.NONE, undefined, true, DisplayMode.WORD_PROBLEM
+      );
+      problems.forEach((p) => {
+        expect(p.a).not.toBe(0);
+        expect(p.b).not.toBe(0);
+      });
+    });
+  });
 });

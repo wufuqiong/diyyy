@@ -1,9 +1,6 @@
-import type {
-  DifficultyRatios,
-  MultiOperationConfig,
-  CustomDifficultyRange} from 'src/types';
+import type { WorksheetConfig, DifficultyRatios } from 'src/types';
 
-// src/sections/math-genie/components/WorksheetSettings.tsx
+import { useTranslation } from 'react-i18next';
 import React, { useMemo, useState } from 'react';
 
 import {
@@ -19,13 +16,11 @@ import {
   Tab,
   Tabs,
   Alert,
-  Paper,
   Stack,
   Button,
   Select,
   Slider,
   Switch,
-  Divider,
   Tooltip,
   MenuItem,
   Snackbar,
@@ -38,6 +33,7 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 
+import { derivePageLayout } from 'src/features/math-genie/shared/layout';
 import {
   DisplayMode,
   ProblemType,
@@ -48,41 +44,30 @@ import {
 } from 'src/types';
 
 interface Props {
-  theme: string;
-  setTheme: (t: string) => void;
-  difficulty: DifficultyLevel;
-  setDifficulty: (d: DifficultyLevel) => void;
-  operation: OperationType;
-  setOperation: (o: OperationType) => void;
-  count: number;
-  setCount: (c: number) => void;
-  textColumns?: 2 | 3 | 4;
-  setTextColumns?: (c: 2 | 3 | 4) => void;
-  excludeZeroProblems: boolean;
-  setExcludeZeroProblems: (v: boolean) => void;
-  showAnswers: boolean;
-  setShowAnswers: (s: boolean) => void;
-  displayMode: DisplayMode;
-  setDisplayMode: (d: DisplayMode) => void;
-  isGenerating: boolean;
-  onGenerate: () => void;
-  onPrint: () => void;
-  customDifficulty?: CustomDifficultyRange;
-  setCustomDifficulty?: (c: CustomDifficultyRange) => void;
-  difficultyRatios?: DifficultyRatios;
-  setDifficultyRatios?: (r: DifficultyRatios) => void;
-  useMixMode: boolean;
-  setUseMixMode: (m: boolean) => void;
-  problemType?: ProblemType;
-  setProblemType?: (p: ProblemType) => void;
-  specialPracticeType: SpecialPracticeType;
-  setSpecialPracticeType: (s: SpecialPracticeType) => void;
-  multiOperationConfig?: MultiOperationConfig;
-  setMultiOperationConfig?: (c: MultiOperationConfig) => void;
-  autoPreview: boolean;
-  setAutoPreview: (v: boolean) => void;
-  onResetConfig: () => void;
+  config: WorksheetConfig;
+  onChange: (c: WorksheetConfig) => void;
+  onGenerate?: () => void;
+  isGenerating?: boolean;
 }
+
+const DEFAULT_CONFIG: WorksheetConfig = {
+  theme: 'Animals 🐶',
+  difficulty: DifficultyLevel.EASY,
+  operation: OperationType.ADDITION,
+  count: 1,
+  textColumns: 2,
+  problemsPerPage: 16,
+  title: 'Fun Math Time!',
+  showAnswers: false,
+  displayMode: DisplayMode.TEXT,
+  customDifficulty: { min: 1, max: 15 },
+  difficultyRatios: undefined,
+  problemType: ProblemType.STANDARD,
+  specialPracticeType: SpecialPracticeType.NONE,
+  multiOperationConfig: { mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 3 },
+  excludeZeroProblems: false,
+  autoPreview: true,
+};
 
 const THEME_PRESETS = [
   'Animals 🐶',
@@ -94,12 +79,6 @@ const THEME_PRESETS = [
   'Weather 🌧️',
   'Emotions 😀',
 ];
-
-const getTextRowsPerPage = (columns: 2 | 3 | 4): number => {
-  if (columns === 4) return 6;
-  if (columns === 3) return 7;
-  return 8;
-};
 
 // ---------- Layout helpers ----------
 
@@ -142,7 +121,6 @@ const Field = ({
   </Box>
 );
 
-// Tooltip wrapper that works on disabled ToggleButton
 const MaybeTooltip = ({
   title,
   show,
@@ -163,72 +141,62 @@ const MaybeTooltip = ({
 // ---------- Component ----------
 
 const WorksheetSettings: React.FC<Props> = ({
-  theme,
-  setTheme,
-  difficulty,
-  setDifficulty,
-  operation,
-  setOperation,
-  count,
-  setCount,
-  textColumns = 2,
-  setTextColumns,
-  excludeZeroProblems,
-  setExcludeZeroProblems,
-  showAnswers,
-  setShowAnswers,
-  displayMode,
-  setDisplayMode,
-  isGenerating,
+  config,
+  onChange,
   onGenerate,
-  onPrint,
-  customDifficulty,
-  setCustomDifficulty,
-  difficultyRatios,
-  setDifficultyRatios,
-  useMixMode,
-  setUseMixMode,
-  problemType,
-  setProblemType,
-  specialPracticeType,
-  setSpecialPracticeType,
-  multiOperationConfig,
-  setMultiOperationConfig,
-  autoPreview,
-  setAutoPreview,
-  onResetConfig,
+  isGenerating = false,
 }) => {
-  const activeProblemType = problemType || ProblemType.STANDARD;
+  const {
+    theme,
+    difficulty,
+    operation,
+    count,
+    textColumns = 2,
+    problemsPerPage: configProblemsPerPage = 16,
+    excludeZeroProblems = false,
+    showAnswers = false,
+    displayMode,
+    customDifficulty,
+    difficultyRatios,
+    problemType = ProblemType.STANDARD,
+    specialPracticeType = SpecialPracticeType.NONE,
+    multiOperationConfig,
+    autoPreview = true,
+  } = config;
+
+  const { t } = useTranslation();
+
+  const activeProblemType = problemType;
   const isSpecialSelected = specialPracticeType !== SpecialPracticeType.NONE;
   const isEmoji = displayMode === DisplayMode.EMOJI;
+  const isWordProblem = displayMode === DisplayMode.WORD_PROBLEM;
   const isMultiOp = operation === OperationType.MULTI_OPERATIONS;
-
-  const textRowsPerPage = getTextRowsPerPage(textColumns);
-  const textProblemsPerPage = textColumns * textRowsPerPage;
+  const useMixMode = !!difficultyRatios;
 
   const [snack, setSnack] = useState<{ open: boolean; msg: string }>({ open: false, msg: '' });
   const notify = (msg: string) => setSnack({ open: true, msg });
 
   // ---------- Derived ----------
 
+  const layout = derivePageLayout({ columns: textColumns, problemsPerPage: configProblemsPerPage });
   const EMOJI_PROBLEMS_PER_PAGE = 6;
-  const perPage = displayMode === DisplayMode.TEXT ? textProblemsPerPage : EMOJI_PROBLEMS_PER_PAGE;
+  const perPage = isWordProblem ? 4 : displayMode === DisplayMode.TEXT ? layout.problemsPerPage : EMOJI_PROBLEMS_PER_PAGE;
   const countSettings = useMemo(() => {
     if (displayMode === DisplayMode.TEXT) {
       return {
         min: 1,
         max: 10,
         step: 1,
-        label: `Pages (up to ${textProblemsPerPage} problems / page at ${textColumns} columns)`,
+        label: t('mathGenie.pagesCaptionText', { problemsPerPage: layout.problemsPerPage, columns: textColumns }),
       };
     }
     return {
       min: 1,
       max: 10,
       step: 1,
-      label: `Pages (${EMOJI_PROBLEMS_PER_PAGE} problems / page)`,
+      label: t('mathGenie.pagesCaptionEmoji', { ppp: EMOJI_PROBLEMS_PER_PAGE }),
     };
-  }, [displayMode, textColumns, textProblemsPerPage]);
+  }, [displayMode, textColumns, layout.problemsPerPage, t]);
 
   const maxPossibleProblems = useMemo(() => {
     let minNum = 1;
@@ -272,181 +240,165 @@ const WorksheetSettings: React.FC<Props> = ({
   const requestedCount = count * perPage;
   const isExceedingMax = requestedCount > maxPossibleProblems;
 
-  const ratioTotal =
-    (difficultyRatios?.easy ?? 0) +
-    (difficultyRatios?.medium ?? 0) +
-    (difficultyRatios?.hard ?? 0) +
-    (difficultyRatios?.custom ?? 0);
+  const ratioTotal = difficultyRatios
+    ? difficultyRatios.easy + difficultyRatios.medium + difficultyRatios.hard + difficultyRatios.custom
+    : 0;
 
-  // ---------- Constraint reasons (for tooltips) ----------
+  // ---------- Constraint reasons ----------
 
   const multiOpUnavailableReason = (() => {
     const reasons: string[] = [];
-    if (isEmoji) reasons.push('Emoji mode');
-    if (activeProblemType === ProblemType.FILL_BLANK) reasons.push('Fill Blank');
-    if (isSpecialSelected) reasons.push('Special Practice');
-    return reasons.length ? `Disabled while using: ${reasons.join(', ')}` : '';
+    if (isEmoji) reasons.push(t('mathGenie.emojiMode'));
+    if (isWordProblem) reasons.push(t('mathGenie.wordProblem'));
+    if (activeProblemType === ProblemType.FILL_BLANK) reasons.push(t('mathGenie.fillBlank'));
+    if (isSpecialSelected) reasons.push(t('mathGenie.specialPractice'));
+    return reasons.length ? t('mathGenie.multiOpDisabled', { reasons: reasons.join(', ') }) : '';
   })();
 
   const fillBlankInEmojiOnlyWithSpecial =
-    isEmoji && activeProblemType === ProblemType.FILL_BLANK && !isSpecialSelected;
+    (isEmoji || isWordProblem) && activeProblemType === ProblemType.FILL_BLANK && !isSpecialSelected;
 
-  // ---------- Handlers (auto-fix + notify) ----------
+  // ---------- Handlers ----------
 
   const handleDisplayMode = (next: DisplayMode | null) => {
     if (!next || next === displayMode) return;
-    setDisplayMode(next);
+    const updates: Partial<WorksheetConfig> = { displayMode: next };
     if (next === DisplayMode.EMOJI && isMultiOp) {
-      setOperation(OperationType.ADDITION);
-      notify('Switched to Addition: Multi-Operations not available in Emoji mode.');
+      updates.operation = OperationType.ADDITION;
+      notify(t('mathGenie.multiOpNotInEmoji'));
     }
+    if (next === DisplayMode.WORD_PROBLEM) {
+      if (isMultiOp) updates.operation = OperationType.ADDITION;
+      if (activeProblemType === ProblemType.FILL_BLANK) updates.problemType = ProblemType.STANDARD;
+      if (isSpecialSelected) updates.specialPracticeType = SpecialPracticeType.NONE;
+    }
+    onChange({ ...config, ...updates });
   };
 
   const handleOperation = (next: OperationType | null) => {
     if (!next || next === operation) return;
+    const updates: Partial<WorksheetConfig> = { operation: next };
     if (next === OperationType.MULTI_OPERATIONS) {
       const fixes: string[] = [];
       if (isEmoji) {
-        setDisplayMode(DisplayMode.TEXT);
+        updates.displayMode = DisplayMode.TEXT;
         fixes.push('Display = Text');
       }
-      if (activeProblemType === ProblemType.FILL_BLANK && setProblemType) {
-        setProblemType(ProblemType.STANDARD);
+      if (activeProblemType === ProblemType.FILL_BLANK) {
+        updates.problemType = ProblemType.STANDARD;
         fixes.push('Problem = Standard');
       }
       if (isSpecialSelected) {
-        setSpecialPracticeType(SpecialPracticeType.NONE);
+        updates.specialPracticeType = SpecialPracticeType.NONE;
         fixes.push('Special = None');
       }
-      if (fixes.length) notify(`Multi-Operations enabled: ${fixes.join(', ')}.`);
+      if (fixes.length) notify(t('mathGenie.multiOpEnabled', { fixes: fixes.join(', ') }));
     }
-    setOperation(next);
+    onChange({ ...config, ...updates });
   };
 
   const handleProblemType = (next: ProblemType | null) => {
-    if (!next || !setProblemType || next === activeProblemType) return;
-    setProblemType(next);
-    if (next === ProblemType.FILL_BLANK) {
-      if (isMultiOp) {
-        setOperation(OperationType.ADDITION);
-        notify('Switched to Addition: Fill Blank not compatible with Multi-Operations.');
-      }
+    if (!next || next === activeProblemType) return;
+    const updates: Partial<WorksheetConfig> = { problemType: next };
+    if (next === ProblemType.FILL_BLANK && isMultiOp) {
+      updates.operation = OperationType.ADDITION;
+      notify(t('mathGenie.fillBlankNotCompatible'));
     }
+    onChange({ ...config, ...updates });
   };
 
   const handleSpecial = (next: SpecialPracticeType | null) => {
     if (!next || next === specialPracticeType) return;
     if (next === SpecialPracticeType.ZERO_DRILL && excludeZeroProblems) {
-      notify('Zero Drill is disabled while "Exclude all zeros" is on.');
+      notify(t('mathGenie.zeroDrillDisabled'));
       return;
     }
-    setSpecialPracticeType(next);
-    if (next !== SpecialPracticeType.NONE) {
-      if (isMultiOp) {
-        setOperation(OperationType.ADDITION);
-        notify('Switched to Addition: Special Practice not compatible with Multi-Operations.');
-      }
+    const updates: Partial<WorksheetConfig> = { specialPracticeType: next };
+    if (next !== SpecialPracticeType.NONE && isMultiOp) {
+      updates.operation = OperationType.ADDITION;
+      notify(t('mathGenie.specialNotCompatible'));
     }
+    onChange({ ...config, ...updates });
   };
 
   const handleDifficulty = (next: DifficultyLevel | null) => {
     if (next === null) return;
-    setDifficulty(next);
-    if (useMixMode) setUseMixMode(false);
+    const updates: Partial<WorksheetConfig> = { difficulty: next };
+    if (useMixMode) {
+      updates.difficultyRatios = undefined;
+    }
+    onChange({ ...config, ...updates });
   };
 
   const handleMixModeTab = (_: React.SyntheticEvent, newValue: 'single' | 'mix') => {
     if (newValue === 'mix') {
-      setUseMixMode(true);
-      if (setDifficultyRatios && (!difficultyRatios || ratioTotal === 0)) {
-        setDifficultyRatios({ easy: 25, medium: 25, hard: 25, custom: 25 });
-      }
+      const ratios = difficultyRatios && ratioTotal > 0
+        ? difficultyRatios
+        : { easy: 25, medium: 25, hard: 25, custom: 25 };
+      onChange({ ...config, difficultyRatios: ratios });
     } else {
-      setUseMixMode(false);
+      onChange({ ...config, difficultyRatios: undefined });
     }
   };
 
   const handleExcludeZero = (checked: boolean) => {
-    setExcludeZeroProblems(checked);
+    const updates: Partial<WorksheetConfig> = { excludeZeroProblems: checked };
     if (checked && specialPracticeType === SpecialPracticeType.ZERO_DRILL) {
-      setSpecialPracticeType(SpecialPracticeType.NONE);
-      notify('Zero Drill turned off because all-zero problems are excluded.');
+      updates.specialPracticeType = SpecialPracticeType.NONE;
+      notify(t('mathGenie.zeroDrillTurnedOff'));
     }
+    onChange({ ...config, ...updates });
   };
 
   const handleCount = (val: number) => {
     const step = countSettings.step;
     const rounded = Math.round(val / step) * step;
-    setCount(Math.max(countSettings.min, Math.min(countSettings.max, rounded)));
+    const newCount = Math.max(countSettings.min, Math.min(countSettings.max, rounded));
+    onChange({ ...config, count: newCount });
   };
 
   const handleCustomRange = (_: Event, val: number | number[]) => {
-    if (!Array.isArray(val) || !setCustomDifficulty) return;
+    if (!Array.isArray(val)) return;
     const [min, max] = val;
     if (max <= min) return;
-    setCustomDifficulty({ min, max });
+    onChange({ ...config, customDifficulty: { min, max } });
   };
 
   const handleRatio = (k: keyof DifficultyRatios, v: number) => {
-    if (!setDifficultyRatios || !difficultyRatios) return;
-    setDifficultyRatios({ ...difficultyRatios, [k]: Math.max(0, Math.min(100, v)) });
+    if (!difficultyRatios) return;
+    onChange({
+      ...config,
+      difficultyRatios: { ...difficultyRatios, [k]: Math.max(0, Math.min(100, v)) },
+    });
   };
 
   const normalizeRatios = () => {
-    if (!setDifficultyRatios || !difficultyRatios || ratioTotal === 0) return;
+    if (!difficultyRatios || ratioTotal === 0) return;
     const factor = 100 / ratioTotal;
     const easy = Math.round(difficultyRatios.easy * factor);
     const medium = Math.round(difficultyRatios.medium * factor);
     const hard = Math.round(difficultyRatios.hard * factor);
     const custom = 100 - easy - medium - hard;
-    setDifficultyRatios({ easy, medium, hard, custom });
+    onChange({ ...config, difficultyRatios: { easy, medium, hard, custom } });
+  };
+
+  const handleReset = () => {
+    onChange(DEFAULT_CONFIG);
+    notify(t('common.reset'));
   };
 
   // ---------- Render ----------
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'white',
-        borderRight: '1px solid',
-        borderColor: 'grey.200',
-        height: '100%',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Header */}
-      <Box sx={{ px: 3, pt: 3, pb: 2 }}>
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 'bold',
-            background: 'linear-gradient(135deg, #2563eb, #4f46e5)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            mb: 0.5,
-          }}
-        >
-          MathGenie
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Create custom math worksheets in seconds.
-        </Typography>
-      </Box>
-
-      <Divider />
-
+    <>
       {/* Scrollable body */}
       <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
         <Stack spacing={3.5}>
           {/* ============= OUTPUT ============= */}
           <Box>
-            <SectionTitle>Output</SectionTitle>
+            <SectionTitle>{t('mathGenie.output')}</SectionTitle>
             <Stack spacing={2} sx={{ mt: 1 }}>
-              <Field label="Display Mode">
+              <Field label={t('mathGenie.displayMode')}>
                 <ToggleButtonGroup
                   value={displayMode}
                   exclusive
@@ -454,23 +406,24 @@ const WorksheetSettings: React.FC<Props> = ({
                   size="small"
                   onChange={(_, v) => handleDisplayMode(v)}
                 >
-                  <ToggleButton value={DisplayMode.TEXT}>📝 Text</ToggleButton>
-                  <ToggleButton value={DisplayMode.EMOJI}>🎨 Emoji</ToggleButton>
+                  <ToggleButton value={DisplayMode.TEXT}>📝 {t('mathGenie.textMode')}</ToggleButton>
+                  <ToggleButton value={DisplayMode.EMOJI}>🎨 {t('mathGenie.emojiMode')}</ToggleButton>
+                  <ToggleButton value={DisplayMode.WORD_PROBLEM}>📖 {t('mathGenie.wordProblem')}</ToggleButton>
                 </ToggleButtonGroup>
               </Field>
 
               {isEmoji && (
                 <Field
-                  label="Theme"
-                  caption="Tip: Chinese themes (中文) produce Chinese titles."
+                  label={t('mathGenie.theme')}
+                  caption={t('mathGenie.themeHint')}
                 >
                   <Autocomplete
                     freeSolo
                     size="small"
                     value={theme}
                     options={THEME_PRESETS}
-                    onChange={(_, v) => setTheme(typeof v === 'string' ? v.split(' ')[0] : '')}
-                    onInputChange={(_, v) => setTheme(v)}
+                    onChange={(_, v) => onChange({ ...config, theme: typeof v === 'string' ? v.split(' ')[0] : '' })}
+                    onInputChange={(_, v) => onChange({ ...config, theme: v })}
                     renderInput={(params) => (
                       <TextField {...params} placeholder="e.g. Pokemon, Cars, Fairies..." />
                     )}
@@ -479,12 +432,12 @@ const WorksheetSettings: React.FC<Props> = ({
               )}
 
               <Field
-                label="Number of Pages"
+                label={t('mathGenie.pages')}
                 caption={
                   <>
                     {countSettings.label}
                     <br />
-                    Total: {requestedCount} problems ({count} page{count > 1 ? 's' : ''} × {perPage})
+                    {t('mathGenie.totalProblems', { count: requestedCount, pages: count, perPage })}
                     {isExceedingMax && (
                       <Box component="span" sx={{ color: 'warning.main', display: 'block' }}>
                         ⚠️ Max unique: {maxPossibleProblems}. Some will repeat.
@@ -523,19 +476,42 @@ const WorksheetSettings: React.FC<Props> = ({
               </Field>
 
               {displayMode === DisplayMode.TEXT && (
-                <Field label="Columns Per Page">
+                <>
+                <Field label={t('mathGenie.columns')}>
                   <ToggleButtonGroup
                     value={textColumns}
                     exclusive
                     fullWidth
                     size="small"
-                    onChange={(_, v) => v && setTextColumns?.(v as 2 | 3 | 4)}
+                    onChange={(_, v) => {
+                      if (!v) return;
+                      const cols = v as 2 | 3 | 4 | 5;
+                      const clamped = Math.max(cols, Math.min(configProblemsPerPage, 30));
+                      onChange({ ...config, textColumns: cols, problemsPerPage: clamped });
+                    }}
                   >
                     <ToggleButton value={2}>2</ToggleButton>
                     <ToggleButton value={3}>3</ToggleButton>
                     <ToggleButton value={4}>4</ToggleButton>
+                    <ToggleButton value={5}>5</ToggleButton>
                   </ToggleButtonGroup>
                 </Field>
+
+                <Field
+                  label={t('mathGenie.problemsPerPage')}
+                  caption={`${layout.rows} ${t('mathGenie.rowsPerPage')}${layout.rowHeight < 14 ? ' — ' + t('mathGenie.rowTooSmall') : ''}`}
+                >
+                  <Slider
+                    value={configProblemsPerPage}
+                    onChange={(_, v) => onChange({ ...config, problemsPerPage: v as number })}
+                    min={textColumns}
+                    max={30}
+                    step={1}
+                    marks
+                    valueLabelDisplay="auto"
+                  />
+                </Field>
+                </>
               )}
 
               <FormControlLabel
@@ -543,7 +519,7 @@ const WorksheetSettings: React.FC<Props> = ({
                 control={
                   <Switch
                     checked={showAnswers}
-                    onChange={(e) => setShowAnswers(e.target.checked)}
+                    onChange={(e) => onChange({ ...config, showAnswers: e.target.checked })}
                     color="primary"
                     size="small"
                   />
@@ -556,7 +532,7 @@ const WorksheetSettings: React.FC<Props> = ({
                       <VisibilityOffIcon fontSize="small" />
                     )}
                     <Typography variant="body2">
-                      Show Answers {showAnswers ? '' : '(blank boxes)'}
+                      {t('mathGenie.showAnswers')} {showAnswers ? '' : t('mathGenie.showAnswersOff')}
                     </Typography>
                   </Box>
                 }
@@ -566,9 +542,9 @@ const WorksheetSettings: React.FC<Props> = ({
 
           {/* ============= PROBLEM ============= */}
           <Box>
-            <SectionTitle>Problem</SectionTitle>
+            <SectionTitle>{t('mathGenie.problem')}</SectionTitle>
             <Stack spacing={2} sx={{ mt: 1 }}>
-              <Field label="Operation">
+              <Field label={t('mathGenie.operation')}>
                 <ToggleButtonGroup
                   value={operation}
                   exclusive
@@ -587,17 +563,17 @@ const WorksheetSettings: React.FC<Props> = ({
                       value={OperationType.MULTI_OPERATIONS}
                       disabled={Boolean(multiOpUnavailableReason)}
                     >
-                      Multi
+                      {t('mathGenie.multi')}
                     </ToggleButton>
                   </MaybeTooltip>
                 </ToggleButtonGroup>
               </Field>
 
               <Field
-                label="Problem Type"
+                label={t('mathGenie.problemType')}
                 caption={
                   fillBlankInEmojiOnlyWithSpecial
-                    ? '⚠️ Fill Blank in Emoji mode requires a Special Practice.'
+                    ? t('mathGenie.fillBlankEmojiHint')
                     : undefined
                 }
               >
@@ -613,7 +589,7 @@ const WorksheetSettings: React.FC<Props> = ({
                 </ToggleButtonGroup>
               </Field>
 
-              <Field label="Special Practice">
+              <Field label={t('mathGenie.specialPractice')}>
                 <ToggleButtonGroup
                   value={specialPracticeType}
                   exclusive
@@ -621,19 +597,20 @@ const WorksheetSettings: React.FC<Props> = ({
                   size="small"
                   onChange={(_, v) => handleSpecial(v)}
                 >
-                  <ToggleButton value={SpecialPracticeType.NONE}>None</ToggleButton>
+                  <ToggleButton value={SpecialPracticeType.NONE}>{t('mathGenie.none')}</ToggleButton>
                   <MaybeTooltip
-                    title='Disabled while "Exclude all zeros" is on.'
+                    title={t('mathGenie.zeroDrillDisabled')}
                     show={excludeZeroProblems}
                   >
                     <ToggleButton
                       value={SpecialPracticeType.ZERO_DRILL}
                       disabled={excludeZeroProblems}
                     >
-                      Zero
+                      {t('mathGenie.zero')}
                     </ToggleButton>
                   </MaybeTooltip>
-                  <ToggleButton value={SpecialPracticeType.FACT_FAMILY}>Fact Fam.</ToggleButton>
+                  <ToggleButton value={SpecialPracticeType.FACT_FAMILY}>{t('mathGenie.factFamily')}</ToggleButton>
+                  <ToggleButton value={SpecialPracticeType.NUMBER_BOND}>{t('mathGenie.numberBond')}</ToggleButton>
                 </ToggleButtonGroup>
               </Field>
 
@@ -648,39 +625,45 @@ const WorksheetSettings: React.FC<Props> = ({
                   }}
                 >
                   <Stack spacing={2}>
-                    <Field label="Mode">
+                    <Field label={t('mathGenie.mode')}>
                       <FormControl fullWidth size="small">
                         <Select
                           value={multiOperationConfig.mode}
                           onChange={(e) =>
-                            setMultiOperationConfig?.({
-                              ...multiOperationConfig,
-                              mode: e.target.value as MultiOperationMode,
+                            onChange({
+                              ...config,
+                              multiOperationConfig: {
+                                ...multiOperationConfig,
+                                mode: e.target.value as MultiOperationMode,
+                              },
                             })
                           }
                         >
                           <MenuItem value={MultiOperationMode.CHAIN_ADDITION}>
-                            Chain Addition (2 + 3 + 4)
+                            {t('mathGenie.chainAddition')}
                           </MenuItem>
                           <MenuItem value={MultiOperationMode.CHAIN_SUBTRACTION}>
-                            Chain Subtraction (10 − 3 − 2)
+                            {t('mathGenie.chainSubtraction')}
                           </MenuItem>
                           <MenuItem value={MultiOperationMode.MIXED_OPERATIONS}>
-                            Mixed (5 + 3 − 2)
+                            {t('mathGenie.mixedOperations')}
                           </MenuItem>
                         </Select>
                       </FormControl>
                     </Field>
                     <Field
-                      label={`Operands: ${multiOperationConfig.numberCount}`}
-                      caption="More numbers = harder."
+                      label={`${t('mathGenie.operands')}: ${multiOperationConfig.numberCount}`}
+                      caption={t('mathGenie.moreOperands')}
                     >
                       <Slider
                         value={multiOperationConfig.numberCount}
                         onChange={(_, v) =>
-                          setMultiOperationConfig?.({
-                            ...multiOperationConfig,
-                            numberCount: v as number,
+                          onChange({
+                            ...config,
+                            multiOperationConfig: {
+                              ...multiOperationConfig,
+                              numberCount: v as number,
+                            },
                           })
                         }
                         min={3}
@@ -698,15 +681,15 @@ const WorksheetSettings: React.FC<Props> = ({
 
           {/* ============= DIFFICULTY ============= */}
           <Box>
-            <SectionTitle>Difficulty</SectionTitle>
+            <SectionTitle>{t('mathGenie.difficulty')}</SectionTitle>
             <Tabs
               value={useMixMode ? 'mix' : 'single'}
               onChange={handleMixModeTab}
               variant="fullWidth"
               sx={{ mt: 0.5, minHeight: 36, '& .MuiTab-root': { minHeight: 36, py: 0.5 } }}
             >
-              <Tab value="single" label="Single" />
-              <Tab value="mix" label="Mix" />
+              <Tab value="single" label={t('mathGenie.single')} />
+              <Tab value="mix" label={t('mathGenie.mix')} />
             </Tabs>
 
             <Stack spacing={2} sx={{ mt: 2 }}>
@@ -721,14 +704,14 @@ const WorksheetSettings: React.FC<Props> = ({
                   <ToggleButton value={DifficultyLevel.EASY}>1–5</ToggleButton>
                   <ToggleButton value={DifficultyLevel.MEDIUM}>1–10</ToggleButton>
                   <ToggleButton value={DifficultyLevel.HARD}>1–20</ToggleButton>
-                  <ToggleButton value={DifficultyLevel.CUSTOM}>Custom</ToggleButton>
+                  <ToggleButton value={DifficultyLevel.CUSTOM}>{t('mathGenie.custom')}</ToggleButton>
                 </ToggleButtonGroup>
               )}
 
               {!useMixMode && difficulty === DifficultyLevel.CUSTOM && (
                 <Field
-                  label="Custom Range"
-                  caption={`Range: ${customDifficulty?.min ?? 1} – ${customDifficulty?.max ?? 20}`}
+                  label={t('mathGenie.customRange')}
+                  caption={t('mathGenie.customRangeHint', { min: customDifficulty?.min ?? 1, max: customDifficulty?.max ?? 20 })}
                 >
                   <Slider
                     value={[customDifficulty?.min ?? 1, customDifficulty?.max ?? 20]}
@@ -780,7 +763,7 @@ const WorksheetSettings: React.FC<Props> = ({
                     sx={{ mt: 1 }}
                   >
                     <Typography variant="caption" color={ratioTotal === 100 ? 'text.secondary' : 'warning.main'}>
-                      Total: {ratioTotal}% {ratioTotal !== 100 && '⚠️'}
+                      {t('mathGenie.totalPercent')}: {ratioTotal}% {ratioTotal !== 100 && '⚠️'}
                     </Typography>
                     <Button
                       size="small"
@@ -789,13 +772,13 @@ const WorksheetSettings: React.FC<Props> = ({
                       disabled={ratioTotal === 100 || ratioTotal === 0}
                       sx={{ textTransform: 'none' }}
                     >
-                      Normalize to 100%
+                      {t('mathGenie.normalize')}
                     </Button>
                   </Stack>
                   {difficultyRatios.custom > 0 && customDifficulty && (
                     <Field
-                      label="Custom Range"
-                      caption={`Range: ${customDifficulty.min} – ${customDifficulty.max}`}
+                      label={t('mathGenie.customRange')}
+                      caption={t('mathGenie.customRangeHint', { min: customDifficulty.min, max: customDifficulty.max })}
                     >
                       <Slider
                         value={[customDifficulty.min, customDifficulty.max]}
@@ -815,7 +798,7 @@ const WorksheetSettings: React.FC<Props> = ({
 
           {/* ============= RULES ============= */}
           <Box>
-            <SectionTitle>Rules</SectionTitle>
+            <SectionTitle>{t('mathGenie.rules')}</SectionTitle>
             <Stack spacing={1} sx={{ mt: 1 }}>
               <FormControlLabel
                 sx={{ ml: 0 }}
@@ -827,11 +810,10 @@ const WorksheetSettings: React.FC<Props> = ({
                     size="small"
                   />
                 }
-                label={<Typography variant="body2">Exclude all zeros</Typography>}
+                label={<Typography variant="body2">{t('mathGenie.excludeZeros')}</Typography>}
               />
               <Typography variant="caption" color="text.secondary">
-                No operand / result / intermediate value can be 0 (e.g. x+0, x−x, x−a−b=0).
-                Mutually exclusive with Zero Drill.
+                {t('mathGenie.excludeZerosHint')}
               </Typography>
             </Stack>
           </Box>
@@ -855,7 +837,7 @@ const WorksheetSettings: React.FC<Props> = ({
             control={
               <Switch
                 checked={autoPreview}
-                onChange={(e) => setAutoPreview(e.target.checked)}
+                onChange={(e) => onChange({ ...config, autoPreview: e.target.checked })}
                 color="primary"
                 size="small"
               />
@@ -863,17 +845,17 @@ const WorksheetSettings: React.FC<Props> = ({
             label={
               <Box>
                 <Typography variant="body2" fontWeight={600}>
-                  Auto Preview
+                  {t('mathGenie.autoPreview')}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {autoPreview ? 'Updates as you change settings' : 'Manual generate only'}
+                  {autoPreview ? t('mathGenie.autoPreviewOn') : t('mathGenie.autoPreviewOff')}
                 </Typography>
               </Box>
             }
           />
 
           <Stack direction="row" spacing={1}>
-            {!autoPreview && (
+            {!autoPreview && onGenerate && (
               <Button
                 onClick={onGenerate}
                 disabled={isGenerating}
@@ -882,11 +864,11 @@ const WorksheetSettings: React.FC<Props> = ({
                 fullWidth
                 sx={{ textTransform: 'none', fontWeight: 600 }}
               >
-                {isGenerating ? 'Generating…' : 'Generate'}
+                {isGenerating ? t('common.generating') : t('mathGenie.generate')}
               </Button>
             )}
             <Button
-              onClick={onPrint}
+              onClick={() => window.print()}
               variant={autoPreview ? 'contained' : 'outlined'}
               startIcon={<PrintIcon />}
               fullWidth
@@ -898,14 +880,14 @@ const WorksheetSettings: React.FC<Props> = ({
 
           <Tooltip title="Reset all settings to default values" arrow>
             <Button
-              onClick={onResetConfig}
+              onClick={handleReset}
               variant="text"
               startIcon={<ResetIcon />}
               size="small"
               color="inherit"
               sx={{ textTransform: 'none', color: 'text.secondary', alignSelf: 'center' }}
             >
-              Reset to defaults
+              {t('common.reset')}
             </Button>
           </Tooltip>
         </Stack>
@@ -926,7 +908,7 @@ const WorksheetSettings: React.FC<Props> = ({
           {snack.msg}
         </Alert>
       </Snackbar>
-    </Paper>
+    </>
   );
 };
 
