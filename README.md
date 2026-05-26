@@ -2,7 +2,7 @@
 
 **Free, printable worksheet generator for kids.** Customize content, preview in real time, and print with one click — no sign-up, no server, everything runs in your browser.
 
-[https://diyyy.vercel.app](https://diyyy.vercel.app)
+[https://diyyy.netlify.app](https://diyyy.netlify.app/)
 
 ---
 
