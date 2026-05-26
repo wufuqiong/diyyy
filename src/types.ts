@@ -42,7 +42,8 @@ export enum OperationType {
 
 export enum DisplayMode {
   EMOJI = 'emoji',
-  TEXT = 'text'
+  TEXT = 'text',
+  WORD_PROBLEM = 'word_problem'
 }
 
 export enum ProblemType {
@@ -53,7 +54,8 @@ export enum ProblemType {
 export enum SpecialPracticeType {
   NONE = 'none',
   ZERO_DRILL = 'zero_drill',
-  FACT_FAMILY = 'fact_family'
+  FACT_FAMILY = 'fact_family',
+  NUMBER_BOND = 'number_bond'
 }
 
 export enum MultiOperationMode {
@@ -84,6 +86,16 @@ export interface MathProblem {
   numbers?: number[]; // 多重运算的所有数字
   operators?: ('+' | '-')[]; // 多重运算的所有运算符
   emojis?: string[]; // 多重运算的所有emoji
+  // 数的分合（number bond）
+  isNumberBond?: boolean;
+  numberBondWhole?: number;
+  numberBondParts?: [number, number];
+  numberBondBlankIndex?: 0 | 1 | 'whole';
+  // 应用题
+  isWordProblem?: boolean;
+  wordProblemText?: string;
+  wordProblemOperation?: 'addition' | 'subtraction';
+  wordProblemMeasure?: string;
 }
 
 export interface WorksheetConfig {
@@ -91,15 +103,18 @@ export interface WorksheetConfig {
   difficulty: DifficultyLevel;
   operation: OperationType;
   count: number; // TEXT 模式表示页数；EMOJI 模式表示题目总数
-  textColumns?: 2 | 3 | 4;
+  textColumns?: 2 | 3 | 4 | 5;
   title: string;
   showAnswers?: boolean;
   displayMode: DisplayMode;
+  problemsPerPage?: number; // 每页题数（8–30），与 columns 解耦
   customDifficulty?: CustomDifficultyRange;
   difficultyRatios?: DifficultyRatios;
   problemType?: ProblemType; // 题目类型
   specialPracticeType?: SpecialPracticeType; // 专项练习类型
   multiOperationConfig?: MultiOperationConfig; // 多重运算配置
+  excludeZeroProblems?: boolean;
+  autoPreview?: boolean;
 }
 
 export interface CustomDifficultyRange {

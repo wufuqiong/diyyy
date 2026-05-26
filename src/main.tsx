@@ -1,4 +1,5 @@
 import { StrictMode } from 'react';
+import * as Sentry from '@sentry/react';
 import { createRoot } from 'react-dom/client';
 import { Outlet, RouterProvider, createBrowserRouter } from 'react-router';
 
@@ -8,21 +9,22 @@ import { ErrorBoundary } from './routes/components';
 
 // ----------------------------------------------------------------------
 
-// Suppress React DevTools port error
-if (typeof window !== 'undefined') {
-  const originalError = console.error;
-  console.error = (...args) => {
-    if (
-      args.length > 0 &&
-      typeof args[0] === 'string' &&
-      (args[0].includes('Attempting to use a disconnected port object') ||
-       args[0].includes('Error: Attempting to use a disconnected port object'))
-    ) {
-      return; // Ignore this specific DevTools error
-    }
-    originalError.apply(console, args);
-  };
+// Initialize Sentry
+if (import.meta.env.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration(),
+    ],
+    tracesSampleRate: 1.0,
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    environment: import.meta.env.MODE,
+  });
 }
+
+// ----------------------------------------------------------------------
 
 const router = createBrowserRouter([
   {

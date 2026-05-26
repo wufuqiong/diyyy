@@ -1,21 +1,14 @@
 import React from 'react';
 
-import { Print, NavigateBefore, NavigateNext, Flag, Star } from '@mui/icons-material';
+import { Print, NavigateNext, NavigateBefore } from '@mui/icons-material';
 import {
   Box,
   Button,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Typography,
-  Paper,
-  Container,
-  Grid,
-  IconButton,
-  SelectChangeEvent
+  IconButton
 } from '@mui/material';
+
+import { colors } from 'src/theme/tokens';
 
 import { useRandomIcon } from 'src/components/iconify/random-icon';
 
@@ -312,7 +305,7 @@ export class PreviewSheet extends React.Component<PreviewSheetProps, PreviewShee
                   width: `${width}mm`,
                   height: `${height}mm`,
                   aspectRatio: '1',
-                  border: '1pt solid #333',
+                  border: `1pt solid ${colors.inkSecondary}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -359,9 +352,10 @@ export class PreviewSheet extends React.Component<PreviewSheetProps, PreviewShee
         }}>
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-              <IconButton 
+              <IconButton
                 onClick={this.goToPreviousPage}
                 disabled={currentPage === 0}
+                aria-label="Previous page"
               >
                 <NavigateBefore />
               </IconButton>
@@ -382,6 +376,7 @@ export class PreviewSheet extends React.Component<PreviewSheetProps, PreviewShee
                       onClick={() => this.goToPage(pageIndex)}
                       color={pageIndex === currentPage ? 'primary' : 'default'}
                       size="small"
+                      aria-label={`Go to page ${pageIndex + 1}`}
                     >
                       {pageIndex + 1}
                     </IconButton>
@@ -389,9 +384,10 @@ export class PreviewSheet extends React.Component<PreviewSheetProps, PreviewShee
                 })}
               </Box>
               
-              <IconButton 
+              <IconButton
                 onClick={this.goToNextPage}
                 disabled={currentPage === pages.length - 1}
+                aria-label="Next page"
               >
                 <NavigateNext />
               </IconButton>

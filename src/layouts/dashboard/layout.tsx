@@ -8,14 +8,13 @@ import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 
-import { _langs, _notifications } from 'src/_mock';
+import { LanguageSwitcher } from 'src/components/language-switcher/LanguageSwitcher';
 
 import { NavMobile, NavDesktop } from './nav';
 import { layoutClasses } from '../core/classes';
-import { _account } from '../nav-config-account';
 import { dashboardLayoutVars } from './css-vars';
-import { navData } from '../nav-config-dashboard';
 import { MainSection } from '../core/main-section';
+import { useNavData } from '../nav-config-dashboard';
 import { MenuButton } from '../components/menu-button';
 import { HeaderSection } from '../core/header-section';
 import { LayoutSection } from '../core/layout-section';
@@ -44,6 +43,7 @@ export function DashboardLayout({
   layoutQuery = 'lg',
 }: DashboardLayoutProps) {
   const theme = useTheme();
+  const navData = useNavData();
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
@@ -92,7 +92,7 @@ export function DashboardLayout({
           />
         </>
       ),
-      rightArea: null,
+      rightArea: <LanguageSwitcher />,
     };
 
     return (
@@ -124,7 +124,10 @@ export function DashboardLayout({
         <NavDesktop
           data={navData}
           layoutQuery={layoutQuery}
-          slots={{ topArea: renderSidebarTopArea() }}
+          slots={{
+            topArea: renderSidebarTopArea(),
+            bottomArea: <LanguageSwitcher />,
+          }}
         />
       }
       /** **************************************

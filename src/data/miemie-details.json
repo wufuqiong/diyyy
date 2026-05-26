@@ -184,7 +184,7 @@
         {
             "title": "第三课",
             "word": ["土", "山", "石", "木", "我", "好", "有", "田"],
-            "phrase": ["天地", "大地", "太阳", "月亮", "星星", "天亮", "大火", "大水", "火星", "水星", "三天", "三月", "下地","地上", "地下"],
+            "phrase": ["天地", "大地", "太阳", "月亮", "星星", "天亮", "大火", "大水", "火星", "水星", "三天", "三月", "下地", "地上", "地下"],
             "sentence": []
         },
         {
@@ -221,7 +221,7 @@
             "title": "第九课",
             "word": ["宝", "在", "学", "书", "游", "友", "儿", "九"],
             "phrase": ["爷爷", "奶奶", "多少", "唱歌", "爱笑", "爱哭", "爱唱", "不爱", "不哭", "不笑", "不唱", "不是", "是不是", "好不好", "不好", "八日", "八月", "八天"],
-            "sentence": [["明天多云，有小雨。", "聪聪爱唱歌。", "我家有爷爷、奶奶、爸爸、妈妈和我。", "爷爷爱我，奶奶爱我，爸爸爱我，妈妈爱我。我爱爷爷，我爱奶奶，我爱爸爸，我爱妈妈。"]]
+            "sentence": ["明天多云，有小雨。", "聪聪爱唱歌。", "我家有爷爷、奶奶、爸爸、妈妈和我。", "爷爷爱我，奶奶爱我，爸爸爱我，妈妈爱我。我爱爷爷，我爱奶奶，我爱爸爸，我爱妈妈。"]
         },
         {
             "title": "第十课",
@@ -232,7 +232,7 @@
         {
             "title": "课后复习",
             "word": [],
-            "phrase": ["宝贝", "生人", "生水", "学习", "上学", "看书", "看戏", "游戏", "生字", "生气", "气人", "十月", "十日", "十天", "好孩子", "小朋友", "下雨天", "好朋友", "小人书", "小学生", "生", "大学生", "唱儿歌", "小红花"],
+            "phrase": ["宝贝", "生人", "生水", "学习", "上学", "看书", "看戏", "游戏", "生字", "生气", "气人", "十月", "十日", "十天", "好孩子", "小朋友", "下雨天", "好朋友", "小人书", "小学生", "中学生", "大学生", "唱儿歌", "小红花"],
             "sentence": ["小宝是爱学习的好孩子。", "爷爷爱看书，奶奶爱看戏，爸爸爱看书，妈妈爱唱歌。", "我爱爷爷、奶奶、爸爸和妈妈。我是大家的好宝贝。", "心心和小叶子是好朋友。", "我爱看书，我爱学习。我是聪明的孩子。", "天上有太阳、月亮、星星和白云；地上有土、石、山、水、花和树木。", "不爱生气、不爱哭的孩子石好孩子。笑，我是好孩子。", "下雨天，我和明明在我家看小人书。", "我是小学生，聪聪天天上学。", "爸爸的爸爸是爷爷。爸爸是爷爷的儿子，我是爸爸的儿子。"]
         }
     ],
@@ -248,10 +248,8 @@
         "sentence": [
           "我学会好多生字。",
           "树上有爱唱歌的小黄鸟。",
-          "天下大雪。",
-          "早上，我看见地上有好多白雪。",
-          "我和妈妈、爸爸去奶奶家。",
-          "在奶奶家，我看见大山、水田和水牛。"
+          "天下大雪。早上，我看见地上有好多白雪。",
+          "我和妈妈、爸爸去奶奶家。在奶奶家，我看见大山、水田和水牛。"
         ]
       },
       {
@@ -266,17 +264,17 @@
           "我看见水中有好多鱼，有大鱼，有小鱼。",
           "小鸟在天上飞，小羊在地上跑。",
           "小羊和小牛在青青的草地上吃草。",
-          "爷爷、奶奶和我爱吃鱼，爸爸和妈妈不怎么爱吃鱼。",
+          "爷爷、奶奶和爸爸爱吃鱼，我和妈妈不怎么爱吃鱼。",
           "我和明明在他家做游戏。"
         ]
       },
       {
         "title": "第十三课",
         "word": [
-          "狗", "猪", "蓝", "落", "真", "开", "说", "也"
+          "狗", "猫", "蓝", "落", "真", "开", "说", "也"
         ],
         "phrase": [
-          "我们", "他们", "人们", "孩子们", "朋友们", "学生们", "春季", "春天", "春风", "春雨", "夏季", "夏天", "秋季", "秋天", "冬季", "冬天", "秋风", "四季", "三个人", "都不是", "都是"
+          "我们", "他们", "人们", "孩子们", "朋友们", "学生们", "春季", "春天", "春风", "春雨", "夏季", "夏天", "三个人", "都不是", "秋季", "秋天", "秋风", "冬季", "冬天",  "四季", "都是"
         ],
         "sentence": [
           "小朋友们天天都唱歌，做游戏。",
@@ -326,7 +324,7 @@
       {
         "title": "第十六课",
         "word": [
-          "就", "还", "快", "得", "西", "东", "乐", "到", "起"
+          "就", "还", "快", "得", "西", "乐", "到", "起"
         ],
         "phrase": [
           "跳着", "吃着", "看着", "说着", "来了", "吃了", "去了", "你们", "又要", "又去", "又哭", "又说", "又笑", "弟弟", "小弟", "姐妹", "妹妹", "小妹"
@@ -470,62 +468,62 @@
         },
         {
             "title": "ai-words",
-            "phrase": ["rain", "train", "hair", "tail", "nail", "mail", "jail"],
             "word": [],
+            "phrase": ["rain", "train", "hair", "tail", "nail", "mail", "jail"],
             "sentence": []
         },
         {
             "title": "oa-words",
-            "phrase": ["boat", "goat", "oak", "coat", "soap", "coal", "goal", "foam", "toast", "road"],
             "word": [],
+            "phrase": ["boat", "goat", "oak", "coat", "soap", "coal", "goal", "foam", "toast", "road"],
             "sentence": []
         },
         {
             "title": "oo-words",
-            "phrase": ["food", "cook", "wood", "good", "look", "hood", "moon", "spoon", "boot"],
             "word": [],
+            "phrase": ["food", "cook", "wood", "good", "look", "hood", "moon", "spoon", "boot"],
             "sentence": []
         },
         {
             "title": "ur-words",
-            "phrase": ["nurse", "purse", "hurt", "purple", "burger", "turn", "turkey", "fur", "curtain"],
             "word": [],
+            "phrase": ["nurse", "purse", "hurt", "purple", "burger", "turn", "turkey", "fur", "curtain"],
             "sentence": []
         },
         {
             "title": "Solar-System",
-            "phrase": ["Earth", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"],
             "word": [],
+            "phrase": ["Earth", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"],
             "sentence": []
         },
         {
             "title": "mesurement",
-            "phrase": ["millimeter", "centimeter", "kilometer", "meter", "kilogram", "gram", "ton", "pound", "ounce", "degrees", "temprature", "height", "weight", "time", "length", "width", "ruler", "scale"],
             "word": [],
+            "phrase": ["millimeter", "centimeter", "kilometer", "meter", "kilogram", "gram", "ton", "pound", "ounce", "degrees", "temprature", "height", "weight", "time", "length", "width", "ruler", "scale"],
             "sentence": []
         },
         {
             "title": "Halloween",
-            "phrase": ["Vampire", "Frankenstein", "Ghost", "Witch", "Scarecrow", "Mummy", "Skeleton", "Zombie", "Tombstone", "Cauldron", "Spooky", "Fright"],
             "word": [],
+            "phrase": ["Vampire", "Frankenstein", "Ghost", "Witch", "Scarecrow", "Mummy", "Skeleton", "Zombie", "Tombstone", "Cauldron", "Spooky", "Fright"],
             "sentence": []
         },
         {
             "title": "Direction",
-            "phrase": ["North", "South", "East", "West", "Compass"],
             "word": [],
+            "phrase": ["North", "South", "East", "West", "Compass"],
             "sentence": []
         },
         {
             "title": "Shapes",
-            "phrase": ["pentagon", "hexagon", "octagon", "cube", "right angle", "sphere", "cylinder", "pyramid", "edge", "angle"],
             "word": [],
+            "phrase": ["pentagon", "hexagon", "octagon", "cube", "right angle", "sphere", "cylinder", "pyramid", "edge", "angle"],
             "sentence": []
         },
         {
             "title": "Clothes",
-            "phrase":["shirt", "dress", "jeans", "trousers", "skirt", "socks", "cap", "umbrella", "swimsuit", "gloves", "high heal shoes", "glasses", "mittens", "necklace", "ring", "bracelet", "belt"],
             "word": [],
+            "phrase":["shirt", "dress", "jeans", "trousers", "skirt", "socks", "cap", "umbrella", "swimsuit", "gloves", "high heal shoes", "glasses", "mittens", "necklace", "ring", "bracelet", "belt"],
             "sentence": []
         }
     ]

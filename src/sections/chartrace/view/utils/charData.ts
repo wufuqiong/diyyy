@@ -1,6 +1,6 @@
-import { pinyin } from 'pinyin-pro';
+import type { CharData } from 'src/types';
 
-import { CharData } from 'src/types';
+import { pinyin } from 'pinyin-pro';
 
 // Small fallback DB for stroke counts (since pinyin-pro doesn't provide strokes by default).
 // In a full app, you might use a library like 'cnchar' for strokes, but for now we keep the structure.

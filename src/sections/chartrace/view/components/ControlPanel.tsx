@@ -1,41 +1,44 @@
-// src/sections/chartrace/view/components/ControlPanel.tsx
+import type { SheetConfig, MiemieLesson } from 'src/types';
+
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Clear as ClearIcon, Print as PrintIcon, Shuffle as ShuffleIcon } from '@mui/icons-material';
 import {
   Box,
+  Stack,
   Button,
-  Checkbox,
-  FormControl,
-  FormControlLabel,
-  InputLabel,
-  MenuItem,
   Select,
   Slider,
-  Stack,
+  Checkbox,
+  MenuItem,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
+  InputLabel,
   Typography,
+  FormControl,
+  ToggleButton,
+  FormControlLabel,
+  ToggleButtonGroup,
 } from '@mui/material';
 
-import miemieDetails from 'src/data/miemie-details.json';
-import { GridType, SheetConfig, TraceContentMode } from 'src/types';
+import { GridType, TraceContentMode } from 'src/types';
+import miemieDetailsJson from 'src/data/miemie-details.json';
 
 import {
   SettingsField,
-  SettingsHeader,
-  SettingsPanel,
   SettingsSection,
 } from 'src/sections/_shared/SettingsPanel';
 
+const miemieDetails: Record<string, MiemieLesson[]> = miemieDetailsJson;
+
 interface ControlPanelProps {
   config: SheetConfig;
-  setConfig: React.Dispatch<React.SetStateAction<SheetConfig>>;
+  setConfig: (c: SheetConfig) => void;
   onPrint: () => void;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, onPrint }) => {
+  const { t } = useTranslation();
   const hasChineseInText = /[\u4e00-\u9fa5]/.test(config.text);
 
   const getContentModeFromText = (text: string, fallback: TraceContentMode) => {
@@ -94,58 +97,56 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
   };
 
   const handleChange = (key: keyof SheetConfig, value: any) => {
-    setConfig((prev) => {
-      const updates: Partial<SheetConfig> = { [key]: value };
+    const updates: Partial<SheetConfig> = { [key]: value };
 
-      if (key === 'text') {
-        const newText = value as string;
-        const isChinese = /[\u4e00-\u9fa5]/.test(newText);
-        const isEnglish = /[a-zA-Z]/.test(newText);
-        const nextContentMode = getContentModeFromText(newText, prev.contentMode);
+    if (key === 'text') {
+      const newText = value as string;
+      const isChinese = /[\u4e00-\u9fa5]/.test(newText);
+      const isEnglish = /[a-zA-Z]/.test(newText);
+      const nextContentMode = getContentModeFromText(newText, config.contentMode);
 
-        updates.contentMode = nextContentMode;
+      updates.contentMode = nextContentMode;
 
-        if (nextContentMode === TraceContentMode.SENTENCES) {
-          updates.traceCount = 1;
-        }
-
-        if (isChinese) {
-          if (prev.gridType === GridType.ENGLISH_LINES) updates.gridType = GridType.TIAN;
-          if (prev.fontFamily?.startsWith('font-english') || prev.fontFamily === 'font-sans') {
-            updates.fontFamily = 'font-kaiti';
-          }
-        } else if (!isChinese && isEnglish) {
-          if (prev.gridType !== GridType.ENGLISH_LINES) {
-            updates.gridType = GridType.ENGLISH_LINES;
-            if (!prev.gridSize) updates.gridSize = 14;
-          }
-        }
+      if (nextContentMode === TraceContentMode.SENTENCES) {
+        updates.traceCount = 1;
       }
 
-      if (key === 'gridType') {
-        if (value === GridType.ENGLISH_LINES) {
-          if (!prev.gridSize) updates.gridSize = 14;
-        } else if (prev.fontFamily?.startsWith('font-english') || prev.fontFamily === 'font-sans') {
+      if (isChinese) {
+        if (config.gridType === GridType.ENGLISH_LINES) updates.gridType = GridType.TIAN;
+        if (config.fontFamily?.startsWith('font-english') || config.fontFamily === 'font-sans') {
           updates.fontFamily = 'font-kaiti';
         }
+      } else if (!isChinese && isEnglish) {
+        if (config.gridType !== GridType.ENGLISH_LINES) {
+          updates.gridType = GridType.ENGLISH_LINES;
+          if (!config.gridSize) updates.gridSize = 14;
+        }
       }
+    }
 
-      if (key === 'gridColor') {
-        updates.traceTextColor = value;
+    if (key === 'gridType') {
+      if (value === GridType.ENGLISH_LINES) {
+        if (!config.gridSize) updates.gridSize = 14;
+      } else if (config.fontFamily?.startsWith('font-english') || config.fontFamily === 'font-sans') {
+        updates.fontFamily = 'font-kaiti';
       }
+    }
 
-      return { ...prev, ...updates };
-    });
+    if (key === 'gridColor') {
+      updates.traceTextColor = value;
+    }
+
+    setConfig({ ...config, ...updates });
   };
 
   const handleBatchChange = (updates: Partial<SheetConfig>) => {
-    setConfig((prev) => ({ ...prev, ...updates }));
+    setConfig({ ...config, ...updates });
   };
 
   const [selectedLevel, setSelectedLevel] = useState<string>('');
   const [selectedLessonIndexes, setSelectedLessonIndexes] = useState<string[]>([]);
 
-  const currentLessons = selectedLevel ? (miemieDetails as any)[selectedLevel] || [] : [];
+  const currentLessons = selectedLevel ? miemieDetails[selectedLevel] || [] : [];
   const selectedLessons =
     selectedLessonIndexes.length > 0
       ? selectedLessonIndexes.map((index) => currentLessons[Number(index)]).filter(Boolean)
@@ -261,37 +262,23 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
   const isSentenceMode = !isEnglishLines && config.contentMode === TraceContentMode.SENTENCES;
 
   return (
-    <SettingsPanel
-      width={320}
-      header={<SettingsHeader title="Zitie Master" subtitle="Printable Calligraphy Generator" />}
-      footer={
-        <Button
-          onClick={onPrint}
-          variant="contained"
-          startIcon={<PrintIcon />}
-          fullWidth
-          sx={{ textTransform: 'none', fontWeight: 600 }}
-        >
-          Print / PDF
-        </Button>
-      }
-    >
+    <>
       {/* ============= CONTENT ============= */}
-      <SettingsSection title="Content">
-        <SettingsField label="Preset">
+      <SettingsSection title={t('charTrace.settings.content')}>
+        <SettingsField label={t('charTrace.settings.preset')}>
           <Stack spacing={1.5}>
             <FormControl fullWidth size="small">
-              <InputLabel>Level</InputLabel>
+              <InputLabel>{t('charTrace.settings.level')}</InputLabel>
               <Select
                 value={selectedLevel}
-                label="Level"
+                label={t('charTrace.settings.level')}
                 onChange={(e) => {
                   setSelectedLevel(e.target.value);
                   setSelectedLessonIndexes([]);
                 }}
               >
                 {Object.keys(miemieDetails).map((level) => {
-                  const lessons = (miemieDetails as any)[level];
+                  const lessons = miemieDetails[level];
                   const isDisabled = !Array.isArray(lessons) || lessons.length === 0;
                   return (
                     <MenuItem key={level} value={level} disabled={isDisabled}>
@@ -306,17 +293,16 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
               size="small"
               disabled={!currentLessons || currentLessons.length === 0}
             >
-              <InputLabel>Lesson</InputLabel>
+              <InputLabel>{t('charTrace.settings.lesson')}</InputLabel>
               <Select
                 multiple
                 value={selectedLessonIndexes}
-                label="Lesson"
-                displayEmpty
+                label={t('charTrace.settings.lesson')}
                 renderValue={(selected) => {
                   const values = selected as string[];
 
                   if (values.length === 0) {
-                    return 'All Lessons';
+                    return t('charTrace.settings.allLessons');
                   }
 
                   return values
@@ -332,7 +318,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
               >
                 <MenuItem value="__all__">
                   <Checkbox size="small" checked={selectedLessonIndexes.length === 0} />
-                  All Lessons
+                  {t('charTrace.settings.allLessons')}
                 </MenuItem>
                 {currentLessons?.map((lesson: any, index: number) => (
                   <MenuItem key={index} value={String(index)}>
@@ -354,7 +340,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                 disabled={!selectedLevel || !hasWords}
                 sx={{ textTransform: 'none' }}
               >
-                Words
+                {t('charTrace.settings.words')}
               </Button>
               <Button
                 variant="outlined"
@@ -364,7 +350,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                 disabled={!selectedLevel || !hasPhrases}
                 sx={{ textTransform: 'none' }}
               >
-                Phrases
+                {t('charTrace.settings.phrases')}
               </Button>
               <Button
                 variant="outlined"
@@ -374,13 +360,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                 disabled={!selectedLevel || !hasSentences}
                 sx={{ textTransform: 'none' }}
               >
-                Sentences
+                {t('charTrace.settings.sentences')}
               </Button>
             </Stack>
           </Stack>
         </SettingsField>
 
-        <SettingsField label="Quick Presets">
+        <SettingsField label={t('charTrace.settings.quickPresets')}>
           <Stack direction="row" spacing={1}>
             <Button
               variant="outlined"
@@ -398,7 +384,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                 })
               }
             >
-              All Pinyin
+              {t('charTrace.settings.allPinyin')}
             </Button>
             <Button
               variant="outlined"
@@ -416,12 +402,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                 })
               }
             >
-              Alphabet
+              {t('charTrace.settings.alphabet')}
             </Button>
           </Stack>
         </SettingsField>
 
-        <SettingsField label="Manual Input" caption={`${config.text.length} characters`}>
+        <SettingsField label={t('charTrace.settings.manualInput')} caption={t('charTrace.settings.manualInputCaption', { length: config.text.length })}>
           <Stack spacing={1}>
             <TextField
               multiline
@@ -447,7 +433,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                 disabled={!config.text}
                 sx={{ textTransform: 'none' }}
               >
-                Clear
+                {t('common.clear')}
               </Button>
               <Button
                 variant="outlined"
@@ -457,7 +443,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                 disabled={shufflePayload.items.length < 2}
                 sx={{ textTransform: 'none' }}
               >
-                Shuffle
+                {t('common.shuffle')}
               </Button>
             </Box>
           </Stack>
@@ -465,8 +451,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
       </SettingsSection>
 
       {/* ============= GRID & LAYOUT ============= */}
-      <SettingsSection title="Grid & Layout">
-        <SettingsField label="Grid Type">
+      <SettingsSection title={t('charTrace.settings.gridAndLayout')}>
+        <SettingsField label={t('charTrace.settings.gridTypeLabel')}>
           <ToggleButtonGroup
             value={config.gridType}
             exclusive
@@ -481,13 +467,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
             <ToggleButton value={GridType.ENGLISH_LINES} disabled={hasChineseInText}>
               四线
             </ToggleButton>
-            <ToggleButton value={GridType.NONE}>None</ToggleButton>
+            <ToggleButton value={GridType.NONE}>{t('charTrace.settings.none')}</ToggleButton>
           </ToggleButtonGroup>
         </SettingsField>
 
         {!isEnglishLines && (
           <Stack direction="row" spacing={2}>
-            <SettingsField label="Grid Color">
+            <SettingsField label={t('charTrace.settings.gridColorLabel2')}>
               <TextField
                 type="color"
                 fullWidth
@@ -496,7 +482,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                 onChange={(e) => handleChange('gridColor', e.target.value)}
               />
             </SettingsField>
-            <SettingsField label="Opacity">
+            <SettingsField label={t('charTrace.settings.opacity')}>
               <TextField
                 type="number"
                 fullWidth
@@ -511,7 +497,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
 
         <Stack direction="row" spacing={2}>
           {!isEnglishLines ? (
-            <SettingsField label="Rows / Page">
+            <SettingsField label={t('charTrace.settings.rowsPerPageLabel')}>
               <TextField
                 type="number"
                 fullWidth
@@ -522,7 +508,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
               />
             </SettingsField>
           ) : (
-            <SettingsField label="Size (mm)">
+            <SettingsField label={t('charTrace.settings.sizeMm')}>
               <FormControl fullWidth size="small">
                 <Select
                   value={config.gridSize || 14}
@@ -536,7 +522,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
             </SettingsField>
           )}
           {!isEnglishLines && (
-            <SettingsField label="Cols / Row">
+            <SettingsField label={t('charTrace.settings.colsPerRowLabel')}>
               <TextField
                 type="number"
                 fullWidth
@@ -552,10 +538,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
         <SettingsField
           label={
             isSentenceMode
-              ? 'Trace Copies: 1'
+              ? t('charTrace.settings.traceCopiesValue', { count: 1 })
               : isEnglishLines
-                ? `Repeat Count: ${config.traceCount}`
-                : `Trace Copies: ${config.traceCount}`
+                ? t('charTrace.settings.repeatCount', { count: config.traceCount })
+                : t('charTrace.settings.traceCopiesValue', { count: config.traceCount })
           }
         >
           <Slider
@@ -572,8 +558,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
       </SettingsSection>
 
       {/* ============= TEXT STYLE ============= */}
-      <SettingsSection title="Text Style">
-        <SettingsField label="Font Family">
+      <SettingsSection title={t('charTrace.settings.textStyle')}>
+        <SettingsField label={t('charTrace.settings.fontFamily')}>
           <FormControl fullWidth size="small">
             <Select
               value={config.fontFamily}
@@ -623,7 +609,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
         </SettingsField>
 
         <Stack direction="row" spacing={2}>
-          <SettingsField label="Main Color">
+          <SettingsField label={t('charTrace.settings.mainColor')}>
             <TextField
               type="color"
               fullWidth
@@ -632,7 +618,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
               onChange={(e) => handleChange('mainTextColor', e.target.value)}
             />
           </SettingsField>
-          <SettingsField label="Trace Color">
+          <SettingsField label={t('charTrace.settings.traceColor')}>
             <TextField
               type="color"
               fullWidth
@@ -643,7 +629,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
           </SettingsField>
         </Stack>
 
-        <SettingsField label={`Trace Opacity: ${config.traceOpacity}`}>
+        <SettingsField label={t('charTrace.settings.traceOpacity', { value: config.traceOpacity })}>
           <Slider
             value={config.traceOpacity}
             min={0.1}
@@ -655,8 +641,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
       </SettingsSection>
 
       {/* ============= PAGE SETUP ============= */}
-      <SettingsSection title="Page Setup">
-        <SettingsField label="Page Title">
+      <SettingsSection title={t('charTrace.settings.pageSetup')}>
+        <SettingsField label={t('charTrace.settings.pageTitle')}>
           <TextField
             fullWidth
             size="small"
@@ -664,7 +650,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
             onChange={(e) => handleChange('headerTitle', e.target.value)}
           />
         </SettingsField>
-        <SettingsField label="Right-aligned info">
+        <SettingsField label={t('charTrace.settings.rightInfo')}>
           <TextField
             fullWidth
             size="small"
@@ -674,7 +660,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
         </SettingsField>
 
         {!isEnglishLines && (
-          <SettingsField label="Display Options">
+          <SettingsField label={t('charTrace.settings.displayOptions')}>
             <Stack direction="row" spacing={2}>
               <FormControlLabel
                 sx={{ ml: 0 }}
@@ -686,7 +672,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                     size="small"
                   />
                 }
-                label={<Typography variant="body2">Pinyin</Typography>}
+                label={<Typography variant="body2">{t('charTrace.settings.pinyin')}</Typography>}
               />
               <FormControlLabel
                 sx={{ ml: 0 }}
@@ -698,12 +684,32 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                     size="small"
                   />
                 }
-                label={<Typography variant="body2">Stroke Count</Typography>}
+                label={<Typography variant="body2">{t('charTrace.settings.strokeCount')}</Typography>}
               />
             </Stack>
           </SettingsField>
         )}
       </SettingsSection>
-    </SettingsPanel>
+
+      <Box
+        sx={{
+          px: 3,
+          py: 2,
+          borderTop: '1px solid',
+          borderColor: 'grey.200',
+          bgcolor: 'grey.50',
+        }}
+      >
+        <Button
+          onClick={onPrint}
+          variant="contained"
+          startIcon={<PrintIcon />}
+          fullWidth
+          sx={{ textTransform: 'none', fontWeight: 600 }}
+        >
+          {t('common.print')}
+        </Button>
+      </Box>
+    </>
   );
 };
