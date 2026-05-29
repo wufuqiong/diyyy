@@ -167,9 +167,6 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
                   height: '100%',
                   pageBreakInside: 'avoid',
                   breakInside: 'avoid',
-                  ...(displayMode === DisplayMode.TEXT && {
-                    marginBottom: 2, // 添加垂直间距
-                  }),
                 }}
               >
                 <ProblemVisualizer 
@@ -231,7 +228,6 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
                 backgroundColor: 'white',
                 boxShadow: 'none',
                 pageBreakAfter: pageIndex < totalPages - 1 ? 'always' : 'auto',
-                pageBreakInside: 'avoid',
               }}
             >
               <Box sx={{ mb: 3, borderBottom: '2px solid', borderColor: 'grey.300', pb: 2 }}>
@@ -269,8 +265,8 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: displayMode === DisplayMode.WORD_PROBLEM ? '1fr' : displayMode === DisplayMode.TEXT ? `repeat(${textColumns}, 1fr)` : 'repeat(2, 1fr)',
-                  columnGap: displayMode === DisplayMode.WORD_PROBLEM ? '0' : displayMode === DisplayMode.TEXT ? '2' : 2,
-                  rowGap: displayMode === DisplayMode.TEXT ? '1' : 2,
+                  columnGap: `${layout.columnGap}mm`,
+                  rowGap: `${layout.rowGap}mm`,
                   gridAutoRows: displayMode === DisplayMode.WORD_PROBLEM ? 'minmax(48mm, auto)' : `minmax(${layout.rowHeight}mm, auto)`,
                   justifyItems: 'center',
                   alignItems: 'center',
@@ -284,9 +280,6 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
                       height: '100%',
                       pageBreakInside: 'avoid',
                       breakInside: 'avoid',
-                      ...(displayMode === DisplayMode.TEXT && {
-                        marginBottom: 2, // 添加垂直间距
-                      }),
                     }}
                   >
                     <ProblemVisualizer 

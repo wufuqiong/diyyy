@@ -92,9 +92,9 @@ input[type='number']::-webkit-inner-spin-button {
     page-break-after: always;
   }
   
-  /* No margin on pages */
+  /* No margin on pages — tools handle their own padding */
   @page {
-    margin: 0.5in;
+    margin: 0;
   }
   
   body {

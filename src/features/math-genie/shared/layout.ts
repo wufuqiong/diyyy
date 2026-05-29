@@ -9,7 +9,10 @@ export interface PageLayout {
 }
 
 const PAGE_HEIGHT_MM = 297;
-const HEADER_MM = 50;
+// Reserves vertical space consumed by paper padding (top 20mm + bottom 15mm = 35mm)
+// plus the header block (title h4 + mb:3 + border + pb:2 ≈ 20mm) plus a small safety
+// margin so the grid never overflows a single A4 page when printed.
+const HEADER_MM = 60;
 const PAGE_WIDTH_MM = 210;
 const MARGIN_MM = 20 * 2; // left + right margins
 
@@ -29,10 +32,18 @@ export function derivePageLayout(opts: {
 
   const rows = Math.ceil(problemsPerPage / columns);
   const availableHeightMM = PAGE_HEIGHT_MM - HEADER_MM;
-  const rowHeightMM = clamp(availableHeightMM / rows, 12, 30);
   const availableWidthMM = PAGE_WIDTH_MM - MARGIN_MM;
+
+  // Row height must account for gaps between rows.
+  // Relationship: rows * rowH + (rows-1) * rowGap = availableHeight
+  // where rowGap ≈ rowH * 0.15 (before clamping).
+  // Solve: rowH = availableHeight / (rows + 0.15 * (rows-1))
+  const rawRowHeight = availableHeightMM / (rows + 0.15 * (rows - 1));
+  const rowGapMM = clamp(rawRowHeight * 0.15, 1, 6);
+  // Recompute with actual (possibly clamped) gap for consistency
+  const rowHeightMM = clamp((availableHeightMM - (rows - 1) * rowGapMM) / rows, 12, 30);
+
   const columnGapMM = clamp(availableWidthMM / (columns * 5), 2, 8);
-  const rowGapMM = clamp(rowHeightMM * 0.15, 1, 6);
   const fontSize = clamp(rowHeightMM * 0.4, 14, 28);
 
   return {
