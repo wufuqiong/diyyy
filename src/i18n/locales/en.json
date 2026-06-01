@@ -122,7 +122,7 @@
       "lesson": "Lesson",
       "quickPresets": "Quick Presets",
       "manualInput": "Manual Input",
-      "manualInputCaption": "{length} characters",
+      "manualInputCaption": "{{length}} characters",
       "gridTypeLabel": "Grid Type",
       "gridColorLabel2": "Grid Color",
       "opacity": "Opacity",
@@ -132,7 +132,7 @@
       "fontFamily": "Font Family",
       "mainColor": "Main Color",
       "traceColor": "Trace Color",
-      "traceOpacity": "Trace Opacity: {value}",
+      "traceOpacity": "Trace Opacity: {{value}}",
       "pageTitle": "Page Title",
       "rightInfo": "Right-aligned info",
       "displayOptions": "Display Options",
@@ -197,7 +197,7 @@
     "single": "Single",
     "mix": "Mix",
     "customRange": "Custom Range",
-    "customRangeHint": "Range: {min} – {max}",
+    "customRangeHint": "Range: {{min}} – {{max}}",
     "range": "Range",
     "normalize": "Normalize to 100%",
     "totalPercent": "Total",
@@ -240,7 +240,14 @@
     "welcome": "Welcome to DIYYY",
     "welcomeSub": "Generate printable worksheets for kids",
     "tools": "Tools",
-    "worksheets": "Worksheet Generators"
+    "worksheets": "Worksheet Generators",
+    "explore": "Explore",
+    "features": {
+      "charColorDesc": "Explore and customize character colors with our intuitive color palette tool. Create beautiful color schemes for your characters.",
+      "charMazeDesc": "Navigate through challenging mazes with your character. Test your skills in this exciting maze adventure game.",
+      "charTraceDesc": "Practice writing characters by tracing them. Improve your handwriting skills with our interactive tracing tool.",
+      "mathGenieDesc": "Practice additions and subtractions."
+    }
   },
   "language": {
     "zh-CN": "中文",

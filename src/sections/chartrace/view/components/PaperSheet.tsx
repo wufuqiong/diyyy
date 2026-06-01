@@ -5,6 +5,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { GridType, TraceContentMode } from 'src/types';
+import { usePreviewScale } from 'src/shared/worksheet/usePreviewScale';
 import { colors, sansStack, kaitiStack, pinyinStack, englishHandStack, englishPrintStack } from 'src/theme/tokens';
 
 import { GridBox } from './GridBox';
@@ -60,6 +61,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
   const isSentenceMode = config.contentMode === TraceContentMode.SENTENCES;
   const isWordMode = config.contentMode === TraceContentMode.PHRASES;
   const isEnglishMode = config.gridType === GridType.ENGLISH_LINES;
+  const { containerRef, scale } = usePreviewScale();
   
   // Calculate dynamic styles
   const borderColor = getBorderColor(config.gridColor, config.gridOpacity);
@@ -179,6 +181,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
     bgcolor: 'grey.200',
     height: '100%',
     overflow: 'auto',
+    overflowX: 'hidden',
     display: 'flex',
     flexDirection: 'column', // Stack pages vertically
     alignItems: 'center',    // Center pages horizontally
@@ -199,7 +202,8 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
     height: '297mm',
     padding: '15mm',
     boxSizing: 'border-box',
-    '@media print': { boxShadow: 'none', minHeight: 'auto', height: '297mm' }
+    ...(scale < 1 ? { transform: `scale(${scale})`, transformOrigin: 'top center' as const } : {}),
+    '@media print': { boxShadow: 'none', minHeight: 'auto', height: '297mm', transform: 'none' }
   };
 
   // Constants for A4 layout calculations (approximate in mm)
@@ -282,7 +286,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
     const y4 = rowHeightPx - 1;
 
     return (
-        <Box sx={containerStyle}>
+        <Box ref={containerRef} sx={containerStyle}>
             {pages.map((pageRows, pageIndex) => (
             <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': { 
                 ...a4PageStyle['@media print'], 
@@ -431,7 +435,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
     }
 
     return (
-      <Box sx={containerStyle}>
+      <Box ref={containerRef} sx={containerStyle}>
         {pages.map((pageBlocks, pageIndex) => (
           <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': {
             ...a4PageStyle['@media print'],
@@ -570,7 +574,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
     }
 
     return (
-      <Box sx={containerStyle}>
+      <Box ref={containerRef} sx={containerStyle}>
         {pages.map((pageBlocks, pageIndex) => (
           <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': {
             ...a4PageStyle['@media print'],
@@ -651,11 +655,11 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
   if (pages.length === 0) pages = [['字']];
 
   return (
-    <Box sx={containerStyle}>
+    <Box ref={containerRef} sx={containerStyle}>
       {pages.map((pageChars, pageIndex) => (
-      <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': { 
-          ...a4PageStyle['@media print'], 
-          breakAfter: pageIndex === pages.length - 1 ? 'auto' : 'page' 
+      <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': {
+          ...a4PageStyle['@media print'],
+          breakAfter: pageIndex === pages.length - 1 ? 'auto' : 'page'
       } }}>
         <Box component="header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid', borderColor: 'orange.200', pb: 1, mb: 3 }}>
              <Typography variant="h6" className="font-kaiti" sx={{ fontWeight: 'bold', color: 'text.primary' }}>{config.headerTitle}</Typography>

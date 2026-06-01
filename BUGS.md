@@ -1,1 +1,1 @@
-应用题模式下，preview的时候显示1页，打印的时候是2页，标题单独占了1页，请检查这个问题。
+charcolor和math-genie的缩放依然有问题，chartrace和charmaze看过去是正常的。

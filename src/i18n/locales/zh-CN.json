@@ -122,7 +122,7 @@
       "lesson": "课册",
       "quickPresets": "快速预设",
       "manualInput": "手动输入",
-      "manualInputCaption": "{length} 个字符",
+      "manualInputCaption": "{{length}} 个字符",
       "gridTypeLabel": "格子类型",
       "gridColorLabel2": "格子颜色",
       "opacity": "透明度",
@@ -132,7 +132,7 @@
       "fontFamily": "字体",
       "mainColor": "主字颜色",
       "traceColor": "描红颜色",
-      "traceOpacity": "描红透明度: {value}",
+      "traceOpacity": "描红透明度: {{value}}",
       "pageTitle": "页面标题",
       "rightInfo": "右侧信息",
       "displayOptions": "显示选项",
@@ -197,7 +197,7 @@
     "single": "单一",
     "mix": "混合",
     "customRange": "自定义范围",
-    "customRangeHint": "范围：{min} – {max}",
+    "customRangeHint": "范围：{{min}} – {{max}}",
     "range": "范围",
     "normalize": "归一化到 100%",
     "totalPercent": "合计",
@@ -240,7 +240,14 @@
     "welcome": "欢迎使用 DIYYY",
     "welcomeSub": "为孩子生成可打印的练习单",
     "tools": "工具",
-    "worksheets": "练习单生成器"
+    "worksheets": "练习单生成器",
+    "explore": "开始使用",
+    "features": {
+      "charColorDesc": "直观的调色板工具，探索和自定义汉字涂色，创建美丽的配色方案。",
+      "charMazeDesc": "在有趣的汉字迷宫中穿行冒险，测试你的观察力和专注力。",
+      "charTraceDesc": "通过描红练习汉字书写，使用交互式工具提高书写技巧。",
+      "mathGenieDesc": "练习加法和减法运算，逐步提升计算能力。"
+    }
   },
   "language": {
     "zh-CN": "中文",

@@ -103,7 +103,7 @@ export interface WorksheetConfig {
   difficulty: DifficultyLevel;
   operation: OperationType;
   count: number; // TEXT 模式表示页数；EMOJI 模式表示题目总数
-  textColumns?: 2 | 3 | 4 | 5;
+  textColumns?: 2 | 3;
   title: string;
   showAnswers?: boolean;
   displayMode: DisplayMode;

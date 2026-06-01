@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 
 import { colors } from 'src/theme/tokens';
+import { usePreviewScale } from 'src/shared/worksheet/usePreviewScale';
 
 import { useRandomIcon } from 'src/components/iconify/random-icon';
 
@@ -436,3 +437,29 @@ export class PreviewSheet extends React.Component<PreviewSheetProps, PreviewShee
     );
   }
 }
+
+/** Functional wrapper that scales the preview to fit the viewport on screen. */
+export const ScaledPreviewSheet: React.FC<PreviewSheetProps> = (props) => {
+  const { containerRef, scale } = usePreviewScale();
+  return (
+    <Box
+      ref={containerRef}
+      sx={{
+        width: '100%',
+        height: '100%',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        '@media print': { overflow: 'visible' },
+      }}
+    >
+      <Box
+        sx={{
+          transform: scale < 1 ? `scale(${scale})` : undefined,
+          transformOrigin: 'top center',
+        }}
+      >
+        <PreviewSheet {...props} />
+      </Box>
+    </Box>
+  );
+};

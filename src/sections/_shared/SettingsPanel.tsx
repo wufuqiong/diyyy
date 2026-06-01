@@ -33,7 +33,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   <Paper
     elevation={0}
     sx={{
-      width: { xs: '100%', lg: width },
+      width: { xs: '100%', md: 260, lg: width },
       flexShrink: 0,
       height: '100%',
       display: 'flex',

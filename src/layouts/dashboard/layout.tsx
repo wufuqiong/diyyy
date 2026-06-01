@@ -40,7 +40,7 @@ export function DashboardLayout({
   cssVars,
   children,
   slotProps,
-  layoutQuery = 'lg',
+  layoutQuery = 'md',
 }: DashboardLayoutProps) {
   const theme = useTheme();
   const navData = useNavData();

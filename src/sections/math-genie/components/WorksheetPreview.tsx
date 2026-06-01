@@ -7,6 +7,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import { Box, Paper, Typography, Pagination, IconButton } from '@mui/material';
 
 import { DisplayMode } from 'src/types';
+import { usePreviewScale } from 'src/shared/worksheet/usePreviewScale';
 import { derivePageLayout } from 'src/features/math-genie/shared/layout';
 
 import ProblemVisualizer from './ProblemVisualizer';
@@ -17,13 +18,14 @@ interface Props {
   theme: string;
   showAnswers: boolean;
   displayMode: DisplayMode;
-  textColumns?: 2 | 3 | 4 | 5;
+  textColumns?: 2 | 3;
   problemsPerPage?: number;
 }
 
 const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, showAnswers, displayMode, textColumns = 2, problemsPerPage: ppp = 16 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const layout = derivePageLayout({ columns: textColumns, problemsPerPage: ppp });
+  const { containerRef, scale } = usePreviewScale();
   const EMOJI_PROBLEMS_PER_PAGE = 6;
   const WORD_PROBLEMS_PER_PAGE = 4;
   const PROBLEMS_PER_PAGE =
@@ -78,7 +80,7 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
         width: '100%',
         height: '100%',
         backgroundColor: 'grey.50',
-        overflowY: 'auto',
+        overflow: 'hidden',
         padding: 2,
         '@media print': {
           backgroundColor: 'white',
@@ -89,11 +91,15 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
       className="worksheet-preview"
     >
       {/* Screen view with pagination - hidden when printing */}
-      <Box 
-        sx={{ 
-          '@media print': { 
-            display: 'none !important' 
-          } 
+      <Box
+        ref={containerRef}
+        sx={{
+          height: '100%',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          '@media print': {
+            display: 'none !important'
+          }
         }}
       >
         <Paper
@@ -108,6 +114,8 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
             paddingBottom: '15mm',
             backgroundColor: 'white',
             boxShadow: 'none',
+            transform: scale < 1 ? `scale(${scale})` : undefined,
+            transformOrigin: 'top center',
             '&:last-child': {
               marginBottom: 0,
             },

@@ -8,8 +8,8 @@ import MapIcon from '@mui/icons-material/Map';
 import miemieDetails from 'src/data/miemie-details.json';
 import { loadMiemieLessons } from 'src/shared/data/lessons';
 
-import { PreviewSheet } from 'src/sections/charmaze/view/preview-sheet';
 import { ControlPanel } from 'src/sections/charmaze/components/ControlPanel';
+import { ScaledPreviewSheet } from 'src/sections/charmaze/view/preview-sheet';
 
 import { generateMazePages } from './utils';
 
@@ -33,7 +33,7 @@ function generate(config: CharMazeConfig): MazePageData[] {
 }
 
 const Preview: React.FC<{ config: CharMazeConfig; problems: MazePageData[] }> = ({ problems }) => (
-  <PreviewSheet
+  <ScaledPreviewSheet
     pages={problems.map((page, index) => ({
       refChars: page.refChars,
       characters: page.chars,

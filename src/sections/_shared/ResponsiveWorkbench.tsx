@@ -14,6 +14,8 @@ export const ResponsiveWorkbench: React.FC<ResponsiveWorkbenchProps> = ({
 }) => {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
+  const isNarrow = isDesktop || isTablet;
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleDrawerToggle = () => {
@@ -24,8 +26,8 @@ export const ResponsiveWorkbench: React.FC<ResponsiveWorkbenchProps> = ({
     <Box
       sx={{
         display: 'flex',
-        height: { xs: 'auto', lg: '100vh' },
-        minHeight: { xs: '100vh', lg: 'auto' },
+        height: { xs: 'auto', md: '100vh' },
+        minHeight: { xs: '100vh', md: 'auto' },
         width: '100%',
         overflow: 'hidden',
         '@media print': {
@@ -35,8 +37,8 @@ export const ResponsiveWorkbench: React.FC<ResponsiveWorkbenchProps> = ({
         },
       }}
     >
-      {/* Desktop: Fixed Sidebar */}
-      {isDesktop ? (
+      {/* Desktop / Tablet: Fixed Sidebar */}
+      {isNarrow ? (
         sidebar
       ) : (
         <>
@@ -80,10 +82,10 @@ export const ResponsiveWorkbench: React.FC<ResponsiveWorkbenchProps> = ({
         component="main"
         sx={{
           flex: 1,
-          height: { xs: 'auto', lg: '100%' },
-          minHeight: { xs: '100vh', lg: 'auto' },
+          height: { xs: 'auto', md: '100%' },
+          minHeight: { xs: '100vh', md: 'auto' },
           position: 'relative',
-          overflow: { xs: 'auto', lg: 'hidden' },
+          overflow: { xs: 'auto', md: 'hidden' },
           '@media print': {
             height: 'auto',
             overflow: 'visible',

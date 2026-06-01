@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -27,6 +28,7 @@ interface FeatureCardProps {
 
 // Custom card component for the features
 function FeatureCard({ title, description, icon, to, color = 'primary' }: FeatureCardProps) {
+  const { t } = useTranslation();
   return (
     <Card 
       sx={{ 
@@ -69,7 +71,7 @@ function FeatureCard({ title, description, icon, to, color = 'primary' }: Featur
           color={color}
           fullWidth
         >
-          Explore
+          {t('dashboard.explore')}
         </Button>
       </CardContent>
     </Card>
@@ -78,31 +80,33 @@ function FeatureCard({ title, description, icon, to, color = 'primary' }: Featur
 
 // Main dashboard content component
 function DashboardContent() {
+  const { t } = useTranslation();
+
   const features: FeatureCardProps[] = [
     {
-      title: 'Char Color',
-      description: 'Explore and customize character colors with our intuitive color palette tool. Create beautiful color schemes for your characters.',
+      title: t('nav.charcolor'),
+      description: t('dashboard.features.charColorDesc'),
       icon: <ColorLensIcon sx={{ fontSize: 30, color: 'error.main' }} />,
       to: '/charcolor',
       color: 'error'
     },
     {
-      title: 'Char Maze',
-      description: 'Navigate through challenging mazes with your character. Test your skills in this exciting maze adventure game.',
+      title: t('nav.charmaze'),
+      description: t('dashboard.features.charMazeDesc'),
       icon: <ExtensionIcon sx={{ fontSize: 30, color: 'warning.main' }} />,
       to: '/charmaze',
       color: 'warning'
     },
     {
-      title: 'Char Trace',
-      description: 'Practice writing characters by tracing them. Improve your handwriting skills with our interactive tracing tool.',
+      title: t('nav.chartrace'),
+      description: t('dashboard.features.charTraceDesc'),
       icon: <DrawIcon sx={{ fontSize: 30, color: 'success.main' }} />,
       to: '/chartrace',
       color: 'success'
     },
     {
-      title: 'Math Genie',
-      description: 'Practice additions and subtractions.',
+      title: t('nav.mathGenie'),
+      description: t('dashboard.features.mathGenieDesc'),
       icon: <CalculateIcon sx={{ fontSize: 30, color: 'info.main' }} />,
       to: '/math-genie',
       color: 'info'
@@ -114,7 +118,7 @@ function DashboardContent() {
       {/* Welcome Section */}
       <Box sx={{ textAlign: 'center', mb: 6 }}>
         <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-          Welcome to {CONFIG.appName}
+          {t('dashboard.welcome')}
         </Typography>
       </Box>
 

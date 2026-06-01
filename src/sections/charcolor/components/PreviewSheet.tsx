@@ -9,6 +9,7 @@ import { colors as tokens } from 'src/theme/tokens';
 import miemieDetails from 'src/data/miemie-details.json';
 import { loadMiemieLessons } from 'src/shared/data/lessons';
 import { generatePatterns } from 'src/features/charcolor/utils';
+import { usePreviewScale } from 'src/shared/worksheet/usePreviewScale';
 
 const miemie = loadMiemieLessons(miemieDetails as MiemieDetails, 'word');
 
@@ -17,10 +18,13 @@ interface PreviewSheetProps {
 }
 
 export const PreviewSheet: React.FC<PreviewSheetProps> = ({ pages }) => {
+  const { containerRef, scale } = usePreviewScale();
+
   const containerStyle = {
     bgcolor: 'grey.200',
     height: '100%',
     overflow: 'auto',
+    overflowX: 'hidden',
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
@@ -40,7 +44,8 @@ export const PreviewSheet: React.FC<PreviewSheetProps> = ({ pages }) => {
     height: '297mm',
     padding: '15mm',
     boxSizing: 'border-box' as const,
-    '@media print': { boxShadow: 'none', minHeight: 'auto', height: '297mm' },
+    ...(scale < 1 ? { transform: `scale(${scale})`, transformOrigin: 'top center' as const } : {}),
+    '@media print': { boxShadow: 'none', minHeight: 'auto', height: '297mm', transform: 'none' },
   };
 
   if (!pages || pages.length === 0) {
@@ -54,7 +59,7 @@ export const PreviewSheet: React.FC<PreviewSheetProps> = ({ pages }) => {
   }
 
   return (
-    <Box sx={containerStyle}>
+    <Box ref={containerRef} sx={containerStyle}>
       {pages.map((page, index) => {
         const { chars: characters, colors } = page;
         const patterns = generatePatterns(characters, miemie);

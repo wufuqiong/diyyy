@@ -485,15 +485,13 @@ const WorksheetSettings: React.FC<Props> = ({
                     size="small"
                     onChange={(_, v) => {
                       if (!v) return;
-                      const cols = v as 2 | 3 | 4 | 5;
+                      const cols = v as 2 | 3;
                       const clamped = Math.max(cols, Math.min(configProblemsPerPage, 30));
                       onChange({ ...config, textColumns: cols, problemsPerPage: clamped });
                     }}
                   >
                     <ToggleButton value={2}>2</ToggleButton>
                     <ToggleButton value={3}>3</ToggleButton>
-                    <ToggleButton value={4}>4</ToggleButton>
-                    <ToggleButton value={5}>5</ToggleButton>
                   </ToggleButtonGroup>
                 </Field>
 
