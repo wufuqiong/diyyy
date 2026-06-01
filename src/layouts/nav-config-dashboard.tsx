@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import DrawIcon from '@mui/icons-material/Draw';
+import GridOnIcon from '@mui/icons-material/GridOn';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import ExtensionIcon from '@mui/icons-material/Extension';
@@ -44,6 +45,11 @@ export function useNavData(): NavItem[] {
       title: t('nav.mathGenie'),
       path: '/math-genie',
       icon: <CalculateIcon />,
+    },
+    {
+      title: t('nav.hundredChart'),
+      path: '/hundred-chart',
+      icon: <GridOnIcon />,
     },
   ];
 }

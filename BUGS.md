@@ -1,1 +1,0 @@
-去掉math-genie preview页面上的打印按钮，以及charmaze中的打印所有页面按钮，让四张页面能保持一致。

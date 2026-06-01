@@ -4,7 +4,8 @@
     "charcolor": "Char Color",
     "charmaze": "Char Maze",
     "chartrace": "Char Trace",
-    "mathGenie": "Math Genie"
+    "mathGenie": "Math Genie",
+    "hundredChart": "Hundred Chart"
   },
   "common": {
     "print": "Print",
@@ -236,6 +237,36 @@
     "wordProblemHint": "4 problems per page",
     "columnForm": "Equation"
   },
+  "hundredChart": {
+    "title": "Hundred Chart - DIYYY",
+    "description": "Free hundred chart worksheet generator with random, pattern, and manual blank modes to help children learn number sequences.",
+    "noPreview": "No pages to preview",
+    "selected": "Selected {{count}} / 100",
+    "answerKey": "★ Answer Key ★",
+    "settings": {
+      "pageSetup": "Page Setup",
+      "pageTitle": "Page Title",
+      "pageInfo": "Right Info",
+      "numberRange": "Number Range",
+      "startNumber": "Start Number",
+      "blankStrategy": "Blank Strategy",
+      "modeRandom": "Random",
+      "modePattern": "Pattern",
+      "modeManual": "Manual",
+      "modeAnswerKey": "Answer Key",
+      "blankCount": "Blank Count: {{count}}",
+      "step": "Step",
+      "offset": "Offset",
+      "manualHint": "Click cells in the preview to toggle blank/display.",
+      "manualCount": "Currently selected {{count}} / 100 blanks.",
+      "clearAll": "Clear All",
+      "invert": "Invert",
+      "answerKeyHint": "All cells show complete numbers, for printing answer keys.",
+      "multiVersion": "Multiple Versions",
+      "versionCount": "Number of Versions",
+      "includeAnswerKey": "Include Answer Key"
+    }
+  },
   "dashboard": {
     "title": "DIYYY - Kids Worksheet Generator",
     "description": "Free learning and practice tools for children, supporting Chinese character tracing, character mazes, character coloring, and math exercises.",
@@ -248,7 +279,8 @@
       "charColorDesc": "Pick a palette and color each character — a playful way to learn Chinese words!",
       "charMazeDesc": "Follow the right character through the maze — sharpen your eyes and your mind!",
       "charTraceDesc": "Trace stroke by stroke, write with confidence — handwriting practice made fun!",
-      "mathGenieDesc": "Generate worksheets for addition and subtraction — math made easy!"
+      "mathGenieDesc": "Generate worksheets for addition and subtraction — math made easy!",
+      "hundredChartDesc": "Fill in the missing numbers on a 100-chart — build number sense!"
     }
   },
   "language": {

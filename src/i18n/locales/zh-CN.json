@@ -4,7 +4,8 @@
     "charcolor": "识字涂色",
     "charmaze": "识字迷宫",
     "chartrace": "描红写字",
-    "mathGenie": "算术天地"
+    "mathGenie": "算术天地",
+    "hundredChart": "百数板"
   },
   "common": {
     "print": "打印",
@@ -236,6 +237,36 @@
     "wordProblemHint": "每页 4 题",
     "columnForm": "列式"
   },
+  "hundredChart": {
+    "title": "百数板 - DIYYY",
+    "description": "免费的百数板练习题生成器，支持随机、规律、手动等多种空格模式，帮助孩子认识数字顺序。",
+    "noPreview": "没有可预览的页面",
+    "selected": "已选 {{count}} / 100",
+    "answerKey": "★ 答案卷 ★",
+    "settings": {
+      "pageSetup": "页面设置",
+      "pageTitle": "页面标题",
+      "pageInfo": "右侧信息",
+      "numberRange": "数字范围",
+      "startNumber": "起始数字",
+      "blankStrategy": "空格策略",
+      "modeRandom": "随机",
+      "modePattern": "按规律",
+      "modeManual": "手动选择",
+      "modeAnswerKey": "答案卷",
+      "blankCount": "留空数量: {{count}}",
+      "step": "间隔",
+      "offset": "偏移",
+      "manualHint": "在预览区点击格子来切换空白/显示。",
+      "manualCount": "当前已选 {{count}} / 100 个空格。",
+      "clearAll": "清除全部",
+      "invert": "反选",
+      "answerKeyHint": "所有格子显示完整数字，用于打印答案版。",
+      "multiVersion": "多张生成",
+      "versionCount": "生成张数",
+      "includeAnswerKey": "包含答案卷"
+    }
+  },
   "dashboard": {
     "title": "DIYYY - 儿童练习单生成工具",
     "description": "免费的儿童学习和练习工具，支持汉字描红、识字迷宫、识字涂色和数学练习等多种题型。",
@@ -248,7 +279,8 @@
       "charColorDesc": "选颜色、涂汉字，边玩边认字！",
       "charMazeDesc": "跟着汉字闯迷宫，练眼力、认字形！",
       "charTraceDesc": "一笔一画描红练字，写字越练越漂亮！",
-      "mathGenieDesc": "一键生成加减法练习题，数学启蒙好帮手！"
+      "mathGenieDesc": "一键生成加减法练习题，数学启蒙好帮手！",
+      "hundredChartDesc": "填数字、学数序，百数板上练数感！"
     }
   },
   "language": {
