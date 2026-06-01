@@ -12,7 +12,8 @@ export const CharMazeView: React.FC = () => (
     <CssBaseline />
     <Workbench<CharMazeConfig, MazePageData>
       tool={charmazeTool}
-      autoGenerate={false}
+      autoGenerate
+      debounceMs={300}
     />
   </>
 );
