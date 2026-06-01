@@ -13,6 +13,7 @@ import { getCharData } from '../utils/charData';
 
 interface PaperSheetProps {
   config: SheetConfig;
+  pdfContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 // Helper to convert hex + opacity to rgba string
@@ -57,7 +58,7 @@ const getFontStack = (fontClass: string) => {
 //     `bā` and `liǎng` look like different fonts.
 const getPinyinFontStack = () => pinyinStack;
 
-export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
+export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef }) => {
   const isSentenceMode = config.contentMode === TraceContentMode.SENTENCES;
   const isWordMode = config.contentMode === TraceContentMode.PHRASES;
   const isEnglishMode = config.gridType === GridType.ENGLISH_LINES;
@@ -286,7 +287,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
     const y4 = rowHeightPx - 1;
 
     return (
-        <Box ref={containerRef} sx={containerStyle}>
+        <Box ref={(node: HTMLDivElement | null) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node; if (pdfContainerRef) pdfContainerRef.current = node; }} sx={containerStyle}>
             {pages.map((pageRows, pageIndex) => (
             <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': { 
                 ...a4PageStyle['@media print'], 
@@ -435,7 +436,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
     }
 
     return (
-      <Box ref={containerRef} sx={containerStyle}>
+      <Box ref={(node: HTMLDivElement | null) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node; if (pdfContainerRef) pdfContainerRef.current = node; }} sx={containerStyle}>
         {pages.map((pageBlocks, pageIndex) => (
           <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': {
             ...a4PageStyle['@media print'],
@@ -574,7 +575,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
     }
 
     return (
-      <Box ref={containerRef} sx={containerStyle}>
+      <Box ref={(node: HTMLDivElement | null) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node; if (pdfContainerRef) pdfContainerRef.current = node; }} sx={containerStyle}>
         {pages.map((pageBlocks, pageIndex) => (
           <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': {
             ...a4PageStyle['@media print'],
@@ -655,7 +656,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config }) => {
   if (pages.length === 0) pages = [['字']];
 
   return (
-    <Box ref={containerRef} sx={containerStyle}>
+    <Box ref={(node: HTMLDivElement | null) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node; if (pdfContainerRef) pdfContainerRef.current = node; }} sx={containerStyle}>
       {pages.map((pageChars, pageIndex) => (
       <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': {
           ...a4PageStyle['@media print'],

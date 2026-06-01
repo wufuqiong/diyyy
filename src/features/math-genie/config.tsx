@@ -146,9 +146,10 @@ function deriveWorksheetTitle(config: WorksheetConfig): string {
   return `${opLabel}${typeSuffix} ${rangeStr}`;
 }
 
-const Preview: React.FC<{ config: WorksheetConfig; problems: MathProblem[] }> = ({
+const Preview: React.FC<{ config: WorksheetConfig; problems: MathProblem[]; pdfContainerRef?: React.RefObject<HTMLDivElement | null> }> = ({
   config,
   problems,
+  pdfContainerRef,
 }) => (
   <WorksheetPreview
     problems={problems}
@@ -158,6 +159,7 @@ const Preview: React.FC<{ config: WorksheetConfig; problems: MathProblem[] }> = 
     displayMode={config.displayMode}
     textColumns={config.textColumns || 2}
     problemsPerPage={config.problemsPerPage}
+    pdfContainerRef={pdfContainerRef}
   />
 );
 

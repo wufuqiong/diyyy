@@ -7,10 +7,12 @@
     "mathGenie": "算术天地"
   },
   "common": {
-    "print": "打印 / PDF",
+    "print": "打印",
+    "savePdf": "保存PDF",
     "regenerate": "重新生成",
     "generating": "生成中…",
     "reset": "恢复默认",
+    "savingPdf": "正在保存PDF…",
     "clear": "清空",
     "shuffle": "随机排列",
     "language": "语言"
@@ -243,10 +245,10 @@
     "worksheets": "练习单生成器",
     "explore": "开始使用",
     "features": {
-      "charColorDesc": "直观的调色板工具，探索和自定义汉字涂色，创建美丽的配色方案。",
-      "charMazeDesc": "在有趣的汉字迷宫中穿行冒险，测试你的观察力和专注力。",
-      "charTraceDesc": "通过描红练习汉字书写，使用交互式工具提高书写技巧。",
-      "mathGenieDesc": "练习加法和减法运算，逐步提升计算能力。"
+      "charColorDesc": "选颜色、涂汉字，边玩边认字！",
+      "charMazeDesc": "跟着汉字闯迷宫，练眼力、认字形！",
+      "charTraceDesc": "一笔一画描红练字，写字越练越漂亮！",
+      "mathGenieDesc": "一键生成加减法练习题，数学启蒙好帮手！"
     }
   },
   "language": {

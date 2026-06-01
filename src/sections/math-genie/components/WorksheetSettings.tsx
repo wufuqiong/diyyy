@@ -4,10 +4,7 @@ import { useTranslation } from 'react-i18next';
 import React, { useMemo, useState } from 'react';
 
 import {
-  Print as PrintIcon,
   Balance as BalanceIcon,
-  AutoFixHigh as WandIcon,
-  RestartAlt as ResetIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
@@ -380,11 +377,6 @@ const WorksheetSettings: React.FC<Props> = ({
     const hard = Math.round(difficultyRatios.hard * factor);
     const custom = 100 - easy - medium - hard;
     onChange({ ...config, difficultyRatios: { easy, medium, hard, custom } });
-  };
-
-  const handleReset = () => {
-    onChange(DEFAULT_CONFIG);
-    notify(t('common.reset'));
   };
 
   // ---------- Render ----------
@@ -815,79 +807,33 @@ const WorksheetSettings: React.FC<Props> = ({
               </Typography>
             </Stack>
           </Box>
-        </Stack>
-      </Box>
 
-      {/* Footer */}
-      <Box
-        sx={{
-          px: 3,
-          py: 2,
-          borderTop: '1px solid',
-          borderColor: 'grey.200',
-          bgcolor: 'grey.50',
-        }}
-      >
-        <Stack spacing={1.5}>
-          <FormControlLabel
-            sx={{ ml: 0, mr: 0, justifyContent: 'space-between', width: '100%' }}
-            labelPlacement="start"
-            control={
-              <Switch
-                checked={autoPreview}
-                onChange={(e) => onChange({ ...config, autoPreview: e.target.checked })}
-                color="primary"
-                size="small"
+          <Box>
+            <SectionTitle>{t('mathGenie.preview')}</SectionTitle>
+            <Stack spacing={1} sx={{ mt: 1 }}>
+              <FormControlLabel
+                sx={{ ml: 0, mr: 0 }}
+                control={
+                  <Switch
+                    checked={autoPreview}
+                    onChange={(e) => onChange({ ...config, autoPreview: e.target.checked })}
+                    color="primary"
+                    size="small"
+                  />
+                }
+                label={
+                  <Box>
+                    <Typography variant="body2" fontWeight={600}>
+                      {t('mathGenie.autoPreview')}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {autoPreview ? t('mathGenie.autoPreviewOn') : t('mathGenie.autoPreviewOff')}
+                    </Typography>
+                  </Box>
+                }
               />
-            }
-            label={
-              <Box>
-                <Typography variant="body2" fontWeight={600}>
-                  {t('mathGenie.autoPreview')}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {autoPreview ? t('mathGenie.autoPreviewOn') : t('mathGenie.autoPreviewOff')}
-                </Typography>
-              </Box>
-            }
-          />
-
-          <Stack direction="row" spacing={1}>
-            {!autoPreview && onGenerate && (
-              <Button
-                onClick={onGenerate}
-                disabled={isGenerating}
-                variant="contained"
-                startIcon={<WandIcon />}
-                fullWidth
-                sx={{ textTransform: 'none', fontWeight: 600 }}
-              >
-                {isGenerating ? t('common.generating') : t('mathGenie.generate')}
-              </Button>
-            )}
-            <Button
-              onClick={() => window.print()}
-              variant={autoPreview ? 'contained' : 'outlined'}
-              startIcon={<PrintIcon />}
-              fullWidth
-              sx={{ textTransform: 'none', fontWeight: 600 }}
-            >
-              Print / PDF
-            </Button>
-          </Stack>
-
-          <Tooltip title="Reset all settings to default values" arrow>
-            <Button
-              onClick={handleReset}
-              variant="text"
-              startIcon={<ResetIcon />}
-              size="small"
-              color="inherit"
-              sx={{ textTransform: 'none', color: 'text.secondary', alignSelf: 'center' }}
-            >
-              {t('common.reset')}
-            </Button>
-          </Tooltip>
+            </Stack>
+          </Box>
         </Stack>
       </Box>
 

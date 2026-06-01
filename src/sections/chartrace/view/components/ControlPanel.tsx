@@ -3,7 +3,7 @@ import type { SheetConfig, MiemieLesson } from 'src/types';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Clear as ClearIcon, Print as PrintIcon, Shuffle as ShuffleIcon } from '@mui/icons-material';
+import { Clear as ClearIcon, Shuffle as ShuffleIcon } from '@mui/icons-material';
 import {
   Box,
   Stack,
@@ -690,26 +690,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
           </SettingsField>
         )}
       </SettingsSection>
-
-      <Box
-        sx={{
-          px: 3,
-          py: 2,
-          borderTop: '1px solid',
-          borderColor: 'grey.200',
-          bgcolor: 'grey.50',
-        }}
-      >
-        <Button
-          onClick={onPrint}
-          variant="contained"
-          startIcon={<PrintIcon />}
-          fullWidth
-          sx={{ textTransform: 'none', fontWeight: 600 }}
-        >
-          {t('common.print')}
-        </Button>
-      </Box>
     </>
   );
 };

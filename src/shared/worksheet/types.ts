@@ -10,7 +10,8 @@ export interface WorksheetTool<Config = any, Problem = any> {
   id: string;
   defaultConfig: Config;
   generate: (config: Config) => Problem[] | Promise<Problem[]>;
-  Preview: React.FC<{ config: Config; problems: Problem[] }>;
+  Preview: React.FC<{ config: Config; problems: Problem[]; pdfContainerRef?: React.RefObject<HTMLDivElement | null> }>;
   Settings: React.FC<{ config: Config; onChange: (c: Config) => void; onGenerate?: () => void; isGenerating?: boolean }>;
   meta: WorksheetToolMeta;
+  deriveTitle?: (config: Config) => string;
 }

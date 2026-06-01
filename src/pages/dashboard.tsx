@@ -42,7 +42,7 @@ function FeatureCard({ title, description, icon, to, color = 'primary' }: Featur
         }
       }}
     >
-      <CardContent sx={{ flexGrow: 1, textAlign: 'center', p: 3 }}>
+      <CardContent sx={{ flexGrow: 1, textAlign: 'center', p: 3, pb: 1 }}>
         <Box
           sx={{
             width: 60,
@@ -61,19 +61,21 @@ function FeatureCard({ title, description, icon, to, color = 'primary' }: Featur
         <Typography variant="h5" component="h2" gutterBottom>
           {title}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary">
           {description}
         </Typography>
-        <Button 
-          component={RouterLink} 
-          to={to} 
-          variant="contained" 
+      </CardContent>
+      <Box sx={{ px: 3, pb: 3, mt: 'auto' }}>
+        <Button
+          component={RouterLink}
+          to={to}
+          variant="contained"
           color={color}
           fullWidth
         >
           {t('dashboard.explore')}
         </Button>
-      </CardContent>
+      </Box>
     </Card>
   );
 }

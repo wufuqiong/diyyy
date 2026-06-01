@@ -24,8 +24,8 @@ function generate(config: CharColorConfig): PageData[] {
   return generateCharColorPages(config);
 }
 
-const Preview: React.FC<{ config: CharColorConfig; problems: PageData[] }> = ({ problems }) => (
-  <PreviewSheet pages={problems} />
+const Preview: React.FC<{ config: CharColorConfig; problems: PageData[]; pdfContainerRef?: React.RefObject<HTMLDivElement | null> }> = ({ problems, pdfContainerRef }) => (
+  <PreviewSheet pages={problems} pdfContainerRef={pdfContainerRef} />
 );
 
 const Settings: React.FC<{
@@ -48,4 +48,5 @@ export const charcolorTool: WorksheetTool<CharColorConfig, PageData> = {
     icon: <PaletteIcon />,
     route: '/charcolor',
   },
+  deriveTitle: (_config) => '识字涂色',
 };

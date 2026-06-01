@@ -36,8 +36,8 @@ function generate(_config: SheetConfig): null[] {
   return [];
 }
 
-const Preview: React.FC<{ config: SheetConfig; problems: null[] }> = ({ config }) => (
-  <PaperSheet config={config} />
+const Preview: React.FC<{ config: SheetConfig; problems: null[]; pdfContainerRef?: React.RefObject<HTMLDivElement | null> }> = ({ config, pdfContainerRef }) => (
+  <PaperSheet config={config} pdfContainerRef={pdfContainerRef} />
 );
 
 const Settings: React.FC<{
@@ -60,4 +60,5 @@ export const chartraceTool: WorksheetTool<SheetConfig, null> = {
     icon: <EditNoteIcon />,
     route: '/chartrace',
   },
+  deriveTitle: (config) => config.headerTitle,
 };

@@ -15,9 +15,10 @@ const miemie = loadMiemieLessons(miemieDetails as MiemieDetails, 'word');
 
 interface PreviewSheetProps {
   pages: PageData[];
+  pdfContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-export const PreviewSheet: React.FC<PreviewSheetProps> = ({ pages }) => {
+export const PreviewSheet: React.FC<PreviewSheetProps> = ({ pages, pdfContainerRef }) => {
   const { containerRef, scale } = usePreviewScale();
 
   const containerStyle = {
@@ -59,7 +60,7 @@ export const PreviewSheet: React.FC<PreviewSheetProps> = ({ pages }) => {
   }
 
   return (
-    <Box ref={containerRef} sx={containerStyle}>
+    <Box ref={(node: HTMLDivElement | null) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node; if (pdfContainerRef) pdfContainerRef.current = node; }} sx={containerStyle}>
       {pages.map((page, index) => {
         const { chars: characters, colors } = page;
         const patterns = generatePatterns(characters, miemie);

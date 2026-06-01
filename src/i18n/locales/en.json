@@ -7,10 +7,12 @@
     "mathGenie": "Math Genie"
   },
   "common": {
-    "print": "Print / PDF",
+    "print": "Print",
+    "savePdf": "Save PDF",
     "regenerate": "Regenerate",
     "generating": "Generating…",
     "reset": "Reset to defaults",
+    "savingPdf": "Saving PDF…",
     "clear": "Clear",
     "shuffle": "Shuffle",
     "language": "Language"
@@ -243,10 +245,10 @@
     "worksheets": "Worksheet Generators",
     "explore": "Explore",
     "features": {
-      "charColorDesc": "Explore and customize character colors with our intuitive color palette tool. Create beautiful color schemes for your characters.",
-      "charMazeDesc": "Navigate through challenging mazes with your character. Test your skills in this exciting maze adventure game.",
-      "charTraceDesc": "Practice writing characters by tracing them. Improve your handwriting skills with our interactive tracing tool.",
-      "mathGenieDesc": "Practice additions and subtractions."
+      "charColorDesc": "Pick a palette and color each character — a playful way to learn Chinese words!",
+      "charMazeDesc": "Follow the right character through the maze — sharpen your eyes and your mind!",
+      "charTraceDesc": "Trace stroke by stroke, write with confidence — handwriting practice made fun!",
+      "mathGenieDesc": "Generate worksheets for addition and subtraction — math made easy!"
     }
   },
   "language": {

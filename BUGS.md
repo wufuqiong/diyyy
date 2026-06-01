@@ -1,1 +1,1 @@
-charcolor和math-genie的缩放依然有问题，chartrace和charmaze看过去是正常的。
+去掉math-genie preview页面上的打印按钮，以及charmaze中的打印所有页面按钮，让四张页面能保持一致。

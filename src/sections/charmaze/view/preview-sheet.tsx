@@ -1,9 +1,8 @@
 import React from 'react';
 
-import { Print, NavigateNext, NavigateBefore } from '@mui/icons-material';
+import { NavigateNext, NavigateBefore } from '@mui/icons-material';
 import {
   Box,
-  Button,
   Typography,
   IconButton
 } from '@mui/material';
@@ -19,6 +18,7 @@ interface PreviewSheetState {
 
 interface PreviewSheetProps {
   pages: PreviewPage[];
+  pdfContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 interface PreviewPage {
@@ -325,10 +325,6 @@ export class PreviewSheet extends React.Component<PreviewSheetProps, PreviewShee
     );
   };
 
-  handlePrint = (): void => {
-    window.print();
-  };
-
   render() {
     const { pages } = this.props;
     const { currentPage } = this.state;
@@ -399,24 +395,25 @@ export class PreviewSheet extends React.Component<PreviewSheetProps, PreviewShee
             {this.renderPage(pages[currentPage])}
           </Box>
           
-          <Box sx={{ textAlign: 'center' }}>
-            <Button
-              variant="outlined"
-              startIcon={<Print />}
-              onClick={this.handlePrint}
-            >
-              打印所有页面 ({pages.length}页)
-            </Button>
-          </Box>
         </Box>
         
-        {/* Print view - only visible when printing */}
-        <Box sx={{ 
-          display: 'none',
-          '@media print': {
-            display: 'block'
-          }
-        }}>
+        {/* Print view - off-screen on screen, visible when printing */}
+        <Box
+          ref={this.props.pdfContainerRef}
+          sx={{
+            position: 'absolute',
+            left: '-9999px',
+            top: 0,
+            opacity: 0,
+            pointerEvents: 'none',
+            '@media print': {
+              position: 'static',
+              left: 'auto',
+              opacity: 1,
+              pointerEvents: 'auto',
+            }
+          }}
+        >
           {pages.map((page, index) => (
             <Box 
               key={index} 

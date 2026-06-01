@@ -3,8 +3,7 @@ import type { MathProblem} from 'src/types';
 // src/sections/math-genie/components/WorksheetPreview.tsx
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
-import PrintIcon from '@mui/icons-material/Print';
-import { Box, Paper, Typography, Pagination, IconButton } from '@mui/material';
+import { Box, Paper, Typography, Pagination } from '@mui/material';
 
 import { DisplayMode } from 'src/types';
 import { usePreviewScale } from 'src/shared/worksheet/usePreviewScale';
@@ -20,9 +19,10 @@ interface Props {
   displayMode: DisplayMode;
   textColumns?: 2 | 3;
   problemsPerPage?: number;
+  pdfContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, showAnswers, displayMode, textColumns = 2, problemsPerPage: ppp = 16 }) => {
+const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, showAnswers, displayMode, textColumns = 2, problemsPerPage: ppp = 16, pdfContainerRef }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const layout = derivePageLayout({ columns: textColumns, problemsPerPage: ppp });
   const { containerRef, scale } = usePreviewScale();
@@ -136,9 +136,6 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
                 >
                   {title || `${theme} Math Worksheet`}
                 </Typography>
-                <IconButton onClick={() => window.print()} color="primary" aria-label="Print worksheet">
-                  <PrintIcon />
-                </IconButton>
               </Box>
               
               {totalPages > 1 && (
@@ -201,19 +198,29 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
         )}
       </Box>
 
-      {/* Print view - all pages - visible only when printing */}
-      <Box 
-        sx={{ 
-          display: 'none',
-          '@media print': { 
-            display: 'block !important',
+      {/* Print view - all pages - off-screen on screen, visible when printing */}
+      <Box
+        ref={pdfContainerRef}
+        sx={{
+          position: 'absolute',
+          left: '-9999px',
+          top: 0,
+          width: '210mm',
+          opacity: 0,
+          pointerEvents: 'none',
+          '@media print': {
+            position: 'static',
+            left: 'auto',
+            width: 'auto',
+            opacity: 1,
+            pointerEvents: 'auto',
             '& .page-container': {
               pageBreakAfter: 'always',
               '&:last-child': {
                 pageBreakAfter: 'auto',
               }
             }
-          } 
+          }
         }}
       >
         {Array.from({ length: totalPages }).map((_, pageIndex) => {

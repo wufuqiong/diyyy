@@ -32,7 +32,7 @@ function generate(config: CharMazeConfig): MazePageData[] {
   return generateMazePages(config, wordData);
 }
 
-const Preview: React.FC<{ config: CharMazeConfig; problems: MazePageData[] }> = ({ problems }) => (
+const Preview: React.FC<{ config: CharMazeConfig; problems: MazePageData[]; pdfContainerRef?: React.RefObject<HTMLDivElement | null> }> = ({ problems, pdfContainerRef }) => (
   <ScaledPreviewSheet
     pages={problems.map((page, index) => ({
       refChars: page.refChars,
@@ -43,6 +43,7 @@ const Preview: React.FC<{ config: CharMazeConfig; problems: MazePageData[] }> = 
       pageNumber: index + 1,
       totalPages: problems.length,
     }))}
+    pdfContainerRef={pdfContainerRef}
   />
 );
 
@@ -66,4 +67,5 @@ export const charmazeTool: WorksheetTool<CharMazeConfig, MazePageData> = {
     icon: <MapIcon />,
     route: '/charmaze',
   },
+  deriveTitle: (_config) => '识字迷宫',
 };

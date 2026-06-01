@@ -6,6 +6,10 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
+  Clear as ClearIcon,
+  Shuffle as ShuffleIcon,
+} from '@mui/icons-material';
+import {
   Box,
   Stack,
   Button,
@@ -15,12 +19,6 @@ import {
   InputLabel,
   FormControl,
 } from '@mui/material';
-import {
-  Clear as ClearIcon,
-  Print as PrintIcon,
-  Refresh as RefreshIcon,
-  Shuffle as ShuffleIcon,
-} from '@mui/icons-material';
 
 import { shuffleArray } from 'src/utils/array-tools';
 
@@ -242,37 +240,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           </Box>
         </SettingsField>
       </SettingsSection>
-
-      <Box
-        sx={{
-          px: 3,
-          py: 2,
-          borderTop: '1px solid',
-          borderColor: 'grey.200',
-          bgcolor: 'grey.50',
-        }}
-      >
-        <Stack direction="row" spacing={1}>
-          <Button
-            onClick={onGenerate}
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            fullWidth
-            sx={{ textTransform: 'none', fontWeight: 600 }}
-          >
-            {t('common.regenerate')}
-          </Button>
-          <Button
-            onClick={onPrint}
-            variant="contained"
-            startIcon={<PrintIcon />}
-            fullWidth
-            sx={{ textTransform: 'none', fontWeight: 600 }}
-          >
-            {t('common.print')}
-          </Button>
-        </Stack>
-      </Box>
     </>
   );
 };

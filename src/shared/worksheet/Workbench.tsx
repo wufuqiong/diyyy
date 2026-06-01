@@ -3,6 +3,8 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 
 import { Box, Alert, LinearProgress } from '@mui/material';
 
+import { saveWorksheetAsPdf } from './save-pdf';
+import { WorksheetToolbar } from './WorksheetToolbar';
 import { usePersistedConfig } from './use-persisted-config';
 import { ResponsiveWorkbench } from '../../sections/_shared/ResponsiveWorkbench';
 import { SettingsPanel, SettingsHeader } from '../../sections/_shared/SettingsPanel';
@@ -33,7 +35,9 @@ export function Workbench<Config = any, Problem = any>({
   const [problems, setProblems] = useState<Problem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSavingPdf, setIsSavingPdf] = useState(false);
   const hasMounted = useRef(false);
+  const pdfContainerRef = useRef<HTMLDivElement | null>(null);
   const { t } = useTranslation();
 
   const isAuto = typeof autoGenerate === 'function' ? autoGenerate(config) : autoGenerate;
@@ -83,8 +87,42 @@ export function Workbench<Config = any, Problem = any>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, isAuto]);
 
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
+  const handleSavePdf = useCallback(async () => {
+    if (!pdfContainerRef.current) return;
+    const baseName = tool.deriveTitle?.(config) || tool.id;
+    const sanitized = baseName.replace(/[/\\:*?"<>|]/g, '-').replace(/\s+/g, '_');
+    setIsSavingPdf(true);
+    try {
+      await saveWorksheetAsPdf(pdfContainerRef.current, `${sanitized}.pdf`);
+    } finally {
+      setIsSavingPdf(false);
+    }
+  }, [tool, config]);
+
+  const handleReset = useCallback(() => {
+    setConfig(tool.defaultConfig);
+  }, [tool.defaultConfig, setConfig]);
+
   const sidebar = (
-    <SettingsPanel header={<SettingsHeader title={t(`nav.${navKey}`)} />}>
+    <SettingsPanel
+      header={
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <SettingsHeader title={t(`nav.${navKey}`)} />
+          <Box sx={{ pr: 2 }}>
+            <WorksheetToolbar
+              onPrint={handlePrint}
+              onSavePdf={handleSavePdf}
+              onReset={handleReset}
+              isSaving={isSavingPdf}
+            />
+          </Box>
+        </Box>
+      }
+    >
       <tool.Settings
         config={config}
         onChange={setConfig}
@@ -140,7 +178,7 @@ export function Workbench<Config = any, Problem = any>({
             </Alert>
           )}
 
-          <tool.Preview config={config} problems={problems} />
+          <tool.Preview config={config} problems={problems} pdfContainerRef={pdfContainerRef} />
         </Box>
       </ResponsiveWorkbench>
     </>
