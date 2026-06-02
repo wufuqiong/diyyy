@@ -8,6 +8,7 @@ import GridOnIcon from '@mui/icons-material/GridOn';
 import i18n from 'src/i18n/config';
 
 import { BlankMode } from './types';
+import { generateCrossSheets } from './cross-utils';
 import { generateSeed, computeBlanks } from './utils';
 import HundredChartPreview from '../../sections/hundred-chart/components/HundredChartPreview';
 import HundredChartSettings from '../../sections/hundred-chart/components/HundredChartSettings';
@@ -17,19 +18,40 @@ import type { HundredChartSheet, HundredChartConfig } from './types';
 const isEn = i18n.language?.startsWith('en');
 
 const defaultConfig: HundredChartConfig = {
-  pageTitle: isEn ? 'Hundred Chart' : '百数板',
+  // shared
+  mode: 'grid',
+  pageTitle: isEn ? 'Hundred Chart Fill' : '百数板填空',
   pageInfo: isEn ? 'Name: __________  Date: __________' : '姓名: __________  日期: __________',
+  versionCount: 1,
+  includeAnswerKey: false,
+
+  // grid mode
   startNumber: 1,
   blankMode: BlankMode.RANDOM,
   blankCount: 20,
   step: 5,
   offset: 0,
   manualBlanks: [],
-  versionCount: 1,
-  includeAnswerKey: false,
+
+  // cross mode
+  showFormula: true,
+  showExample: true,
+  showNumbering: true,
+  minCenter: 11,
+  maxCenter: 90,
+  questionsPerPage: 8,
+  columnsPerRow: 4,
+  difficulty: 'medium',
+  easyHintCount: 2,
+  easyHintPosition: 'random',
+  mediumCellCount: 'random5-6',
+  mediumHintCount: 'random2-3',
+  hardCellCount: 'random5-9',
 };
 
-function generate(config: HundredChartConfig): HundredChartSheet[] {
+// ---------- generate ----------
+
+function generateGridSheets(config: HundredChartConfig): HundredChartSheet[] {
   const sheets: HundredChartSheet[] = [];
   const baseSeed = generateSeed();
 
@@ -53,6 +75,7 @@ function generate(config: HundredChartConfig): HundredChartSheet[] {
 
     sheets.push({
       id: uuidv4(),
+      mode: 'grid',
       cells,
       pageTitle: config.pageTitle,
       pageInfo: config.pageInfo,
@@ -63,6 +86,7 @@ function generate(config: HundredChartConfig): HundredChartSheet[] {
     if (config.includeAnswerKey) {
       sheets.push({
         id: uuidv4(),
+        mode: 'grid',
         cells: Array.from({ length: 100 }, (_, i) => ({
           number: config.startNumber + i,
           isBlank: false,
@@ -78,11 +102,25 @@ function generate(config: HundredChartConfig): HundredChartSheet[] {
   return sheets;
 }
 
+function generate(config: HundredChartConfig): HundredChartSheet[] {
+  const runSeed = generateSeed();
+  if (config.mode === 'cross') {
+    return generateCrossSheets(config, runSeed);
+  }
+  return generateGridSheets(config);
+}
+
 function deriveTitle(config: HundredChartConfig): string {
+  if (config.mode === 'cross') {
+    const label = isEn ? 'CrossPuzzle' : '十字填空';
+    return `${label}_${config.minCenter}-${config.maxCenter}`;
+  }
   const end = config.startNumber + 99;
   const label = isEn ? 'HundredChart' : '百数板';
   return `${label}_${config.startNumber}-${end}`;
 }
+
+// ---------- Preview / Settings wrappers ----------
 
 const Preview: React.FC<{
   config: HundredChartConfig;
@@ -96,11 +134,11 @@ const Preview: React.FC<{
 
   return (
     <HundredChartPreview
+      config={config}
       sheets={problems}
-      blankMode={config.blankMode}
       pdfContainerRef={pdfContainerRef}
       onManualBlanksChange={
-        config.blankMode === BlankMode.MANUAL
+        config.mode === 'grid' && config.blankMode === BlankMode.MANUAL
           ? handleManualBlanksChange
           : undefined
       }

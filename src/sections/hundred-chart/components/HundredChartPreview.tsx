@@ -1,307 +1,110 @@
-import type { HundredChartSheet } from 'src/features/hundred-chart/types';
+import type { HundredChartSheet, HundredChartConfig } from 'src/features/hundred-chart/types';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Box, Typography, IconButton } from '@mui/material';
-import { NavigateNext, NavigateBefore } from '@mui/icons-material';
+import { Box, Typography } from '@mui/material';
 
 import { colors } from 'src/theme/tokens';
 import { BlankMode } from 'src/features/hundred-chart/types';
-import { usePreviewScale } from 'src/shared/worksheet/usePreviewScale';
+
+import ChartPageShell from './ChartPageShell';
+import CrossPuzzlePreview from './CrossPuzzlePreview';
 
 interface Props {
+  config: HundredChartConfig;
   sheets: HundredChartSheet[];
-  blankMode: BlankMode;
   pdfContainerRef?: React.RefObject<HTMLDivElement | null>;
   onManualBlanksChange?: (blanks: number[]) => void;
 }
 
 const HundredChartPreview: React.FC<Props> = ({
+  config,
   sheets,
-  blankMode,
   pdfContainerRef,
   onManualBlanksChange,
 }) => {
   const { t } = useTranslation();
-  const [currentPage, setCurrentPage] = useState(0);
-  const { containerRef, scale } = usePreviewScale();
 
-  if (!sheets || sheets.length === 0) {
-    return (
-      <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h6" color="textSecondary">
-          {t('hundredChart.noPreview')}
-        </Typography>
-      </Box>
-    );
+  if (config.mode === 'cross') {
+    return <CrossPuzzlePreview sheets={sheets} pdfContainerRef={pdfContainerRef} />;
   }
 
+  // --- Grid mode ---
   const totalPages = sheets.length;
-  const sheet = sheets[currentPage];
+  const blankMode = config.blankMode;
   const isManual = blankMode === BlankMode.MANUAL && !!onManualBlanksChange;
 
-  const handleCellClick = (index: number) => {
-    if (!isManual || !onManualBlanksChange) return;
-    const newBlanks: number[] = [];
-    for (let i = 0; i < 100; i++) {
-      const wasBlank = sheet.cells[i].isBlank;
-      const toggled = i === index ? !wasBlank : wasBlank;
-      if (toggled) newBlanks.push(i);
-    }
-    onManualBlanksChange(newBlanks);
-  };
-
-  const generatePageIndicators = (): (number | 'ellipsis')[] => {
-    if (totalPages <= 7) {
-      return Array.from({ length: totalPages }, (_, i) => i);
-    }
-
-    const indicators: (number | 'ellipsis')[] = [];
-    indicators.push(0);
-
-    if (currentPage <= 3) {
-      for (let i = 1; i <= 4; i++) indicators.push(i);
-      indicators.push('ellipsis');
-      indicators.push(totalPages - 2);
-      indicators.push(totalPages - 1);
-    } else if (currentPage >= totalPages - 4) {
-      indicators.push('ellipsis');
-      for (let i = totalPages - 5; i < totalPages; i++) {
-        if (i > 0) indicators.push(i);
-      }
-    } else {
-      indicators.push('ellipsis');
-      for (let i = currentPage - 2; i <= currentPage + 2; i++) indicators.push(i);
-      indicators.push('ellipsis');
-      indicators.push(totalPages - 1);
-    }
-
-    return indicators;
-  };
-
-  const renderSheet = (sheetData: HundredChartSheet): React.ReactElement => {
-    const { cells, pageTitle, pageInfo, isAnswerKey } = sheetData;
+  const renderPage = (sheetData: HundredChartSheet, idx: number): React.ReactElement => {
+    const cells = sheetData.cells;
+    if (!cells) return <Box sx={{ textAlign: 'center', py: 4 }}><Typography color="textSecondary">{t('hundredChart.generating')}</Typography></Box>;
     const manualBlankCount = cells.filter(c => c.isBlank).length;
+    const { pageTitle, isAnswerKey } = sheetData;
+
+    const handleCellClick = (index: number) => {
+      if (!isManual || !onManualBlanksChange) return;
+      const newBlanks: number[] = [];
+      for (let i = 0; i < 100; i++) {
+        const wasBlank = cells[i].isBlank;
+        const toggled = i === index ? !wasBlank : wasBlank;
+        if (toggled) newBlanks.push(i);
+      }
+      onManualBlanksChange(newBlanks);
+    };
 
     return (
-      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Header: page title (left) + info (right), chartrace-style */}
-        <Box
-          component="header"
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-end',
-            borderBottom: '2px solid',
-            borderColor: 'success.main',
-            pb: 1,
-            mb: 2,
-          }}
-        >
-          <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'success.dark', fontFamily: 'serif' }}>
-            {pageTitle}
-          </Typography>
-          {pageInfo && (
-            <Typography variant="body2" sx={{ color: 'success.dark', fontFamily: 'serif' }}>
-              {pageInfo}
+      <>
+        {/* Header */}
+        <Box sx={{ mb: 3, borderBottom: '2px solid', borderColor: 'grey.300', pb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'grey.800', mb: 0.5, fontSize: { xs: '1.5rem', md: '1.875rem' } }}>
+              {pageTitle}
+            </Typography>
+            {totalPages > 1 && (
+              <Typography variant="body2" sx={{ color: 'grey.500', fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
+                {t('hundredChart.pageOf', { current: idx + 1, total: totalPages })}
+              </Typography>
+            )}
+          </Box>
+          {isAnswerKey && (
+            <Typography variant="body2" sx={{ color: 'grey.500', fontStyle: 'italic', mt: 0.5 }}>
+              {t('hundredChart.answerKey')}
             </Typography>
           )}
         </Box>
 
-        {/* Answer key badge */}
-        {isAnswerKey && (
-          <Typography
-            variant="subtitle1"
-            align="center"
-            sx={{ mb: 1, color: 'success.main', fontWeight: 'bold' }}
-          >
-            {t('hundredChart.answerKey')}
-          </Typography>
-        )}
-
         {/* 10×10 Grid */}
-        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Box
-            sx={{
-              width: '100%',
-              aspectRatio: '1',
-              maxHeight: '100%',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(10, 1fr)',
-              gridTemplateRows: 'repeat(10, 1fr)',
-              border: `2px solid ${colors.inkSecondary}`,
-            }}
-          >
-            {cells.map((cell, i) => (
-              <Box
-                key={i}
-                onClick={() => handleCellClick(i)}
-                sx={{
-                  border: `0.5px solid ${colors.inkSecondary}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: cell.isBlank ? 'grey.100' : 'white',
-                  cursor: isManual ? 'pointer' : 'default',
-                  transition: 'background-color 0.15s',
-                  '&:hover': isManual
-                    ? { backgroundColor: cell.isBlank ? 'grey.200' : 'primary.light', opacity: 0.7 }
-                    : {},
-                  '@media print': {
-                    backgroundColor: cell.isBlank ? 'white' : 'white',
-                  },
-                }}
-              >
-                {!cell.isBlank && (
-                  <Typography
-                    sx={{
-                      fontSize: {
-                        xs: '0.65rem',
-                        sm: '0.8rem',
-                        md: '1rem',
-                      },
-                      fontWeight: 'bold',
-                      color: 'text.primary',
-                    }}
-                  >
-                    {cell.number}
-                  </Typography>
-                )}
-              </Box>
-            ))}
-          </Box>
-        </Box>
-
-        {/* Manual mode counter */}
-        {isManual && (
-          <Typography
-            variant="body2"
-            align="center"
-            sx={{ mt: 1, color: 'text.secondary' }}
-          >
-            {t('hundredChart.selected', { count: manualBlankCount })}
-          </Typography>
-        )}
-      </Box>
-    );
-  };
-
-  return (
-    <Box
-      ref={containerRef}
-      sx={{
-        width: '100%',
-        height: '100%',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        '@media print': { overflow: 'visible' },
-      }}
-    >
-      <Box
-        sx={{
-          transform: scale < 1 ? `scale(${scale})` : undefined,
-          transformOrigin: 'top center',
-        }}
-      >
-        {/* Screen view - hidden when printing */}
-        <Box sx={{ '@media print': { display: 'none' } }}>
-          {/* Pagination controls */}
-          {totalPages > 1 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
-              <IconButton
-                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                disabled={currentPage === 0}
-                size="small"
-              >
-                <NavigateBefore />
-              </IconButton>
-
-              {generatePageIndicators().map((item, idx) =>
-                item === 'ellipsis' ? (
-                  <Typography key={`e-${idx}`} sx={{ px: 0.5 }}>...</Typography>
-                ) : (
-                  <IconButton
-                    key={item}
-                    onClick={() => setCurrentPage(item)}
-                    color={item === currentPage ? 'primary' : 'default'}
-                    size="small"
-                  >
-                    {item + 1}
-                  </IconButton>
-                ),
-              )}
-
-              <IconButton
-                onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-                disabled={currentPage === totalPages - 1}
-                size="small"
-              >
-                <NavigateNext />
-              </IconButton>
-            </Box>
-          )}
-
-          {/* Current page */}
-          <Box
-            sx={{
-              width: '210mm',
-              minHeight: '297mm',
-              margin: '0 auto',
-              mb: 4,
-              padding: '15mm',
-              backgroundColor: 'white',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-              display: 'flex',
-              flexDirection: 'column',
-              '@media print': { boxShadow: 'none', padding: 0 },
-            }}
-          >
-            {renderSheet(sheet)}
-          </Box>
-        </Box>
-
-        {/* Print view - all pages, off-screen */}
-        <Box
-          ref={pdfContainerRef}
-          sx={{
-            position: 'absolute',
-            left: '-9999px',
-            top: 0,
-            opacity: 0,
-            pointerEvents: 'none',
-            '@media print': {
-              position: 'static',
-              left: 'auto',
-              opacity: 1,
-              pointerEvents: 'auto',
-            },
-          }}
-        >
-          {sheets.map((s, idx) => (
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', width: '100%', border: `2px solid ${colors.inkSecondary}` }}>
+          {cells.map((cell, i) => (
             <Box
-              key={s.id}
+              key={i} onClick={() => handleCellClick(i)}
               sx={{
-                width: '210mm',
-                minHeight: '297mm',
-                margin: '0 auto',
-                padding: '15mm',
-                backgroundColor: 'white',
-                display: 'flex',
-                flexDirection: 'column',
-                pageBreakAfter: idx < sheets.length - 1 ? 'always' : 'auto',
-                '&:last-child': {
-                  pageBreakAfter: 'auto',
-                },
+                aspectRatio: '1', border: `0.5px solid ${colors.inkSecondary}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                backgroundColor: cell.isBlank ? 'grey.100' : 'white',
+                cursor: isManual ? 'pointer' : 'default',
+                transition: 'background-color 0.15s',
+                '&:hover': isManual ? { backgroundColor: cell.isBlank ? 'grey.200' : 'primary.light', opacity: 0.7 } : {},
+                '@media print': { backgroundColor: cell.isBlank ? 'white' : 'white' },
               }}
             >
-              {renderSheet(s)}
+              {!cell.isBlank && (
+                <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.8rem', md: '1rem' }, fontWeight: 'bold', color: 'text.primary' }}>
+                  {cell.number}
+                </Typography>
+              )}
             </Box>
           ))}
         </Box>
-      </Box>
-    </Box>
-  );
+
+        {isManual && (
+          <Typography variant="body2" align="center" sx={{ mt: 1, color: 'text.secondary' }}>{t('hundredChart.selected', { count: manualBlankCount })}</Typography>
+        )}
+      </>
+    );
+  };
+
+  return <ChartPageShell sheets={sheets} pdfContainerRef={pdfContainerRef} renderPage={renderPage} />;
 };
 
 export default HundredChartPreview;

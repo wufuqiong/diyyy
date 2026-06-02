@@ -8,5 +8,7 @@ import { hundredChartTool } from 'src/features/hundred-chart';
 export const HundredChartView: React.FC = () => (
   <Workbench<HundredChartConfig, HundredChartSheet>
     tool={hundredChartTool}
+    configVersion={6}
+    autoGenerate
   />
 );
