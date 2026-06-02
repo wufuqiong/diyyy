@@ -12,7 +12,8 @@ export const CharColorView: React.FC = () => (
     <CssBaseline />
     <Workbench<CharColorConfig, PageData>
       tool={charcolorTool}
-      autoGenerate={false}
+      autoGenerate
+      debounceMs={300}
     />
   </>
 );
