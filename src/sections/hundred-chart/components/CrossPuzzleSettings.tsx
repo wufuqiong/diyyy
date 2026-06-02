@@ -138,7 +138,7 @@ const CrossPuzzleSettings: React.FC<Props> = ({ config, onChange }) => {
       <SettingsSection title={t('hundredChart.cross.questionCount')}>
         <SettingsField label={t('hundredChart.cross.numberOfQuestions')}>
           <ToggleButtonGroup value={config.questionsPerPage} exclusive onChange={(_, v) => v !== null && update({ questionsPerPage: v })} size="small">
-            {[4, 6, 8, 10, 12].map((n) => (<ToggleButton key={n} value={n}>{n}</ToggleButton>))}
+            {[4, 6, 8, 10, 12, 14, 16].map((n) => (<ToggleButton key={n} value={n}>{n}</ToggleButton>))}
           </ToggleButtonGroup>
         </SettingsField>
         <SettingsField label={t('hundredChart.cross.columns')}>

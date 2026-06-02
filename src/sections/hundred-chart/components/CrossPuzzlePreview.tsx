@@ -14,7 +14,7 @@ interface Props {
   pdfContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-const QUESTION_NUMBERS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫'];
+const QUESTION_NUMBERS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫', '⑬', '⑭', '⑮', '⑯'];
 
 function renderPuzzleGrid(puzzle: CrossPuzzle, isAnswer: boolean, showNumbering: boolean, cellSize: string, fontSize: string) {
   const { grid, rows, cols, questionNumber } = puzzle;

@@ -259,9 +259,23 @@ export function generateCrossSheets(config: HundredChartConfig, runSeed: number)
       return p;
     });
 
-    // Example puzzle
+    // Example puzzle — pick a center not on any edge so the cross fits completely
     const examplePuzzle = config.showExample
-      ? (() => { const s = generateShape(anchors[v][0], 5, 'cross', versionSeed + 9999); return buildPuzzle(s, new Set([...s])); })()
+      ? (() => {
+          const exampleCenter = anchors[v].find((n) => {
+            const r = toRow(n) + 1; // 1-based
+            const c = toCol(n) + 1;
+            return r >= 2 && r <= 9 && c >= 2 && c <= 9;
+          }) || (() => {
+            const rng = lcg(versionSeed + 9999);
+            // Random valid center: rows 2-9, cols 2-9 → numbers 12-89 except col 1/10
+            const vr = 1 + Math.floor(rng() * 8); // rows 2-9 (0-based: 1-8)
+            const vc = 1 + Math.floor(rng() * 8); // cols 2-9
+            return fromRC(vr, vc);
+          })();
+          const s = generateShape(exampleCenter, 5, 'cross', versionSeed + 9999);
+          return buildPuzzle(s, new Set([...s]));
+        })()
       : undefined;
 
     sheets.push({
