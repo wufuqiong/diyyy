@@ -26,11 +26,7 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
   const [currentPage, setCurrentPage] = useState(1);
   const layout = derivePageLayout({ columns: textColumns, problemsPerPage: ppp });
   const { containerRef, scale } = usePreviewScale();
-  const EMOJI_PROBLEMS_PER_PAGE = 6;
-  const WORD_PROBLEMS_PER_PAGE = 4;
-  const PROBLEMS_PER_PAGE =
-    displayMode === DisplayMode.WORD_PROBLEM ? WORD_PROBLEMS_PER_PAGE :
-    displayMode === DisplayMode.TEXT ? layout.problemsPerPage : EMOJI_PROBLEMS_PER_PAGE;
+  const PROBLEMS_PER_PAGE = ppp;
   
   // Memoize calculations to prevent re-calculation on every render
   const paginationData = useMemo(() => {

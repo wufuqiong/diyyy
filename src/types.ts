@@ -55,7 +55,8 @@ export enum SpecialPracticeType {
   NONE = 'none',
   ZERO_DRILL = 'zero_drill',
   FACT_FAMILY = 'fact_family',
-  NUMBER_BOND = 'number_bond'
+  NUMBER_BOND = 'number_bond',
+  WORD_PROBLEM_COMPARISON = 'word_problem_comparison',
 }
 
 export enum MultiOperationMode {
@@ -114,6 +115,7 @@ export interface WorksheetConfig {
   specialPracticeType?: SpecialPracticeType; // 专项练习类型
   multiOperationConfig?: MultiOperationConfig; // 多重运算配置
   excludeZeroProblems?: boolean;
+  excludeComparisonProblems?: boolean;
   autoPreview?: boolean;
 }
 

@@ -1,3 +1,13 @@
+import type { ProblemType,
+  MultiOperationConfig} from 'src/types';
+
+import {
+  DisplayMode,
+  OperationType,
+  DifficultyLevel,
+  SpecialPracticeType,
+} from 'src/types';
+
 export interface PageLayout {
   columns: number;
   rows: number;
@@ -13,6 +23,7 @@ const PAGE_HEIGHT_MM = 297;
 // plus the header block (title h4 + mb:3 + border + pb:2 ≈ 20mm) plus a small safety
 // margin so the grid never overflows a single A4 page when printed.
 const HEADER_MM = 60;
+const AVAILABLE_HEIGHT_MM = PAGE_HEIGHT_MM - HEADER_MM; // 237
 const PAGE_WIDTH_MM = 210;
 const MARGIN_MM = 20 * 2; // left + right margins
 
@@ -31,7 +42,7 @@ export function derivePageLayout(opts: {
   const { columns, problemsPerPage } = opts;
 
   const rows = Math.ceil(problemsPerPage / columns);
-  const availableHeightMM = PAGE_HEIGHT_MM - HEADER_MM;
+  const availableHeightMM = AVAILABLE_HEIGHT_MM;
   const availableWidthMM = PAGE_WIDTH_MM - MARGIN_MM;
 
   // Row height must account for gaps between rows.
@@ -55,4 +66,95 @@ export function derivePageLayout(opts: {
     columnGap: Math.round(columnGapMM),
     rowGap: Math.round(rowGapMM),
   };
+}
+
+// ---------- Optimal problems-per-page calculation ----------
+
+interface OptimalParams {
+  displayMode: DisplayMode;
+  columns: number;
+  problemType: ProblemType;
+  specialPracticeType: SpecialPracticeType;
+  operation: OperationType;
+  difficulty: DifficultyLevel;
+  customDifficulty?: { min: number; max: number };
+  multiOperationConfig?: MultiOperationConfig;
+}
+
+function getEffectiveMax(difficulty: DifficultyLevel, customDifficulty?: { min: number; max: number }): number {
+  if (difficulty === DifficultyLevel.CUSTOM) {
+    return customDifficulty?.max ?? 20;
+  }
+  return difficulty as number as number;
+}
+
+function getMinCellHeightText(
+  _problemType: ProblemType,
+  specialPracticeType: SpecialPracticeType,
+  operation: OperationType,
+  multiOperationConfig?: MultiOperationConfig,
+): number {
+  if (specialPracticeType === SpecialPracticeType.NUMBER_BOND) return 47;
+  if (operation === OperationType.MULTI_OPERATIONS && multiOperationConfig) {
+    if (multiOperationConfig.numberCount >= 5) return 18;
+    return 20;
+  }
+  return 20;
+}
+
+function getMinCellHeightEmoji(maxNum: number): number {
+  if (maxNum <= 5) return 35;
+  if (maxNum <= 10) return 45;
+  return 55;
+}
+
+function findMaxProblemsByContentHeight(columns: number, minCellHeightMM: number): number {
+  const gap = clamp(minCellHeightMM * 0.15, 1, 6);
+  const maxRows = Math.floor((AVAILABLE_HEIGHT_MM + gap) / (minCellHeightMM + gap));
+  return maxRows * columns;
+}
+
+function findMaxProblemsForText(columns: number, minRowHeightMM: number): number {
+  let maxValid = columns;
+  // Iterate upward — rowHeight decreases as problemsPerPage increases.
+  // rowHeight from derivePageLayout is clamped to [12, 30] so
+  // minRowHeightMM must be ≤ 30 for this path.
+  for (let p = columns; p <= 60; p++) {
+    const layout = derivePageLayout({ columns, problemsPerPage: p });
+    if (layout.rowHeight >= minRowHeightMM) {
+      maxValid = p;
+    } else {
+      break;
+    }
+  }
+  return maxValid;
+}
+
+/**
+ * Calculate the maximum number of problems that fit on a single A4 page
+ * for the given configuration. Used as the default problemsPerPage value
+ * and adapts automatically when display mode, problem type, or difficulty change.
+ */
+export function calculateOptimalProblemsPerPage(params: OptimalParams): number {
+  const { displayMode, columns, problemType, specialPracticeType, operation, difficulty, customDifficulty, multiOperationConfig } = params;
+
+  if (displayMode === DisplayMode.WORD_PROBLEM) {
+    return findMaxProblemsByContentHeight(1, 48);
+  }
+
+  if (displayMode === DisplayMode.EMOJI) {
+    const maxNum = getEffectiveMax(difficulty, customDifficulty);
+    const minH = getMinCellHeightEmoji(maxNum);
+    return Math.max(2, findMaxProblemsByContentHeight(2, minH));
+  }
+
+  // TEXT mode: use derivePageLayout iteration when content fits within [12,30]mm clamp,
+  // otherwise fall back to content-height estimate (e.g. number bond SVG > 30mm).
+  const minH = getMinCellHeightText(problemType, specialPracticeType, operation, multiOperationConfig);
+  if (minH <= 30) {
+    const raw = findMaxProblemsForText(columns, minH);
+    return clamp(raw, columns, 30);
+  }
+  const raw = findMaxProblemsByContentHeight(columns, minH);
+  return Math.max(columns, raw);
 }

@@ -23,7 +23,10 @@
       "{n1}"        : "较大的数字（初始数量）",
       "{n2}"        : "较小的数字（变化数量）",
       "{name1}"     : "人物1，来自 names 列表",
-      "{name2}"     : "人物2，来自 names 列表（与 name1 不同）"
+      "{name2}"     : "人物2，来自 names 列表（与 name1 不同）",
+      "{total}"     : "“一共”的同义词，来自 phrases.total，随机选取以丰富表达",
+      "{connector}" : "多步应用题中连接各事件的连词，来自 multiStep.connectors",
+      "{n}"         : "多步应用题中某一步的数量"
     }
   },
 
@@ -90,48 +93,91 @@
       "verbs"   : { "appear": "跑来了", "leave": "跑走了" },
       "location": "院子里",
       "tags"    : ["living", "animal"]
+    },
+    {
+      "noun"    : "书",
+      "measure" : "本",
+      "verbs"   : { "appear": "摆上了", "leave": "拿走了" },
+      "location": "书架上",
+      "tags"    : ["object", "portable", "buyable", "containerFriendly"]
+    },
+    {
+      "noun"    : "贴纸",
+      "measure" : "张",
+      "verbs"   : { "appear": "贴上了", "leave": "撕下了" },
+      "location": "本子上",
+      "tags"    : ["object", "portable", "buyable"]
+    },
+    {
+      "noun"    : "邮票",
+      "measure" : "张",
+      "verbs"   : { "appear": "贴上了", "leave": "拿走了" },
+      "location": "集邮册里",
+      "tags"    : ["object", "portable", "buyable", "containerFriendly"]
     }
   ],
 
   "names": ["明明", "聪聪", "小华", "小丽", "小刚", "JoJo", "元元", "珍珍", "小明", "小红", "爸爸", "妈妈"],
+
+  "phrases": {
+    "total": ["一共", "总共", "共", "合计"]
+  },
 
   "templates": {
     "addition": [
       {
         "id"         : "add_natural_flow",
         "desc"       : "主体自然出现在原有场景里（使用各主体专属的出现动词）",
-        "pattern"    : "{location}有{n1}{measure}{noun}，又{verb_appear}{n2}{measure}，现在{location}一共有多少{measure}{noun}？",
+        "pattern"    : "{location}有{n1}{measure}{noun}，又{verb_appear}{n2}{measure}，现在{location}{total}有多少{measure}{noun}？",
         "requiresTags": []
       },
       {
         "id"         : "add_container",
         "desc"       : "把物品放入容器（仅适用于自然存放于容器的物品）",
-        "pattern"    : "{location}原来有{n1}{measure}{noun}，{name1}又放进去{n2}{measure}，现在一共有多少{measure}{noun}？",
+        "pattern"    : "{location}原来有{n1}{measure}{noun}，{name1}又放进去{n2}{measure}，现在{total}有多少{measure}{noun}？",
         "requiresTags": ["containerFriendly"]
       },
       {
         "id"         : "add_give",
         "desc"       : "别人赠送可携带物品",
-        "pattern"    : "{name1}有{n1}{measure}{noun}，{name2}又给了他{n2}{measure}，他现在一共有多少{measure}{noun}？",
+        "pattern"    : "{name1}有{n1}{measure}{noun}，{name2}又给了{n2}{measure}，{name1}现在{total}有多少{measure}{noun}？",
         "requiresTags": ["portable"]
       },
       {
         "id"         : "add_pick_together",
         "desc"       : "两人分别摘取可摘取的植物",
-        "pattern"    : "{name1}摘了{n1}{measure}{noun}，{name2}也摘了{n2}{measure}，他们一共摘了多少{measure}{noun}？",
+        "pattern"    : "{name1}摘了{n1}{measure}{noun}，{name2}也摘了{n2}{measure}，他们{total}摘了多少{measure}{noun}？",
         "requiresTags": ["pickable"]
       },
       {
         "id"         : "add_basket",
         "desc"       : "把食物放入篮子（仅食物适合放篮子）",
-        "pattern"    : "篮子里原来有{n1}{measure}{noun}，{name1}又放进去{n2}{measure}，现在一共有多少{measure}{noun}？",
+        "pattern"    : "篮子里原来有{n1}{measure}{noun}，{name1}又放进去{n2}{measure}，现在{total}有多少{measure}{noun}？",
         "requiresTags": ["edible"]
       },
       {
         "id"         : "add_buy",
         "desc"       : "购买物品（仅可在商店购买的物品）",
-        "pattern"    : "{name1}买了{n1}{measure}{noun}，又买了{n2}{measure}，一共买了多少{measure}{noun}？",
+        "pattern"    : "{name1}买了{n1}{measure}{noun}，又买了{n2}{measure}，{total}买了多少{measure}{noun}？",
         "requiresTags": ["buyable"]
+      },
+      {
+        "id"         : "add_total_two_people",
+        "desc"       : "两人各有若干，求一共（关键词：一共/总共）",
+        "pattern"    : "{name1}有{n1}{measure}{noun}，{name2}有{n2}{measure}{noun}，他们{total}有多少{measure}{noun}？",
+        "requiresTags": ["portable"]
+      },
+      {
+        "id"         : "add_compare_more_find_bigger",
+        "desc"       : "已知较小数与差值，比……多，求较大数（加法）",
+        "pattern"    : "{name2}有{n1}{measure}{noun}，{name1}比{name2}多{n2}{measure}，{name1}有多少{measure}{noun}？",
+        "requiresTags": ["portable"]
+      },
+      {
+        "id"         : "add_compare_less_find_bigger",
+        "desc"       : "已知较小数与差值，自己比……少，求对方较大数（加法）",
+        "pattern"    : "{name1}有{n1}{measure}{noun}，{name1}比{name2}少{n2}{measure}，{name2}有多少{measure}{noun}？",
+        "requiresTags": ["portable"]
       }
     ],
 
@@ -145,7 +191,7 @@
       {
         "id"         : "sub_give_away",
         "desc"       : "把可携带物品送给他人",
-        "pattern"    : "{name1}有{n1}{measure}{noun}，给了{name2}{n2}{measure}，他还剩多少{measure}{noun}？",
+        "pattern"    : "{name1}有{n1}{measure}{noun}，给了{name2}{n2}{measure}，还剩多少{measure}{noun}？",
         "requiresTags": ["portable"]
       },
       {
@@ -163,7 +209,7 @@
       {
         "id"         : "sub_send",
         "desc"       : "把可携带物品送给朋友",
-        "pattern"    : "{name1}有{n1}{measure}{noun}，送给朋友{n2}{measure}，他还剩多少{measure}{noun}？",
+        "pattern"    : "{name1}有{n1}{measure}{noun}，送给朋友{n2}{measure}，还剩多少{measure}{noun}？",
         "requiresTags": ["portable"]
       },
       {
@@ -171,7 +217,77 @@
         "desc"       : "被风吹走（仅适用于轻盈可漂浮物体）",
         "pattern"    : "{location}原来有{n1}{measure}{noun}，被风吹走了{n2}{measure}，还剩多少{measure}{noun}？",
         "requiresTags": ["windBlown"]
+      },
+      {
+        "id"         : "sub_sell",
+        "desc"       : "商店卖出物品，求还剩（关键词：卖出）",
+        "pattern"    : "商店里原来有{n1}{measure}{noun}，卖出了{n2}{measure}，还剩多少{measure}{noun}？",
+        "requiresTags": ["buyable"]
+      },
+      {
+        "id"         : "sub_difference",
+        "desc"       : "已知两数，求相差（关键词：相差）",
+        "pattern"    : "{name1}有{n1}{measure}{noun}，{name2}有{n2}{measure}{noun}，两人相差多少{measure}{noun}？",
+        "requiresTags": ["portable"]
+      },
+      {
+        "id"         : "sub_compare_more_diff",
+        "desc"       : "已知两数，求甲比乙多多少（关键词：比……多）",
+        "pattern"    : "{name1}有{n1}{measure}{noun}，{name2}有{n2}{measure}{noun}，{name1}比{name2}多多少{measure}{noun}？",
+        "requiresTags": ["portable"]
+      },
+      {
+        "id"         : "sub_compare_less_diff",
+        "desc"       : "已知两数，求甲比乙少多少（关键词：比……少）",
+        "pattern"    : "{name1}有{n2}{measure}{noun}，{name2}有{n1}{measure}{noun}，{name1}比{name2}少多少{measure}{noun}？",
+        "requiresTags": ["portable"]
+      },
+      {
+        "id"         : "sub_compare_less_find_smaller",
+        "desc"       : "已知较大数与差值，比……少，求较小数（减法）",
+        "pattern"    : "{name2}有{n1}{measure}{noun}，{name1}比{name2}少{n2}{measure}，{name1}有多少{measure}{noun}？",
+        "requiresTags": ["portable"]
+      },
+      {
+        "id"         : "sub_compare_more_find_smaller",
+        "desc"       : "已知较大数与差值，自己比……多，求对方较小数（减法，易混点）",
+        "pattern"    : "{name1}有{n1}{measure}{noun}，{name1}比{name2}多{n2}{measure}，{name2}有多少{measure}{noun}？",
+        "requiresTags": ["portable"]
+      },
+      {
+        "id"         : "sub_change",
+        "desc"       : "购物付钱找零（关键词：找回），金额单位为元",
+        "pattern"    : "{name1}买东西付了{n1}元，花了{n2}元，应找回多少元？",
+        "requiresTags": []
+      },
+      {
+        "id"         : "sub_need_more",
+        "desc"       : "已有若干还需若干（关键词：还差/还要）",
+        "pattern"    : "{name1}有{n2}{measure}{noun}，但需要{n1}{measure}{noun}，还差多少{measure}{noun}？",
+        "requiresTags": ["portable"]
       }
     ]
+  },
+
+  "multiStep": {
+    "desc": "多步（连加/连减/加减混合）应用题模板，用于 multi 模式。{connector} 取自 connectors，加法步骤用 verb_appear，减法步骤用 verb_leave。",
+    "connectors"     : ["先", "又", "再", "然后", "接着", "最后"],
+    "mixedConnectors": ["", "又", "再", "然后", "接着", "最后"],
+    "chain_addition": {
+      "intro"   : "{location}原来有{n1}{measure}{noun}，",
+      "step"    : "{connector}{verb_appear}{n}{measure}，",
+      "question": "现在{location}{total}有多少{measure}{noun}？"
+    },
+    "chain_subtraction": {
+      "intro"   : "{location}原来有{n1}{measure}{noun}，",
+      "step"    : "{connector}{verb_leave}{n}{measure}，",
+      "question": "现在{location}还剩多少{measure}{noun}？"
+    },
+    "mixed": {
+      "intro"   : "{location}原来有{n1}{measure}{noun}，",
+      "stepAdd" : "{connector}{verb_appear}{n}{measure}，",
+      "stepSub" : "{connector}{verb_leave}{n}{measure}，",
+      "question": "现在{location}有多少{measure}{noun}？"
+    }
   }
 }

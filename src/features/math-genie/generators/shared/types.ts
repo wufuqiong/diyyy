@@ -21,6 +21,8 @@ export interface RawMathProblem {
   wordProblemText?: string;
   wordProblemOperation?: 'addition' | 'subtraction';
   wordProblemMeasure?: string;
+  // Explicit precomputed answer (used by multi-step word problems with >2 operands)
+  answer?: number;
 }
 
 export const THEME_EMOJIS: Record<string, string[]> = {

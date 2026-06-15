@@ -469,4 +469,112 @@ describe('Math Genie Generators', () => {
       });
     });
   });
+
+  // ---------- calculateOptimalProblemsPerPage tests ----------
+  describe('calculateOptimalProblemsPerPage', () => {
+    it('TEXT: standard 2 columns returns 20', async () => {
+      const { calculateOptimalProblemsPerPage } = await import('src/features/math-genie/shared/layout');
+      const result = calculateOptimalProblemsPerPage({
+        displayMode: DisplayMode.TEXT,
+        columns: 2,
+        problemType: ProblemType.STANDARD,
+        specialPracticeType: SpecialPracticeType.NONE,
+        operation: OperationType.ADDITION,
+        difficulty: DifficultyLevel.EASY,
+      });
+      expect(result).toBe(20);
+    });
+
+    it('TEXT: number bond 2 columns returns 8', async () => {
+      const { calculateOptimalProblemsPerPage } = await import('src/features/math-genie/shared/layout');
+      const result = calculateOptimalProblemsPerPage({
+        displayMode: DisplayMode.TEXT,
+        columns: 2,
+        problemType: ProblemType.STANDARD,
+        specialPracticeType: SpecialPracticeType.NUMBER_BOND,
+        operation: OperationType.ADDITION,
+        difficulty: DifficultyLevel.EASY,
+      });
+      expect(result).toBe(8);
+    });
+
+    it('TEXT: multi-op 5 operands 2 columns returns 22', async () => {
+      const { calculateOptimalProblemsPerPage } = await import('src/features/math-genie/shared/layout');
+      const result = calculateOptimalProblemsPerPage({
+        displayMode: DisplayMode.TEXT,
+        columns: 2,
+        problemType: ProblemType.STANDARD,
+        specialPracticeType: SpecialPracticeType.NONE,
+        operation: OperationType.MULTI_OPERATIONS,
+        difficulty: DifficultyLevel.EASY,
+        multiOperationConfig: { mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 5 },
+      });
+      expect(result).toBe(22);
+    });
+
+    it('TEXT: 3 columns clamps to max 30', async () => {
+      const { calculateOptimalProblemsPerPage } = await import('src/features/math-genie/shared/layout');
+      const result = calculateOptimalProblemsPerPage({
+        displayMode: DisplayMode.TEXT,
+        columns: 3,
+        problemType: ProblemType.STANDARD,
+        specialPracticeType: SpecialPracticeType.NONE,
+        operation: OperationType.ADDITION,
+        difficulty: DifficultyLevel.EASY,
+      });
+      expect(result).toBe(30);
+    });
+
+    it('EMOJI: small range max<=5 returns 12', async () => {
+      const { calculateOptimalProblemsPerPage } = await import('src/features/math-genie/shared/layout');
+      const result = calculateOptimalProblemsPerPage({
+        displayMode: DisplayMode.EMOJI,
+        columns: 2,
+        problemType: ProblemType.STANDARD,
+        specialPracticeType: SpecialPracticeType.NONE,
+        operation: OperationType.ADDITION,
+        difficulty: DifficultyLevel.EASY,
+      });
+      expect(result).toBe(12);
+    });
+
+    it('EMOJI: large range max>10 returns 6', async () => {
+      const { calculateOptimalProblemsPerPage } = await import('src/features/math-genie/shared/layout');
+      const result = calculateOptimalProblemsPerPage({
+        displayMode: DisplayMode.EMOJI,
+        columns: 2,
+        problemType: ProblemType.STANDARD,
+        specialPracticeType: SpecialPracticeType.NONE,
+        operation: OperationType.ADDITION,
+        difficulty: DifficultyLevel.HARD,
+      });
+      expect(result).toBe(6);
+    });
+
+    it('WORD_PROBLEM: returns 4', async () => {
+      const { calculateOptimalProblemsPerPage } = await import('src/features/math-genie/shared/layout');
+      const result = calculateOptimalProblemsPerPage({
+        displayMode: DisplayMode.WORD_PROBLEM,
+        columns: 1,
+        problemType: ProblemType.STANDARD,
+        specialPracticeType: SpecialPracticeType.NONE,
+        operation: OperationType.ADDITION,
+        difficulty: DifficultyLevel.EASY,
+      });
+      expect(result).toBe(4);
+    });
+
+    it('EMOJI: medium range 5<max<=10 returns 8', async () => {
+      const { calculateOptimalProblemsPerPage } = await import('src/features/math-genie/shared/layout');
+      const result = calculateOptimalProblemsPerPage({
+        displayMode: DisplayMode.EMOJI,
+        columns: 2,
+        problemType: ProblemType.STANDARD,
+        specialPracticeType: SpecialPracticeType.NONE,
+        operation: OperationType.ADDITION,
+        difficulty: DifficultyLevel.MEDIUM,
+      });
+      expect(result).toBe(8);
+    });
+  });
 });

@@ -15,9 +15,9 @@ import {
   SpecialPracticeType,
 } from 'src/types';
 
-import { derivePageLayout } from './shared/layout';
 import { generateMathProblems } from './generators';
 import { reorderProblemsByColumnPerPage } from './generators/shared/problem-key';
+import { derivePageLayout, calculateOptimalProblemsPerPage } from './shared/layout';
 import WorksheetPreview from '../../sections/math-genie/components/WorksheetPreview';
 import WorksheetSettings from '../../sections/math-genie/components/WorksheetSettings';
 
@@ -30,27 +30,28 @@ const defaultConfig: WorksheetConfig = {
   title: 'Fun Math Time!',
   showAnswers: false,
   displayMode: DisplayMode.TEXT,
-  problemsPerPage: 16,
+  problemsPerPage: calculateOptimalProblemsPerPage({
+    displayMode: DisplayMode.TEXT,
+    columns: 2,
+    problemType: ProblemType.STANDARD,
+    specialPracticeType: SpecialPracticeType.NONE,
+    operation: OperationType.ADDITION,
+    difficulty: DifficultyLevel.EASY,
+  }),
   customDifficulty: { min: 1, max: 15 },
   problemType: ProblemType.STANDARD,
   specialPracticeType: SpecialPracticeType.NONE,
   multiOperationConfig: { mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 3 },
   excludeZeroProblems: false,
+  excludeComparisonProblems: false,
   autoPreview: true,
 };
 
 async function generate(config: WorksheetConfig): Promise<MathProblem[]> {
   const textColumns = config.textColumns || 2;
-  const problemsPerPage = config.problemsPerPage || (textColumns * 8); // fallback for old configs
-  const layout = derivePageLayout({ columns: textColumns, problemsPerPage });
-  const EMOJI_PROBLEMS_PER_PAGE = 6;
-  const WORD_PROBLEMS_PER_PAGE = 4;
-  const targetProblemCount =
-    config.displayMode === DisplayMode.WORD_PROBLEM
-      ? config.count * WORD_PROBLEMS_PER_PAGE
-      : config.displayMode === DisplayMode.TEXT
-      ? config.count * layout.problemsPerPage
-      : config.count * EMOJI_PROBLEMS_PER_PAGE;
+  const perPage = config.problemsPerPage || (textColumns * 8);
+  const layout = derivePageLayout({ columns: textColumns, problemsPerPage: perPage });
+  const targetProblemCount = config.count * perPage;
 
   const response = await generateMathProblems(
     config.theme,
@@ -63,7 +64,8 @@ async function generate(config: WorksheetConfig): Promise<MathProblem[]> {
     config.specialPracticeType || SpecialPracticeType.NONE,
     config.operation === OperationType.MULTI_OPERATIONS ? config.multiOperationConfig : undefined,
     config.excludeZeroProblems || false,
-    config.displayMode
+    config.displayMode,
+    config.excludeComparisonProblems || false,
   );
 
   const shouldUseVerticalFactFamilyOrder =
@@ -81,7 +83,9 @@ async function generate(config: WorksheetConfig): Promise<MathProblem[]> {
     num2: p.b,
     emoji1: p.emoji1,
     emoji2: p.emoji2 || p.emoji1,
-    answer: p.isNumberBond
+    answer: p.answer !== undefined
+      ? p.answer
+      : p.isNumberBond
       ? p.numberBondBlankIndex === 0 ? p.a
         : p.numberBondBlankIndex === 1 ? p.b
         : p.numberBondWhole!
@@ -123,6 +127,13 @@ function deriveWorksheetTitle(config: WorksheetConfig): string {
 
   // Word problem display mode
   if (config.displayMode === DisplayMode.WORD_PROBLEM) {
+    if (config.operation === OperationType.MULTI_OPERATIONS) {
+      const mode = config.multiOperationConfig?.mode;
+      const msLabel = mode === MultiOperationMode.CHAIN_ADDITION ? '连加'
+        : mode === MultiOperationMode.CHAIN_SUBTRACTION ? '连减'
+        : '加减混合';
+      return `${msLabel}应用题 ${rangeStr}`;
+    }
     const opLabel = config.operation === OperationType.ADDITION ? '加法'
       : config.operation === OperationType.SUBTRACTION ? '减法'
       : '加减混合';

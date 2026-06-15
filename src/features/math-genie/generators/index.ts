@@ -1,14 +1,14 @@
 import type { DifficultyRatios, MultiOperationConfig, CustomDifficultyRange } from 'src/types';
 
-import { ProblemType, DisplayMode, OperationType, DifficultyLevel, SpecialPracticeType } from 'src/types';
+import { ProblemType, DisplayMode, OperationType, DifficultyLevel, MultiOperationMode, SpecialPracticeType } from 'src/types';
 
-import { generateWordProblems } from './word-problem';
 import { generateFillBlankProblems } from './fill-blank';
 import { generateMultiOperationProblems } from './multi-op';
 import { generateZeroDrillProblems } from './special-practice/zero-drill';
 import { THEME_EMOJIS, THEME_TITLES, isChineseTheme } from './shared/types';
 import { generateFactFamilyProblems } from './special-practice/fact-family';
 import { generateNumberBondProblems } from './special-practice/number-bond';
+import { generateWordProblems, generateMultiStepWordProblems } from './word-problem';
 import { getMixedTargetCounts, selectBalancedMixedProblems } from './shared/mixed-balance';
 import { generateProblemsForDifficulty, generateProblemsForCustomRange } from './standard';
 
@@ -28,7 +28,8 @@ async function generateMathProblems(
   specialPracticeType: SpecialPracticeType = SpecialPracticeType.NONE,
   multiOperationConfig?: MultiOperationConfig,
   excludeZeroProblems: boolean = false,
-  displayMode: DisplayMode = DisplayMode.TEXT
+  displayMode: DisplayMode = DisplayMode.TEXT,
+  excludeComparisonProblems: boolean = false,
 ): Promise<{ problems: RawMathProblem[]; titleSuggestion: string }> {
   try {
     const activeCustomDifficulty = difficulty === DifficultyLevel.CUSTOM ? customDifficulty : undefined;
@@ -41,9 +42,48 @@ async function generateMathProblems(
         : difficulty === DifficultyLevel.MEDIUM ? [1, 10]
         : [1, 20];
 
-      const wpOperation = operation === OperationType.MULTI_OPERATIONS
-        ? 'mixed' as const
-        : operation === OperationType.ADDITION ? 'addition' as const
+      const comparisonOnly = specialPracticeType === SpecialPracticeType.WORD_PROBLEM_COMPARISON;
+
+      const titleSuggestion = isChineseTheme(theme)
+        ? comparisonOnly ? '比多少高阶练习' : '应用题练习'
+        : comparisonOnly ? 'Comparison Word Problems' : 'Word Problems';
+
+      // Multi-step word problems (连加/连减/加减混合)
+      if (operation === OperationType.MULTI_OPERATIONS && multiOperationConfig) {
+        const msMode = multiOperationConfig.mode === MultiOperationMode.CHAIN_ADDITION
+          ? 'chain_addition' as const
+          : multiOperationConfig.mode === MultiOperationMode.CHAIN_SUBTRACTION
+          ? 'chain_subtraction' as const
+          : 'mixed' as const;
+
+        const multiStepProblems = generateMultiStepWordProblems({
+          mode: msMode,
+          numberCount: multiOperationConfig.numberCount,
+          range: wpRange,
+          count,
+          excludeZero: excludeZeroProblems,
+        });
+
+        return {
+          problems: multiStepProblems.map((wp) => ({
+            op: wp.operators[0] ?? '+' as const,
+            a: wp.numbers[0],
+            b: wp.numbers[1] ?? 0,
+            emoji1: '📝',
+            equationText: wp.text,
+            isWordProblem: true,
+            wordProblemText: wp.text,
+            wordProblemOperation: 'addition' as const,
+            wordProblemMeasure: wp.measure,
+            numbers: wp.numbers,
+            operators: wp.operators,
+            answer: wp.answer,
+          })),
+          titleSuggestion,
+        };
+      }
+
+      const wpOperation = operation === OperationType.ADDITION ? 'addition' as const
         : operation === OperationType.SUBTRACTION ? 'subtraction' as const
         : 'mixed' as const;
 
@@ -52,11 +92,9 @@ async function generateMathProblems(
         range: wpRange,
         count,
         excludeZero: excludeZeroProblems,
+        excludeComparison: excludeComparisonProblems,
+        comparisonOnly,
       });
-
-      const titleSuggestion = isChineseTheme(theme)
-        ? '应用题练习'
-        : 'Word Problems';
 
       return {
         problems: wordProblems.map((wp) => ({

@@ -1,7 +1,7 @@
 import type { WorksheetConfig, DifficultyRatios } from 'src/types';
 
 import { useTranslation } from 'react-i18next';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import {
   Balance as BalanceIcon,
@@ -30,7 +30,7 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 
-import { derivePageLayout } from 'src/features/math-genie/shared/layout';
+import { derivePageLayout, calculateOptimalProblemsPerPage } from 'src/features/math-genie/shared/layout';
 import {
   DisplayMode,
   ProblemType,
@@ -53,7 +53,14 @@ const DEFAULT_CONFIG: WorksheetConfig = {
   operation: OperationType.ADDITION,
   count: 1,
   textColumns: 2,
-  problemsPerPage: 16,
+  problemsPerPage: calculateOptimalProblemsPerPage({
+    displayMode: DisplayMode.TEXT,
+    columns: 2,
+    problemType: ProblemType.STANDARD,
+    specialPracticeType: SpecialPracticeType.NONE,
+    operation: OperationType.ADDITION,
+    difficulty: DifficultyLevel.EASY,
+  }),
   title: 'Fun Math Time!',
   showAnswers: false,
   displayMode: DisplayMode.TEXT,
@@ -159,6 +166,7 @@ const WorksheetSettings: React.FC<Props> = ({
     specialPracticeType = SpecialPracticeType.NONE,
     multiOperationConfig,
     autoPreview = true,
+    excludeComparisonProblems = false,
   } = config;
 
   const { t } = useTranslation();
@@ -176,8 +184,38 @@ const WorksheetSettings: React.FC<Props> = ({
   // ---------- Derived ----------
 
   const layout = derivePageLayout({ columns: textColumns, problemsPerPage: configProblemsPerPage });
-  const EMOJI_PROBLEMS_PER_PAGE = 6;
-  const perPage = isWordProblem ? 4 : displayMode === DisplayMode.TEXT ? layout.problemsPerPage : EMOJI_PROBLEMS_PER_PAGE;
+  const perPage = configProblemsPerPage;
+
+  // Auto-update problemsPerPage when config changes affect layout.
+  // Only primitive values in deps to avoid infinite loops (excludes config, onChange, configProblemsPerPage).
+  useEffect(() => {
+    const optimal = calculateOptimalProblemsPerPage({
+      displayMode,
+      columns: textColumns,
+      problemType: activeProblemType,
+      specialPracticeType,
+      operation,
+      difficulty,
+      customDifficulty,
+      multiOperationConfig,
+    });
+
+    if (configProblemsPerPage !== optimal) {
+      onChange({ ...config, problemsPerPage: optimal });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    displayMode,
+    textColumns,
+    activeProblemType,
+    specialPracticeType,
+    operation,
+    difficulty,
+    customDifficulty?.min,
+    customDifficulty?.max,
+    multiOperationConfig?.mode,
+    multiOperationConfig?.numberCount,
+  ]);
   const countSettings = useMemo(() => {
     if (displayMode === DisplayMode.TEXT) {
       return {
@@ -191,9 +229,9 @@ const WorksheetSettings: React.FC<Props> = ({
       min: 1,
       max: 10,
       step: 1,
-      label: t('mathGenie.pagesCaptionEmoji', { ppp: EMOJI_PROBLEMS_PER_PAGE }),
+      label: t('mathGenie.pagesCaptionEmoji', { ppp: perPage }),
     };
-  }, [displayMode, textColumns, layout.problemsPerPage, t]);
+  }, [displayMode, textColumns, layout.problemsPerPage, perPage, t]);
 
   const maxPossibleProblems = useMemo(() => {
     let minNum = 1;
@@ -246,7 +284,6 @@ const WorksheetSettings: React.FC<Props> = ({
   const multiOpUnavailableReason = (() => {
     const reasons: string[] = [];
     if (isEmoji) reasons.push(t('mathGenie.emojiMode'));
-    if (isWordProblem) reasons.push(t('mathGenie.wordProblem'));
     if (activeProblemType === ProblemType.FILL_BLANK) reasons.push(t('mathGenie.fillBlank'));
     if (isSpecialSelected) reasons.push(t('mathGenie.specialPractice'));
     return reasons.length ? t('mathGenie.multiOpDisabled', { reasons: reasons.join(', ') }) : '';
@@ -265,9 +302,13 @@ const WorksheetSettings: React.FC<Props> = ({
       notify(t('mathGenie.multiOpNotInEmoji'));
     }
     if (next === DisplayMode.WORD_PROBLEM) {
-      if (isMultiOp) updates.operation = OperationType.ADDITION;
       if (activeProblemType === ProblemType.FILL_BLANK) updates.problemType = ProblemType.STANDARD;
-      if (isSpecialSelected) updates.specialPracticeType = SpecialPracticeType.NONE;
+      if (isSpecialSelected && specialPracticeType !== SpecialPracticeType.WORD_PROBLEM_COMPARISON) {
+        updates.specialPracticeType = SpecialPracticeType.NONE;
+      }
+    }
+    if (next !== DisplayMode.WORD_PROBLEM && specialPracticeType === SpecialPracticeType.WORD_PROBLEM_COMPARISON) {
+      updates.specialPracticeType = SpecialPracticeType.NONE;
     }
     onChange({ ...config, ...updates });
   };
@@ -311,9 +352,17 @@ const WorksheetSettings: React.FC<Props> = ({
       return;
     }
     const updates: Partial<WorksheetConfig> = { specialPracticeType: next };
-    if (next !== SpecialPracticeType.NONE && isMultiOp) {
-      updates.operation = OperationType.ADDITION;
-      notify(t('mathGenie.specialNotCompatible'));
+    if (next === SpecialPracticeType.WORD_PROBLEM_COMPARISON) {
+      updates.displayMode = DisplayMode.WORD_PROBLEM;
+      if (isMultiOp) updates.operation = OperationType.MIXED;
+    } else {
+      if (specialPracticeType === SpecialPracticeType.WORD_PROBLEM_COMPARISON) {
+        updates.displayMode = DisplayMode.TEXT;
+      }
+      if (next !== SpecialPracticeType.NONE && isMultiOp) {
+        updates.operation = OperationType.ADDITION;
+        notify(t('mathGenie.specialNotCompatible'));
+      }
     }
     onChange({ ...config, ...updates });
   };
@@ -343,6 +392,14 @@ const WorksheetSettings: React.FC<Props> = ({
     if (checked && specialPracticeType === SpecialPracticeType.ZERO_DRILL) {
       updates.specialPracticeType = SpecialPracticeType.NONE;
       notify(t('mathGenie.zeroDrillTurnedOff'));
+    }
+    onChange({ ...config, ...updates });
+  };
+
+  const handleExcludeComparison = (checked: boolean) => {
+    const updates: Partial<WorksheetConfig> = { excludeComparisonProblems: checked };
+    if (checked && specialPracticeType === SpecialPracticeType.WORD_PROBLEM_COMPARISON) {
+      updates.specialPracticeType = SpecialPracticeType.NONE;
     }
     onChange({ ...config, ...updates });
   };
@@ -476,10 +533,8 @@ const WorksheetSettings: React.FC<Props> = ({
                     fullWidth
                     size="small"
                     onChange={(_, v) => {
-                      if (!v) return;
-                      const cols = v as 2 | 3;
-                      const clamped = Math.max(cols, Math.min(configProblemsPerPage, 30));
-                      onChange({ ...config, textColumns: cols, problemsPerPage: clamped });
+                      if (!v || (v as 2 | 3) === textColumns) return;
+                      onChange({ ...config, textColumns: v as 2 | 3 });
                     }}
                   >
                     <ToggleButton value={2}>2</ToggleButton>
@@ -601,6 +656,17 @@ const WorksheetSettings: React.FC<Props> = ({
                   </MaybeTooltip>
                   <ToggleButton value={SpecialPracticeType.FACT_FAMILY}>{t('mathGenie.factFamily')}</ToggleButton>
                   <ToggleButton value={SpecialPracticeType.NUMBER_BOND}>{t('mathGenie.numberBond')}</ToggleButton>
+                  <MaybeTooltip
+                    title={t('mathGenie.excludeComparisonDisabled')}
+                    show={excludeComparisonProblems}
+                  >
+                    <ToggleButton
+                      value={SpecialPracticeType.WORD_PROBLEM_COMPARISON}
+                      disabled={excludeComparisonProblems}
+                    >
+                      {t('mathGenie.comparison')}
+                    </ToggleButton>
+                  </MaybeTooltip>
                 </ToggleButtonGroup>
               </Field>
 
@@ -805,6 +871,21 @@ const WorksheetSettings: React.FC<Props> = ({
               <Typography variant="caption" color="text.secondary">
                 {t('mathGenie.excludeZerosHint')}
               </Typography>
+
+              {isWordProblem && (
+                <FormControlLabel
+                  sx={{ ml: 0 }}
+                  control={
+                    <Switch
+                      checked={excludeComparisonProblems}
+                      onChange={(e) => handleExcludeComparison(e.target.checked)}
+                      color="primary"
+                      size="small"
+                    />
+                  }
+                  label={<Typography variant="body2">{t('mathGenie.excludeComparison')}</Typography>}
+                />
+              )}
             </Stack>
           </Box>
 

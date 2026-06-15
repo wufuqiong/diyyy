@@ -514,55 +514,64 @@ const NumberBondNode: React.FC<{
   blankIndex?: 0 | 1 | 'whole';
   showAnswers: boolean;
 }> = ({ whole, parts, blankIndex, showAnswers }) => {
-  const wholeIsBlank = blankIndex === 'whole';
-  const partsAreBlank = [!showAnswers && blankIndex === 0, !showAnswers && blankIndex === 1];
+  const wholeIsBlank = blankIndex === 'whole' && !showAnswers;
+  const part0IsBlank = blankIndex === 0 && !showAnswers;
+  const part1IsBlank = blankIndex === 1 && !showAnswers;
+
   const wholeValue = showAnswers || !wholeIsBlank ? String(whole) : '?';
   const partValues = [
-    showAnswers || !partsAreBlank[0] ? String(parts[0]) : '?',
-    showAnswers || !partsAreBlank[1] ? String(parts[1]) : '?',
+    showAnswers || !part0IsBlank ? String(parts[0]) : '?',
+    showAnswers || !part1IsBlank ? String(parts[1]) : '?',
   ];
 
-  const circleSx = {
-    width: 48,
-    height: 48,
-    borderRadius: '50%',
-    border: `3px solid ${colors.fillBlankBox}`,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+  const CIRCLE_R = 24;
+  const STROKE_W = 3;
+  // Geometry: whole at (64,24), parts at (24,112) and (104,112)
+  // Lines: (64,48)→(24,88) and (64,48)→(104,88) — dx=±40, dy=40 → 45°
+
+  const circleProps = (isBlank: boolean) => ({
+    cx: 0,
+    cy: 0,
+    r: CIRCLE_R,
+    fill: 'white',
+    stroke: colors.fillBlankBox,
+    strokeWidth: STROKE_W,
+    strokeDasharray: isBlank ? '6 4' : undefined,
+  });
+
+  const textProps = (isBlank: boolean) => ({
+    textAnchor: 'middle' as const,
+    dominantBaseline: 'central' as const,
     fontSize: 24,
     fontWeight: 'bold',
-    color: colors.inkSecondary,
-    backgroundColor: 'white',
-  };
-
-  const blankCircleSx = {
-    ...circleSx,
-    borderStyle: 'dashed',
-    color: colors.errorRed,
-  };
+    fill: isBlank ? colors.errorRed : colors.inkSecondary,
+  });
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, py: 1 }}>
-      {/* Whole circle */}
-      <Box sx={wholeIsBlank && !showAnswers ? blankCircleSx : circleSx}>
-        {wholeValue}
-      </Box>
+    <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+      <svg width="128" height="140" viewBox="0 0 128 140" style={{ overflow: 'visible' }}>
+        {/* Connecting lines at 45° */}
+        <line x1="64" y1="48" x2="24" y2="88" stroke={colors.inkSecondary} strokeWidth="1.5" />
+        <line x1="64" y1="48" x2="104" y2="88" stroke={colors.inkSecondary} strokeWidth="1.5" />
 
-      {/* Connecting lines + parts */}
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 4, position: 'relative' }}>
-        {/* SVG lines */}
-        <svg width="60" height="30" style={{ position: 'absolute', top: -5, left: 20 }}>
-          <line x1="30" y1="0" x2="5" y2="25" stroke={colors.inkSecondary} strokeWidth="1.5" />
-          <line x1="30" y1="0" x2="55" y2="25" stroke={colors.inkSecondary} strokeWidth="1.5" />
-        </svg>
-        <Box sx={(blankIndex === 0 && !showAnswers) ? blankCircleSx : circleSx}>
-          {partValues[0]}
-        </Box>
-        <Box sx={(blankIndex === 1 && !showAnswers) ? blankCircleSx : circleSx}>
-          {partValues[1]}
-        </Box>
-      </Box>
+        {/* Whole circle */}
+        <g transform="translate(64, 24)">
+          <circle {...circleProps(wholeIsBlank)} />
+          <text {...textProps(wholeIsBlank)}>{wholeValue}</text>
+        </g>
+
+        {/* Left parts circle */}
+        <g transform="translate(24, 112)">
+          <circle {...circleProps(part0IsBlank)} />
+          <text {...textProps(part0IsBlank)}>{partValues[0]}</text>
+        </g>
+
+        {/* Right parts circle */}
+        <g transform="translate(104, 112)">
+          <circle {...circleProps(part1IsBlank)} />
+          <text {...textProps(part1IsBlank)}>{partValues[1]}</text>
+        </g>
+      </svg>
     </Box>
   );
 };
