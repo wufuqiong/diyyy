@@ -26,6 +26,8 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 
 // ----------------------------------------------------------------------
 
+const BASENAME = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined;
+
 const router = createBrowserRouter([
   {
     Component: () => (
@@ -36,7 +38,7 @@ const router = createBrowserRouter([
     errorElement: <ErrorBoundary />,
     children: routesSection,
   },
-]);
+], { basename: BASENAME });
 
 const root = createRoot(document.getElementById('root')!);
 

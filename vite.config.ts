@@ -7,7 +7,8 @@ import react from '@vitejs/plugin-react-swc';
 
 const PORT = 3039;
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/diyyy/' : '/',
   plugins: [
     react(),
     checker({
@@ -39,4 +40,4 @@ export default defineConfig({
     }
   },
   preview: { port: PORT, host: true },
-});
+}));
