@@ -33,6 +33,16 @@
   </head>
 
   <body>
+    <script>
+      // Restore SPA route after GitHub Pages 404.html redirect
+      (function() {
+        var redirect = sessionStorage.getItem('diyyy-redirect');
+        if (redirect) {
+          sessionStorage.removeItem('diyyy-redirect');
+          history.replaceState(null, '', redirect);
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

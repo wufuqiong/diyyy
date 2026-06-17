@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>DIYYY</title>
+  <script>
+    // GitHub Pages SPA redirect: capture the intended path and redirect
+    // to index.html, where the path is restored via history.replaceState
+    var path = location.pathname + location.search + location.hash;
+    sessionStorage.setItem('diyyy-redirect', path);
+    location.replace(location.origin + '/diyyy/');
+  </script>
+</head>
+<body></body>
+</html>

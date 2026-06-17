@@ -35,7 +35,7 @@ export function NotFoundView() {
 
         <Box
           component="img"
-          src="/assets/illustrations/illustration-404.svg"
+          src={`${import.meta.env.BASE_URL}assets/illustrations/illustration-404.svg`}
           sx={{
             width: 320,
             height: 'auto',
