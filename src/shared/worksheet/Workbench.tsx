@@ -3,10 +3,12 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 
 import { Box, Alert, LinearProgress } from '@mui/material';
 
+import { isSafari } from './is-safari';
 import { saveWorksheetAsPdf } from './save-pdf';
 import { WorksheetToolbar } from './WorksheetToolbar';
 import { usePersistedConfig } from './use-persisted-config';
 import { ResponsiveWorkbench } from '../../sections/_shared/ResponsiveWorkbench';
+import { SafariPrintWarning, shouldShowSafariWarning } from './SafariPrintWarning';
 import { SettingsPanel, SettingsHeader } from '../../sections/_shared/SettingsPanel';
 
 import type { WorksheetTool } from './types';
@@ -36,6 +38,8 @@ export function Workbench<Config = any, Problem = any>({
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSavingPdf, setIsSavingPdf] = useState(false);
+  const [safariWarningOpen, setSafariWarningOpen] = useState(false);
+  const isSafariBrowser = useRef(isSafari());
   const hasMounted = useRef(false);
   const pdfContainerRef = useRef<HTMLDivElement | null>(null);
   const { t } = useTranslation();
@@ -88,7 +92,29 @@ export function Workbench<Config = any, Problem = any>({
   }, [config, isAuto]);
 
   const handlePrint = useCallback(() => {
+    if (isSafariBrowser.current && shouldShowSafariWarning()) {
+      setSafariWarningOpen(true);
+      return;
+    }
     window.print();
+  }, []);
+
+  const handleSafariContinuePrint = useCallback(() => {
+    window.print();
+  }, []);
+
+  // Intercept ⌘P / Ctrl+P for Safari
+  useEffect(() => {
+    if (!isSafariBrowser.current || !shouldShowSafariWarning()) return undefined;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
+        e.preventDefault();
+        setSafariWarningOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   const handleSavePdf = useCallback(async () => {
@@ -181,6 +207,13 @@ export function Workbench<Config = any, Problem = any>({
           <tool.Preview config={config} problems={problems} pdfContainerRef={pdfContainerRef} onConfigChange={setConfig} />
         </Box>
       </ResponsiveWorkbench>
+
+      <SafariPrintWarning
+        open={safariWarningOpen}
+        onClose={() => setSafariWarningOpen(false)}
+        onSavePdf={handleSavePdf}
+        onContinuePrint={handleSafariContinuePrint}
+      />
     </>
   );
 }
