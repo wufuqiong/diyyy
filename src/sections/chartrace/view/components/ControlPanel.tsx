@@ -407,7 +407,16 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
           </Stack>
         </SettingsField>
 
-        <SettingsField label={t('charTrace.settings.manualInput')} caption={t('charTrace.settings.manualInputCaption', { length: config.text.length })}>
+        <SettingsField label={t('charTrace.settings.manualInput')} caption={
+          (() => {
+            const countStr = t('charTrace.settings.manualInputCaption', { length: config.text.length });
+            const text = config.text;
+            if (text.includes('\n')) return `${countStr}  ·  ${t('charTrace.settings.parsingHintSentences')}`;
+            if (text.includes(',') || text.includes('，')) return `${countStr}  ·  ${t('charTrace.settings.parsingHintPhrases')}`;
+            if (config.gridType === 'english') return `${countStr}  ·  ${t('charTrace.settings.parsingHintEnglish')}`;
+            return `${countStr}  ·  ${t('charTrace.settings.parsingHintChars')}`;
+          })()
+        }>
           <Stack spacing={1}>
             <TextField
               multiline

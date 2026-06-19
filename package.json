@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "vite",
     "start": "vite preview",
-    "build": "tsc && vite build",
+    "build": "node scripts/build-docs.mjs && tsc && vite build",
+    "docs:build": "node scripts/build-docs.mjs",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",

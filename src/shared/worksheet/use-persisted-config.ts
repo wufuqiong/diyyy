@@ -52,14 +52,31 @@ function writeStorage<T>(key: string, version: number, data: T) {
 export function usePersistedConfig<T>(
   key: string,
   defaultValue: T,
-  version = 1
+  version = 1,
+  options?: { onRestore?: () => void }
 ): [T, Dispatch<SetStateAction<T>>] {
   const versionRef = useRef(version);
   const keyRef = useRef(key);
+  const onRestoreRef = useRef(options?.onRestore);
+  onRestoreRef.current = options?.onRestore;
 
-  const [value, setValue] = useState<T>(
-    () => readStorage<T>(key, version) ?? defaultValue
-  );
+  const didRestore = useRef(false);
+
+  const [value, setValue] = useState<T>(() => {
+    const stored = readStorage<T>(key, version);
+    if (stored !== undefined) {
+      didRestore.current = true;
+      return stored;
+    }
+    return defaultValue;
+  });
+
+  useEffect(() => {
+    if (didRestore.current) {
+      didRestore.current = false;
+      onRestoreRef.current?.();
+    }
+  }, []);
 
   useEffect(() => {
     writeStorage(keyRef.current, versionRef.current, value);

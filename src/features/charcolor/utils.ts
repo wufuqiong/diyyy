@@ -11,15 +11,27 @@ export const COLOR_PRESETS: ColorPreset[] = [
   { name: '自然组合', colors: ['#8B4513', '#228B22', '#1E90FF', '#FFD700', '#FF6347'] },
 ];
 
+/**
+ * Splits user input into individual characters.
+ * Char Color only supports single Chinese characters — all commas,
+ * spaces, and other delimiters are ignored, and every character
+ * is treated individually.
+ */
 export function userInputToChars(userInput: string): string[] {
-  let inputChars: string[] = [];
-  if (userInput.trim() !== '') {
-    inputChars = userInput.split(/[\s,;，；、]+/).filter((char) => char.trim() !== '');
-  }
-  if (inputChars.length === 0 && userInput.trim() !== '') {
-    inputChars = userInput.split('').filter((char) => char.trim() !== '');
-  }
-  return inputChars;
+  if (userInput.trim() === '') return [];
+  return userInput.split('').filter((char) => char.trim() !== '');
+}
+
+/**
+ * Returns true if the input contains any non-Chinese characters
+ * (letters, digits, punctuation etc. that aren't CJK ideographs).
+ */
+export function hasNonChineseChars(userInput: string): boolean {
+  return userInput.split('').some((char) => {
+    const trimmed = char.trim();
+    if (!trimmed) return false;
+    return !/[\u4e00-\u9fff]/.test(trimmed);
+  });
 }
 
 function generateRandomColorsForPage(pageChars: string[], presetIndex: number): string[] {

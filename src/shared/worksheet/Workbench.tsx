@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 
-import { Box, Alert, LinearProgress } from '@mui/material';
+import { Box, Alert, Snackbar, LinearProgress } from '@mui/material';
 
 import { isSafari } from './is-safari';
+import { HelpDrawer } from './HelpDrawer';
 import { saveWorksheetAsPdf } from './save-pdf';
 import { WorksheetToolbar } from './WorksheetToolbar';
 import { usePersistedConfig } from './use-persisted-config';
@@ -31,7 +32,8 @@ export function Workbench<Config = any, Problem = any>({
   const [config, setConfig] = usePersistedConfig<Config>(
     `${tool.id}.config`,
     tool.defaultConfig,
-    configVersion
+    configVersion,
+    { onRestore: () => setShowRestoredSnackbar(true) }
   );
 
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -39,6 +41,8 @@ export function Workbench<Config = any, Problem = any>({
   const [error, setError] = useState<string | null>(null);
   const [isSavingPdf, setIsSavingPdf] = useState(false);
   const [safariWarningOpen, setSafariWarningOpen] = useState(false);
+  const [showRestoredSnackbar, setShowRestoredSnackbar] = useState(false);
+  const [helpDrawerOpen, setHelpDrawerOpen] = useState(false);
   const isSafariBrowser = useRef(isSafari());
   const hasMounted = useRef(false);
   const pdfContainerRef = useRef<HTMLDivElement | null>(null);
@@ -143,6 +147,7 @@ export function Workbench<Config = any, Problem = any>({
               onPrint={handlePrint}
               onSavePdf={handleSavePdf}
               onReset={handleReset}
+              onHelp={() => setHelpDrawerOpen(true)}
               isSaving={isSavingPdf}
             />
           </Box>
@@ -208,11 +213,28 @@ export function Workbench<Config = any, Problem = any>({
         </Box>
       </ResponsiveWorkbench>
 
+      <Snackbar
+        open={showRestoredSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setShowRestoredSnackbar(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="info" onClose={() => setShowRestoredSnackbar(false)} sx={{ width: '100%' }}>
+          {t('common.configRestored')}
+        </Alert>
+      </Snackbar>
+
       <SafariPrintWarning
         open={safariWarningOpen}
         onClose={() => setSafariWarningOpen(false)}
         onSavePdf={handleSavePdf}
         onContinuePrint={handleSafariContinuePrint}
+      />
+
+      <HelpDrawer
+        toolId={tool.id}
+        open={helpDrawerOpen}
+        onClose={() => setHelpDrawerOpen(false)}
       />
     </>
   );

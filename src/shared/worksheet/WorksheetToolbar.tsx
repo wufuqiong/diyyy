@@ -2,12 +2,13 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Stack, Tooltip, IconButton } from '@mui/material';
-import { Print as PrintIcon, PictureAsPdf as PdfIcon, RestartAlt as ResetIcon } from '@mui/icons-material';
+import { Print as PrintIcon, HelpOutline as HelpIcon, PictureAsPdf as PdfIcon, RestartAlt as ResetIcon } from '@mui/icons-material';
 
 interface WorksheetToolbarProps {
   onPrint: () => void;
   onSavePdf: () => void;
   onReset?: () => void;
+  onHelp?: () => void;
   isSaving?: boolean;
 }
 
@@ -15,6 +16,7 @@ export const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
   onPrint,
   onSavePdf,
   onReset,
+  onHelp,
   isSaving = false,
 }) => {
   const { t } = useTranslation();
@@ -40,6 +42,13 @@ export const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
           <PrintIcon fontSize="small" />
         </IconButton>
       </Tooltip>
+      {onHelp && (
+        <Tooltip title={t('common.help')} arrow>
+          <IconButton onClick={onHelp} size="small" color="inherit">
+            <HelpIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
     </Stack>
   );
 };

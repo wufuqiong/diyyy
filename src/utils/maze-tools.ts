@@ -61,8 +61,7 @@ export const generateSentenceMazePath = (sentence: string, rows: number, cols: n
   
   // If the sentence is longer than available cells, we can't place it
   if (sentenceLength > totalCells) {
-    console.warn("Sentence is too long for the maze dimensions");
-    return [];
+    throw new Error(`句子太长（${sentenceLength}字），超出迷宫容量（${totalCells}格）。请增加网格尺寸或缩短句子。`);
   }
   
   // Helper function to get a random starting position
@@ -228,6 +227,7 @@ const generateSimplePath = (sentence: string, rows: number, cols: number): numbe
 export const generatePhraseMazePath = (chars: string[], rows: number, cols: number): WordPosition[] => {
   const maze: string[][] = Array(rows).fill(null).map(() => Array(cols).fill(''));
   const wordPositions: WordPosition[] = [];
+  const unplaced: string[] = [];
   
   // Sort by longest to shortest for better placement
   const sortedChars = [...chars].sort((a, b) => b.length - a.length);
@@ -268,9 +268,14 @@ export const generatePhraseMazePath = (chars: string[], rows: number, cols: numb
     
     if (!placed) {
       console.warn(`Could not place word: "${word}" after ${maxAttempts} attempts`);
+      unplaced.push(word);
     }
   }
-  
+
+  if (unplaced.length > 0) {
+    throw new Error(`以下词语无法放入迷宫（网格太小或词语太长）：${unplaced.join('、')}。请增大迷宫尺寸。`);
+  }
+
   return wordPositions;
 };
 

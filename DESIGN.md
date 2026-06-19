@@ -403,3 +403,135 @@ yarn lint             # ESLint check
 yarn lint:fix         # ESLint auto-fix
 yarn fm:fix           # Prettier format
 ```
+
+---
+
+## Input Parsing Rules
+
+_From UX Audit Round 2 — implicit syntax findings._
+
+### chartrace `text` field
+
+Comma (`,` / `，`) and newline (`\n`) are **control characters** that auto-detect content mode:
+
+| Input | Detected Mode | Result |
+|-------|--------------|--------|
+| No delimiters | CHARACTERS | Each char traced individually |
+| Contains `,` or `，` | PHRASES | Comma-separated segments as phrase rows |
+| Contains `\n` | SENTENCES | One sentence per line, `traceCount` forced to 1 |
+
+English mode (gridType=ENGLISH_LINES): 3-tier fallback — `\n/,` split → space split → per-character split.
+
+### charcolor `userInput` field
+
+**Chinese characters only.** Every character is split individually — commas, spaces, and punctuation are ignored. Non-Chinese input triggers a red warning below the field. Shuffle and preset loading join without delimiters.
+
+### charmaze `userInput` field
+
+WORD/PHRASE modes split by `/[\s,;，；、]+/`. SENTENCE mode splits by `\n` only — commas ARE content in sentence mode but ARE separators in word/phrase mode.
+
+### math-genie `theme` field
+
+Autocomplete freeSolo. Input is lowercased and matched against `THEME_EMOJIS` dictionary. Unmatched keys silently fall back to a default star emoji set. Preset labels (e.g. "Animals 🐶") are stripped to the key (`animals`) on input.
+
+---
+
+## Help System
+
+_From Help UI Implementation Plan._
+
+### Architecture
+
+Three-layer help system, data-driven from `docs/{tool-id}.md` markdown files:
+
+| Layer | Trigger | Component |
+|-------|---------|-----------|
+| Tooltip | User hovers `?` icon next to a field label | `HelpTooltip` — reads `docs/{tool-id}.md` → `field-reference` → specific anchor |
+| Input preview | User types in a text field | Inline chip preview below charcolor input showing how text is split |
+| Full help drawer | User clicks `?` in toolbar | `HelpDrawer` — right-side drawer with Field Reference, Feature Map, FAQ |
+
+### Build Pipeline
+
+```
+docs/{tool-id}.md  →  scripts/build-docs.mjs  →  src/data/docs/{tool-id}.json
+```
+
+The build script (`node scripts/build-docs.mjs`) runs before `tsc && vite build`. It validates that every anchor has bilingual (zh/en) content and rejects the build on mismatch.
+
+### Tooltip Usage
+
+```tsx
+<SettingsField
+  label="预设字库"
+  toolId="charcolor"
+  helpAnchor="field-preset-word-lib"
+>
+```
+
+The `SettingsField` component in `src/sections/_shared/SettingsPanel.tsx` accepts optional `toolId` + `helpAnchor` props and renders a `?` icon next to the label.
+
+### Help Documents
+
+`docs/{tool-id}.md` files follow a shared template (7 sections: Quick Start, Feature Map, Field Reference, Input Syntax, FAQ, Glossary). Each supports bilingual content and anchor-based deep linking for the Tooltip and Drawer layers.
+
+### Key Help Docs
+
+| File | Tool |
+|------|------|
+| `docs/math-genie.md` | Math worksheet generator |
+| `docs/charcolor.md` | Character find & color |
+| `docs/charmaze.md` | Character maze |
+| `docs/chartrace.md` | Character tracing |
+| `docs/hundred-chart.md` | Hundred chart puzzles |
+
+---
+
+## SaaS Print Warning
+
+When a Safari user triggers print (toolbar button or ⌘P), a `SafariPrintWarning` dialog appears suggesting Chrome or Save PDF as alternatives. The dialog can be permanently dismissed via a "don't show again" checkbox (stored in localStorage). Chrome users are unaffected.
+
+Components: `SafariPrintWarning.tsx`, `is-safari.ts`, integration in `Workbench.tsx`.
+
+---
+
+## UX Improvements Applied
+
+_From UX Audit Round 1 & 2 task lists._
+
+| ID | Area | Change |
+|----|------|--------|
+| DIYYY-001 | Charmaze | Mode switch confirmation dialog |
+| DIYYY-002 | Hundred Chart | Cross mode Display Options default-expanded |
+| DIYYY-003 | Charmaze | Sentence overflow error → visible Alert |
+| DIYYY-004 | Math Genie | Special Practice button tooltips |
+| DIYYY-005 | All tools | Reset button → icon + tooltip |
+| DIYYY-006 | Charmaze | Empty state guidance text |
+| DIYYY-007 | All tools | localStorage restore snackbar |
+| R2-01 | Chartrace | Dynamic parsing hint below text input |
+| R2-02 | Charcolor | Delimiter hint → single-char-only caption |
+| R2-03 | Math Genie | Theme onChange/onInputChange race condition fix |
+| R2-05 | Charmaze | WORD mode multi-char detection warning |
+| R2-06 | Charmaze | PHRASE mode overflow → visible Error |
+| — | Charcolor | Changed to single-char-only, non-Chinese warning |
+
+---
+
+## Data
+
+### Textbook Data
+
+`src/data/miemie-details.json` contains 17 lesson sets. The primary dataset is:
+
+**人教版语文-一年级上** (2024 edition, 280 characters total): 24 lessons organized as:
+
+| # | Lesson | Character Count |
+|---|--------|----------------|
+| 1–4 | Introductory units (我是中国人, 我爱我们的祖国, 我是小学生, 我爱学语文) | 34 |
+| 5–8 | 识字 1–4 (天地人, 金木水火土, 口耳目手足, 日月山川) | 28 |
+| 9 | 语文园地一 | 5 |
+| 10–13 | 阅读 1–4 (秋天, 江南, 雪地里的小画家, 四季) | 43 |
+| 14–17 | 识字 5–8 (对韵歌, 日月明, 小书包, 升国旗) | 42 |
+| 18 | 语文园地六 | 9 |
+| 19–24 | 阅读 5–10 (小小的船, 影子, 两件宝, 比尾巴, 乌鸦喝水, 雨点儿) | 65 |
+
+Full reference table: `docs/生字表-人教版语文-一年级上.md`

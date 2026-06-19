@@ -11,11 +11,13 @@ import {
 } from '@mui/icons-material';
 import {
   Box,
+  Chip,
   Stack,
   Button,
   Select,
   MenuItem,
   TextField,
+  Typography,
   InputLabel,
   FormControl,
 } from '@mui/material';
@@ -24,7 +26,7 @@ import { shuffleArray } from 'src/utils/array-tools';
 
 import miemieDetails from 'src/data/miemie-details.json';
 import { loadMiemieLessons } from 'src/shared/data/lessons';
-import { COLOR_PRESETS, userInputToChars } from 'src/features/charcolor/utils';
+import { COLOR_PRESETS, userInputToChars, hasNonChineseChars } from 'src/features/charcolor/utils';
 
 import {
   SettingsField,
@@ -62,7 +64,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         fullSelectedValue: value,
         selectedLevel: level,
         selectedBook: '',
-        userInput: characters.join(','),
+        userInput: characters.join(''),
       });
     } else {
       onChange({
@@ -83,7 +85,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     onChange({
       ...config,
       selectedBook: selectedBookTitle,
-      userInput: selectedLesson ? selectedLesson.word.join(',') : '',
+      userInput: selectedLesson ? selectedLesson.word.join('') : '',
     });
   };
 
@@ -100,7 +102,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   const handleShuffleInput = () => {
     let inputChars = userInputToChars(userInput);
     inputChars = shuffleArray(inputChars);
-    onChange({ ...config, userInput: inputChars.join(',') });
+    onChange({ ...config, userInput: inputChars.join('') });
   };
 
   const renderBookOptions = () => {
@@ -125,7 +127,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   return (
     <>
       <SettingsSection title={t('charColor.settings.load')}>
-        <SettingsField label={t('charColor.settings.presetWordLib')}>
+        <SettingsField label={t('charColor.settings.presetWordLib')} toolId="charcolor" helpAnchor="field-preset-word-lib">
           <FormControl fullWidth size="small">
             <InputLabel>{t('charColor.settings.presetWordLib')}</InputLabel>
             <Select value={fullSelectedValue} onChange={handleLevelChange} label={t('charColor.settings.presetWordLib')}>
@@ -154,7 +156,15 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       <SettingsSection title={t('charColor.settings.content')}>
         <SettingsField
           label={t('charColor.settings.manualInput')}
-          caption={`${userInput.length}/${MAX_INPUT_LENGTH} characters`}
+          caption={
+            (() => {
+              const count = `${userInput.length}/${MAX_INPUT_LENGTH}`;
+              if (hasNonChineseChars(userInput)) {
+                return <Typography variant="caption" color="error.main">{count}  ·  {t('charColor.settings.nonChineseWarning')}</Typography>;
+              }
+              return `${count}  ·  ${t('charColor.settings.parsingHint')}`;
+            })()
+          }
         >
           <Stack spacing={1}>
             <TextField
@@ -189,6 +199,23 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 {t('common.shuffle')}
               </Button>
             </Box>
+            {(() => {
+              const chars = userInputToChars(userInput);
+              if (chars.length === 0) return null;
+              return (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    {t('charColor.settings.charPreview', { count: chars.length })}:
+                  </Typography>
+                  {chars.slice(0, 30).map((c, i) => (
+                    <Chip key={i} label={c} size="small" variant="outlined" sx={{ fontFamily: 'monospace' }} />
+                  ))}
+                  {chars.length > 30 && (
+                    <Typography variant="caption" color="text.secondary">+{chars.length - 30} more</Typography>
+                  )}
+                </Box>
+              );
+            })()}
           </Stack>
         </SettingsField>
       </SettingsSection>

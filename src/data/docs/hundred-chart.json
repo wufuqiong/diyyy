@@ -1,0 +1,250 @@
+{
+  "tool_id": "hundred-chart",
+  "title": {
+    "zh": "百数板",
+    "en": "Hundred Chart"
+  },
+  "route": "/hundred-chart",
+  "sections": {
+    "quick-start": {
+      "title": "🚀 快速上手 / Quick Start",
+      "content": "<!-- anchor: quick-start -->\n\n#### 场景一：生成一张随机填空百数表\n<!-- anchor: quick-start-grid-random -->\n\n**中文**\n1. 确保「Chart Type」为 **Grid** 模式（默认）\n2. 在「Blank Strategy」选择 **Random** — 默认挖 20 个空\n3. 拖动 **Blank Count** 滑块调整填空数量（1-99）\n4. 预览区实时显示填空结果，点击「保存 PDF」打印\n\n**English**\n1. Make sure **Chart Type** is **Grid** (default)\n2. Under **Blank Strategy**, choose **Random** — defaults to 20 blanks\n3. Drag the **Blank Count** slider to adjust (1–99 blanks)\n4. Preview updates live — click **Save PDF** to print\n\n---\n\n#### 场景二：自定义填空位置（手动模式）\n<!-- anchor: quick-start-grid-manual -->\n\n**中文**\n1. 在「Blank Strategy」选择 **Manual**\n2. 直接在右侧预览区的 10×10 格子上**点击**要挖空的格子\n3. 格子变白即为挖空，再点恢复。下方按钮可「全清」或「反选」\n4. 点击「保存 PDF」导出自定义排版\n\n**English**\n1. Under **Blank Strategy**, choose **Manual**\n2. **Click cells directly** in the 10×10 preview grid to toggle them blank/filled\n3. Clicked cells turn white (blank), click again to restore. Use **Clear All** / **Invert** buttons\n4. Click **Save PDF** to export your custom layout\n\n---\n\n#### 场景三：生成十字填空谜题\n<!-- anchor: quick-start-cross -->\n\n**中文**\n1. 将「Chart Type」切换为 **Cross** 模式\n2. 设置「Min Anchor」和「Max Anchor」控制中间数字范围（如 11-90）\n3. 选择难度（Easy/Medium/Hard），调整每页题目数\n4. 预览区显示十字填空 puzzle，每个 puzzle 有已知数和待填格\n\n**English**\n1. Switch **Chart Type** to **Cross**\n2. Set **Min Anchor** and **Max Anchor** to control the center number range (e.g. 11–90)\n3. Choose difficulty (Easy/Medium/Hard) and questions per page\n4. Preview shows cross puzzles — each has known cells and blanks to fill\n\n---"
+    },
+    "feature-map": {
+      "title": "🗺️ 功能地图 / Feature Map",
+      "content": "<!-- anchor: feature-map -->\n\n| 功能 | 在哪里找到 | 它能做什么 |\n|---|---|---|\n| Grid 模式（百数填空） | Chart Type → Grid 按钮 | 在 10×10 百数表中挖空，训练数字认知 |\n| ⭐ Cross 模式（十字填空） | Chart Type → Cross 按钮 | 生成十字形数学填空 puzzle，训练加减法推理 |\n| 随机挖空 | Grid → Blank Strategy → Random | 随机挖掉 N 个格子 |\n| 规律挖空 | Grid → Blank Strategy → Pattern | 按步长（step）和偏移（offset）规律挖空 |\n| ⭐ 手动挖空 | Grid → Blank Strategy → Manual | **直接在预览区点击格子**来标记/取消挖空 |\n| 答案页 | Grid → Blank Strategy → Answer Key | 所有格子填满，用作对答案 |\n| ⭐ 多版本 | Multiple Versions → 滑块 | 生成 1-10 个不同排列的版本（防作弊） |\n| 包含答案页 | Multiple Versions → Include Answer Key | 每个版本自动附带一张完整答案页 |\n| 起始数字可调 | Number Range → Start Number | 如从 101 开始，生成 101-200 的百数表 |\n| 十字谜题难度 | Cross → Difficulty Easy/Medium/Hard | 控制已知格数量和位置 |\n| 显示公式/示例/题号 | Cross → Display Options（默认展开） | 控制十字谜题中是否显示公式框、示例、题号 |\n\n| Feature | Where to find it | What it does |\n|---|---|---|\n| Grid mode | Chart Type → Grid | Blank out cells in a 10×10 hundred chart for number recognition |\n| ⭐ Cross mode | Chart Type → Cross | Cross-shaped arithmetic fill puzzles for addition/subtraction reasoning |\n| Random blanks | Grid → Blank Strategy → Random | Randomly blank N cells |\n| Pattern blanks | Grid → Blank Strategy → Pattern | Blank cells at regular intervals (step + offset) |\n| ⭐ Manual blanks | Grid → Blank Strategy → Manual | **Click cells in the preview** to toggle blank/filled |\n| Answer key | Grid → Blank Strategy → Answer Key | All cells filled — for answer checking |\n| ⭐ Multiple versions | Multiple Versions → slider | Generate 1–10 different versions (anti-cheating) |\n| Include answer key | Multiple Versions → toggle | Auto-attach a filled answer page per version |\n| Adjustable start number | Number Range → Start Number | e.g. start at 101 for a 101–200 chart |\n| Cross puzzle difficulty | Cross → Difficulty Easy/Medium/Hard | Controls number of known cells and their positions |\n| Show formula/example/numbering | Cross → Display Options (default expanded) | Show formula box, example, and question numbers in Cross mode |\n\n---"
+    },
+    "field-reference": {
+      "title": "📖 配置项参考 / Field Reference",
+      "content": "<!-- anchor: field-reference -->\n\n#### Chart Type（图表类型）\n<!-- anchor: field-chart-type -->\n\n| | 中文 | English |\n|---|---|---|\n| **是什么** | 切换百数表（Grid）和十字填空（Cross）两种完全不同的练习模式 | Toggle between Grid (hundred chart fill) and Cross (arithmetic puzzles) |\n| **Grid** | 10×10 百数表挖空练习，训练数字顺序和位置感 | 10×10 hundred chart with blanks — practice number sequences |\n| **Cross** | 十字形数学填空 puzzle，已知数值 + 空白格 → 推理中间数字 | Cross arithmetic puzzles with known values → deduce the center |\n\n#### Blank Strategy（挖空策略）— Grid 模式\n<!-- anchor: field-blank-strategy -->\n\n| | 中文 | English |\n|---|---|---|\n| **Random** | 随机挖空，拖动滑块控制数量（1-99） | Randomly blank cells, slider controls count (1–99) |\n| **Pattern** | 按步长规律挖空（如每 5 个挖一个），可设偏移量 | Blank at regular intervals (e.g. every 5th cell), with offset |\n| ⭐ **Manual** | 点击预览区格子手动标记挖空位置 | Click cells in the preview to manually set blanks |\n| **Answer Key** | 全部填满，用于对答案 | All cells filled — use as answer key |\n\n#### Start Number（起始数字）— Grid 模式\n<!-- anchor: field-start-number -->\n\n| | 中文 | English |\n|---|---|---|\n| **是什么** | 百数表的起始数字，如设为 101 → 生成 101-200 | Starting number — e.g. 101 → generates 101–200 chart |\n\n#### ⭐ Cross Mode — Difficulty Sub-options\n<!-- anchor: field-cross-difficulty -->\n\n| | Easy | Medium | Hard |\n|---|---|---|---|\n| **已知格数** | 2–3 | 5–6 | 5–9 |\n| **已知格位置** | 可选择（随机/固定） | 可选择（随机/固定） | 固定 1 格 |\n| **提示数** | 2–3 | 2–3 | 1（固定） |\n\n#### ⭐ Display Options（显示选项）— Cross 模式\n<!-- anchor: field-display-options -->\n\n| | 中文 | English |\n|---|---|---|\n| **Show Formula Box** | 是否显示 `__ + __ = __` 公式框 | Whether to show a formula box |\n| **Show Example** | 是否显示示例 | Whether to show an example |\n| **Show Question Numbers** | 是否显示题号 | Whether to number each question |\n| **注意事项** | 此区域默认展开，可在设置面板中折叠 | This section is expanded by default, collapsible in settings |\n\n#### Multiple Versions（多版本）\n<!-- anchor: field-multiple-versions -->\n\n| | 中文 | English |\n|---|---|---|\n| **是什么** | 生成多个不同排列的版本，防止学生互相抄答案 | Generate multiple unique versions to prevent copying |\n| **包含答案页** | 每个版本自动附带一张完整答案页 | Each version gets an accompanying filled answer page |\n\n---"
+    },
+    "faq": {
+      "title": "❓ 常见问题 / FAQ",
+      "content": "<!-- anchor: faq -->\n\n**Q: Manual 模式下怎么标记挖空？**\n**Q: How do I mark blanks in Manual mode?**\n\n中文：切换到 Manual 模式后，直接在右侧预览区的数字格子上**点击**即可。点一下变白（挖空），再点恢复。下方「Clear All」清空所有标记，「Invert」反转所有标记。\n\nEnglish: Switch to Manual mode, then **click cells directly** in the preview grid. Click once to blank (turn white), click again to restore. **Clear All** removes all blanks; **Invert** flips all cells.\n\n**Q: Cross 模式和 Grid 模式有什么区别？**\n**Q: What's the difference between Cross and Grid mode?**\n\n中文：Grid 模式是传统百数表填空（训练数字认识）；Cross 模式是十字形数学填空题（训练加减法推理）。两者的配置项完全不同。切换到 Cross 模式后，所有 Grid 专属配置项（Blank Strategy 等）会隐藏。\n\nEnglish: Grid mode is a traditional hundred chart fill (number recognition). Cross mode generates arithmetic cross puzzles (addition/subtraction reasoning). The settings completely change when you switch modes.\n\n**Q: 为什么我的数字输入变成了别的值？**\n**Q: Why did my number change to something else?**\n\n中文：某些数值输入有范围限制（如 Start Number 0-990，Step 2-10）。超出范围时系统会自动修正为最近的合法值。\n\nEnglish: Some numeric inputs have range limits (e.g. Start Number 0–990, Step 2–10). Values outside the range are silently clamped to the nearest valid value."
+    }
+  },
+  "fieldRefs": {
+    "field-chart-type": {
+      "what": {
+        "zh": "切换百数表（Grid）和十字填空（Cross）两种完全不同的练习模式",
+        "en": "Toggle between Grid (hundred chart fill) and Cross (arithmetic puzzles)"
+      },
+      "grid": {
+        "zh": "10×10 百数表挖空练习，训练数字顺序和位置感",
+        "en": "10×10 hundred chart with blanks — practice number sequences"
+      },
+      "cross": {
+        "zh": "十字形数学填空 puzzle，已知数值 + 空白格 → 推理中间数字",
+        "en": "Cross arithmetic puzzles with known values → deduce the center"
+      },
+      "_title_zh": "Chart Type（图表类型）",
+      "_title_en": "Chart Type（图表类型）"
+    },
+    "field-blank-strategy": {
+      "random": {
+        "zh": "随机挖空，拖动滑块控制数量（1-99）",
+        "en": "Randomly blank cells, slider controls count (1–99)"
+      },
+      "pattern": {
+        "zh": "按步长规律挖空（如每 5 个挖一个），可设偏移量",
+        "en": "Blank at regular intervals (e.g. every 5th cell), with offset"
+      },
+      "⭐_manual": {
+        "zh": "点击预览区格子手动标记挖空位置",
+        "en": "Click cells in the preview to manually set blanks"
+      },
+      "answer_key": {
+        "zh": "全部填满，用于对答案",
+        "en": "All cells filled — use as answer key"
+      },
+      "_title_zh": "Blank Strategy（挖空策略）— Grid 模式",
+      "_title_en": "Blank Strategy（挖空策略）— Grid 模式"
+    },
+    "field-start-number": {
+      "what": {
+        "zh": "百数表的起始数字，如设为 101 → 生成 101-200",
+        "en": "Starting number — e.g. 101 → generates 101–200 chart"
+      },
+      "_title_zh": "Start Number（起始数字）— Grid 模式",
+      "_title_en": "Start Number（起始数字）— Grid 模式"
+    },
+    "field-cross-difficulty": {
+      "easy": {
+        "zh": "Medium",
+        "en": "Hard"
+      },
+      "已知格数": {
+        "zh": "2–3",
+        "en": "5–6"
+      },
+      "已知格位置": {
+        "zh": "可选择（随机/固定）",
+        "en": "可选择（随机/固定）"
+      },
+      "提示数": {
+        "zh": "2–3",
+        "en": "2–3"
+      },
+      "_title_zh": "⭐ Cross Mode — Difficulty Sub-options",
+      "_title_en": "⭐ Cross Mode — Difficulty Sub-options"
+    },
+    "field-display-options": {
+      "show_formula_box": {
+        "zh": "是否显示 `__ + __ = __` 公式框",
+        "en": "Whether to show a formula box"
+      },
+      "show_example": {
+        "zh": "是否显示示例",
+        "en": "Whether to show an example"
+      },
+      "show_question_numbers": {
+        "zh": "是否显示题号",
+        "en": "Whether to number each question"
+      },
+      "note": {
+        "zh": "此区域默认展开，可在设置面板中折叠",
+        "en": "This section is expanded by default, collapsible in settings"
+      },
+      "_title_zh": "⭐ Display Options（显示选项）— Cross 模式",
+      "_title_en": "⭐ Display Options（显示选项）— Cross 模式"
+    },
+    "field-multiple-versions": {
+      "what": {
+        "zh": "生成多个不同排列的版本，防止学生互相抄答案",
+        "en": "Generate multiple unique versions to prevent copying"
+      },
+      "包含答案页": {
+        "zh": "每个版本自动附带一张完整答案页",
+        "en": "Each version gets an accompanying filled answer page"
+      },
+      "_title_zh": "Multiple Versions（多版本）",
+      "_title_en": "Multiple Versions（多版本）"
+    }
+  },
+  "syntaxRules": [],
+  "featureItems": [
+    {
+      "feature_zh": "Grid 模式（百数填空）",
+      "feature_en": "Grid mode",
+      "location_zh": "Chart Type → Grid 按钮",
+      "location_en": "Chart Type → Grid",
+      "description_zh": "在 10×10 百数表中挖空，训练数字认知",
+      "description_en": "Blank out cells in a 10×10 hundred chart for number recognition"
+    },
+    {
+      "feature_zh": "⭐ Cross 模式（十字填空）",
+      "feature_en": "⭐ Cross mode",
+      "location_zh": "Chart Type → Cross 按钮",
+      "location_en": "Chart Type → Cross",
+      "description_zh": "生成十字形数学填空 puzzle，训练加减法推理",
+      "description_en": "Cross-shaped arithmetic fill puzzles for addition/subtraction reasoning"
+    },
+    {
+      "feature_zh": "随机挖空",
+      "feature_en": "Random blanks",
+      "location_zh": "Grid → Blank Strategy → Random",
+      "location_en": "Grid → Blank Strategy → Random",
+      "description_zh": "随机挖掉 N 个格子",
+      "description_en": "Randomly blank N cells"
+    },
+    {
+      "feature_zh": "规律挖空",
+      "feature_en": "Pattern blanks",
+      "location_zh": "Grid → Blank Strategy → Pattern",
+      "location_en": "Grid → Blank Strategy → Pattern",
+      "description_zh": "按步长（step）和偏移（offset）规律挖空",
+      "description_en": "Blank cells at regular intervals (step + offset)"
+    },
+    {
+      "feature_zh": "⭐ 手动挖空",
+      "feature_en": "⭐ Manual blanks",
+      "location_zh": "Grid → Blank Strategy → Manual",
+      "location_en": "Grid → Blank Strategy → Manual",
+      "description_zh": "**直接在预览区点击格子**来标记/取消挖空",
+      "description_en": "**Click cells in the preview** to toggle blank/filled"
+    },
+    {
+      "feature_zh": "答案页",
+      "feature_en": "Answer key",
+      "location_zh": "Grid → Blank Strategy → Answer Key",
+      "location_en": "Grid → Blank Strategy → Answer Key",
+      "description_zh": "所有格子填满，用作对答案",
+      "description_en": "All cells filled — for answer checking"
+    },
+    {
+      "feature_zh": "⭐ 多版本",
+      "feature_en": "⭐ Multiple versions",
+      "location_zh": "Multiple Versions → 滑块",
+      "location_en": "Multiple Versions → slider",
+      "description_zh": "生成 1-10 个不同排列的版本（防作弊）",
+      "description_en": "Generate 1–10 different versions (anti-cheating)"
+    },
+    {
+      "feature_zh": "包含答案页",
+      "feature_en": "Include answer key",
+      "location_zh": "Multiple Versions → Include Answer Key",
+      "location_en": "Multiple Versions → toggle",
+      "description_zh": "每个版本自动附带一张完整答案页",
+      "description_en": "Auto-attach a filled answer page per version"
+    },
+    {
+      "feature_zh": "起始数字可调",
+      "feature_en": "Adjustable start number",
+      "location_zh": "Number Range → Start Number",
+      "location_en": "Number Range → Start Number",
+      "description_zh": "如从 101 开始，生成 101-200 的百数表",
+      "description_en": "e.g. start at 101 for a 101–200 chart"
+    },
+    {
+      "feature_zh": "十字谜题难度",
+      "feature_en": "Cross puzzle difficulty",
+      "location_zh": "Cross → Difficulty Easy/Medium/Hard",
+      "location_en": "Cross → Difficulty Easy/Medium/Hard",
+      "description_zh": "控制已知格数量和位置",
+      "description_en": "Controls number of known cells and their positions"
+    },
+    {
+      "feature_zh": "显示公式/示例/题号",
+      "feature_en": "Show formula/example/numbering",
+      "location_zh": "Cross → Display Options（默认展开）",
+      "location_en": "Cross → Display Options (default expanded)",
+      "description_zh": "控制十字谜题中是否显示公式框、示例、题号",
+      "description_en": "Show formula box, example, and question numbers in Cross mode"
+    }
+  ],
+  "faq": [
+    {
+      "question_zh": "Manual 模式下怎么标记挖空？",
+      "question_en": "How do I mark blanks in Manual mode?",
+      "answer_zh": "切换到 Manual 模式后，直接在右侧预览区的数字格子上**点击**即可。点一下变白（挖空），再点恢复。下方「Clear All」清空所有标记，「Invert」反转所有标记。",
+      "answer_en": "Switch to Manual mode, then **click cells directly** in the preview grid. Click once to blank (turn white), click again to restore. **Clear All** removes all blanks; **Invert** flips all cells."
+    },
+    {
+      "question_zh": "Cross 模式和 Grid 模式有什么区别？",
+      "question_en": "What's the difference between Cross and Grid mode?",
+      "answer_zh": "Grid 模式是传统百数表填空（训练数字认识）；Cross 模式是十字形数学填空题（训练加减法推理）。两者的配置项完全不同。切换到 Cross 模式后，所有 Grid 专属配置项（Blank Strategy 等）会隐藏。",
+      "answer_en": "Grid mode is a traditional hundred chart fill (number recognition). Cross mode generates arithmetic cross puzzles (addition/subtraction reasoning). The settings completely change when you switch modes."
+    },
+    {
+      "question_zh": "为什么我的数字输入变成了别的值？",
+      "question_en": "Why did my number change to something else?",
+      "answer_zh": "某些数值输入有范围限制（如 Start Number 0-990，Step 2-10）。超出范围时系统会自动修正为最近的合法值。",
+      "answer_en": "Some numeric inputs have range limits (e.g. Start Number 0–990, Step 2–10). Values outside the range are silently clamped to the nearest valid value."
+    }
+  ],
+  "glossary": [],
+  "quickStarts": [
+    {
+      "anchor": "quick-start-grid-random",
+      "content": "#### 场景一：生成一张随机填空百数表\n<!-- anchor: quick-start-grid-random -->\n\n**中文**\n1. 确保「Chart Type」为 **Grid** 模式（默认）\n2. 在「Blank Strategy」选择 **Random** — 默认挖 20 个空\n3. 拖动 **Blank Count** 滑块调整填空数量（1-99）\n4. 预览区实时显示填空结果，点击「保存 PDF」打印\n\n**English**\n1. Make sure **Chart Type** is **Grid** (default)\n2. Under **Blank Strategy**, choose **Random** — defaults to 20 blanks\n3. Drag the **Blank Count** slider to adjust (1–99 blanks)\n4. Preview updates live — click **Save PDF** to print\n\n---"
+    },
+    {
+      "anchor": "quick-start-grid-manual",
+      "content": "#### 场景二：自定义填空位置（手动模式）\n<!-- anchor: quick-start-grid-manual -->\n\n**中文**\n1. 在「Blank Strategy」选择 **Manual**\n2. 直接在右侧预览区的 10×10 格子上**点击**要挖空的格子\n3. 格子变白即为挖空，再点恢复。下方按钮可「全清」或「反选」\n4. 点击「保存 PDF」导出自定义排版\n\n**English**\n1. Under **Blank Strategy**, choose **Manual**\n2. **Click cells directly** in the 10×10 preview grid to toggle them blank/filled\n3. Clicked cells turn white (blank), click again to restore. Use **Clear All** / **Invert** buttons\n4. Click **Save PDF** to export your custom layout\n\n---"
+    },
+    {
+      "anchor": "quick-start-cross",
+      "content": "#### 场景三：生成十字填空谜题\n<!-- anchor: quick-start-cross -->\n\n**中文**\n1. 将「Chart Type」切换为 **Cross** 模式\n2. 设置「Min Anchor」和「Max Anchor」控制中间数字范围（如 11-90）\n3. 选择难度（Easy/Medium/Hard），调整每页题目数\n4. 预览区显示十字填空 puzzle，每个 puzzle 有已知数和待填格\n\n**English**\n1. Switch **Chart Type** to **Cross**\n2. Set **Min Anchor** and **Max Anchor** to control the center number range (e.g. 11–90)\n3. Choose difficulty (Easy/Medium/Hard) and questions per page\n4. Preview shows cross puzzles — each has known cells and blanks to fill\n\n---"
+    }
+  ]
+}

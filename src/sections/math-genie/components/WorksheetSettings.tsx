@@ -471,8 +471,10 @@ const WorksheetSettings: React.FC<Props> = ({
                     size="small"
                     value={theme}
                     options={THEME_PRESETS}
-                    onChange={(_, v) => onChange({ ...config, theme: typeof v === 'string' ? v.split(' ')[0] : '' })}
-                    onInputChange={(_, v) => onChange({ ...config, theme: v })}
+                    onInputChange={(_, v) => {
+                      // Strip emoji suffix from preset labels, lowercase for dictionary lookup
+                      onChange({ ...config, theme: v.split(' ')[0].toLowerCase() });
+                    }}
                     renderInput={(params) => (
                       <TextField {...params} placeholder="e.g. Pokemon, Cars, Fairies..." />
                     )}
@@ -647,25 +649,33 @@ const WorksheetSettings: React.FC<Props> = ({
                     title={t('mathGenie.zeroDrillDisabled')}
                     show={excludeZeroProblems}
                   >
-                    <ToggleButton
-                      value={SpecialPracticeType.ZERO_DRILL}
-                      disabled={excludeZeroProblems}
-                    >
-                      {t('mathGenie.zero')}
-                    </ToggleButton>
+                    <Tooltip title={t('mathGenie.zeroDrillTooltip')} arrow placement="top">
+                      <ToggleButton
+                        value={SpecialPracticeType.ZERO_DRILL}
+                        disabled={excludeZeroProblems}
+                      >
+                        {t('mathGenie.zero')}
+                      </ToggleButton>
+                    </Tooltip>
                   </MaybeTooltip>
-                  <ToggleButton value={SpecialPracticeType.FACT_FAMILY}>{t('mathGenie.factFamily')}</ToggleButton>
-                  <ToggleButton value={SpecialPracticeType.NUMBER_BOND}>{t('mathGenie.numberBond')}</ToggleButton>
+                  <Tooltip title={t('mathGenie.factFamilyTooltip')} arrow placement="top">
+                    <ToggleButton value={SpecialPracticeType.FACT_FAMILY}>{t('mathGenie.factFamily')}</ToggleButton>
+                  </Tooltip>
+                  <Tooltip title={t('mathGenie.numberBondTooltip')} arrow placement="top">
+                    <ToggleButton value={SpecialPracticeType.NUMBER_BOND}>{t('mathGenie.numberBond')}</ToggleButton>
+                  </Tooltip>
                   <MaybeTooltip
                     title={t('mathGenie.excludeComparisonDisabled')}
                     show={excludeComparisonProblems}
                   >
-                    <ToggleButton
-                      value={SpecialPracticeType.WORD_PROBLEM_COMPARISON}
+                    <Tooltip title={t('mathGenie.comparisonTooltip')} arrow placement="top">
+                      <ToggleButton
+                        value={SpecialPracticeType.WORD_PROBLEM_COMPARISON}
                       disabled={excludeComparisonProblems}
                     >
                       {t('mathGenie.comparison')}
                     </ToggleButton>
+                    </Tooltip>
                   </MaybeTooltip>
                 </ToggleButtonGroup>
               </Field>

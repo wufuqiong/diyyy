@@ -2,7 +2,7 @@ import type { SelectChangeEvent } from '@mui/material';
 import type { MiemieLesson, MiemieDetails } from 'src/types';
 import type { CharMazeConfig } from 'src/features/charmaze/types';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -14,10 +14,16 @@ import {
   Stack,
   Button,
   Select,
+  Dialog,
   MenuItem,
   TextField,
   InputLabel,
+  Typography,
   FormControl,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
 } from '@mui/material';
 
 import { shuffleArray } from 'src/utils/array-tools';
@@ -69,10 +75,22 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
   const modeLabelKeys = { WORD: 'wordPractice', PHRASE: 'phrasePractice', SENTENCE: 'sentencePractice' } as const;
 
+  const [pendingMode, setPendingMode] = useState<number | null>(null);
+
   const handleModeChange = (e: SelectChangeEvent<number>) => {
+    const newMode = e.target.value as number;
+    if (userInput) {
+      // Show confirmation before clearing user content
+      setPendingMode(newMode);
+      return;
+    }
+    applyModeChange(newMode);
+  };
+
+  const applyModeChange = (newMode: number) => {
     onChange({
       ...config,
-      selectedMode: e.target.value as number,
+      selectedMode: newMode,
       selectedLevel: '',
       fullSelectedValue: '',
       selectedBook: '',
@@ -249,7 +267,19 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       <SettingsSection title={t('charMaze.settings.content')}>
         <SettingsField
           label={t('charMaze.settings.manualInput')}
-          caption={`${userInput.length}/${MAX_INPUT_LENGTH} characters`}
+          caption={
+            (() => {
+              const count = `${userInput.length}/${MAX_INPUT_LENGTH}`;
+              if (mode === 'WORD') {
+                const tokens = userInput.split(/[\s,;，；、]+/).filter((c: string) => c.trim() !== '');
+                const multiChar = tokens.filter((token: string) => token.length > 1);
+                if (multiChar.length > 0) {
+                  return <Typography variant="caption" color="warning.main">{count} — {t('charMaze.settings.wordModeMultiCharWarning', { examples: multiChar.slice(0, 3).join(', ') })}</Typography>;
+                }
+              }
+              return `${count} characters`;
+            })()
+          }
         >
           <Stack spacing={1}>
             <TextField
@@ -322,6 +352,36 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           </FormControl>
         </SettingsField>
       </SettingsSection>
+
+      <Dialog
+        open={pendingMode !== null}
+        onClose={() => setPendingMode(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>{t('common.confirm')}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {t('charMaze.settings.modeChangeWarning')}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingMode(null)}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              if (pendingMode !== null) {
+                applyModeChange(pendingMode);
+                setPendingMode(null);
+              }
+            }}
+          >
+            {t('common.confirm')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

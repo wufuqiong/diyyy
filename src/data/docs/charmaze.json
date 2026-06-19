@@ -1,0 +1,193 @@
+{
+  "tool_id": "charmaze",
+  "title": {
+    "zh": "识字迷宫",
+    "en": "Character Maze"
+  },
+  "route": "/charmaze",
+  "sections": {
+    "quick-start": {
+      "title": "🚀 快速上手 / Quick Start",
+      "content": "<!-- anchor: quick-start -->\n\n#### 场景一：生成一个单字迷宫\n<!-- anchor: quick-start-word-maze -->\n\n**中文**\n1. 确认「模式」选择为「单字练习」（默认）\n2. 在手动输入框中输入要练习的字（如 `日,月,水,火`）\n3. 预览区自动生成迷宫 — 每个字一个独立迷宫页，孩子沿着路径找到目标字\n\n**English**\n1. Make sure **Mode** is set to **Characters** (the default)\n2. Type the characters in the manual input box (e.g. `日,月,水,火`)\n3. Preview auto-generates — one maze page per character. Kids follow the path to find the target character\n\n---\n\n#### 场景二：生成一个词语迷宫\n<!-- anchor: quick-start-phrase-maze -->\n\n**中文**\n1. 将「模式」切换为「词语练习」\n2. 输入词语，用逗号分隔（如 `中国,北京,上海`）\n3. 每个词语作为一条路径嵌入迷宫，孩子需要在网格中找到并连起来\n\n**English**\n1. Switch **Mode** to **Phrases**\n2. Type phrases separated by commas (e.g. `中国,北京,上海`)\n3. Each phrase is embedded as a path in the maze — kids find and connect them\n\n---"
+    },
+    "feature-map": {
+      "title": "🗺️ 功能地图 / Feature Map",
+      "content": "<!-- anchor: feature-map -->\n\n| 功能 | 在哪里找到 | 它能做什么 |\n|---|---|---|\n| ⭐ WORD 模式 | 加载 → Mode 下拉框 | 每个字独立生成一页迷宫 |\n| ⭐ PHRASE 模式 | 加载 → Mode 下拉框 | 词语嵌入迷宫，横向或纵向排列 |\n| ⭐ SENTENCE 模式 | 加载 → Mode 下拉框 | 整句作为连续的迷宫路径 |\n| 预设字/词/句库 | 加载 → 预设库下拉框（标签随 Mode 变化） | 一键加载教材内容 |\n| 预设书册 | 加载 → 预设书册 | 加载某一课内容 |\n| 迷宫尺寸 | 选项 → 迷宫尺寸 | 4 种尺寸：8×8 / 9×9 / 10×10 / 12×12 |\n| 每页字数 | 选项 → 每页字数（仅 PHRASE 模式） | 控制每页放置几个词语 |\n\n| Feature | Where to find it | What it does |\n|---|---|---|\n| ⭐ WORD mode | Load → Mode dropdown | One page per character maze |\n| ⭐ PHRASE mode | Load → Mode dropdown | Phrases placed as paths |\n| ⭐ SENTENCE mode | Load → Mode dropdown | Full sentence as a single maze path |\n| Preset word/phrase/sentence library | Load → Library dropdown (label changes with mode) | One-click textbook content load |\n| Preset lesson book | Load → Lesson Book | Load one lesson's content |\n| Maze size | Options → Maze Size | 4 sizes: 8×8 / 9×9 / 10×10 / 12×12 |\n| Words per page | Options → Words Per Page (PHRASE only) | Phrases per maze page |\n\n---"
+    },
+    "field-reference": {
+      "title": "📖 配置项参考 / Field Reference",
+      "content": "<!-- anchor: field-reference -->\n\n#### 模式 / Mode\n<!-- anchor: field-mode -->\n\n| | 中文 | English |\n|---|---|---|\n| **是什么** | 决定输入内容被解析为什么类型 | Determines how input is parsed |\n| **选项** | 单字练习 — 每个字独立迷宫；词语练习 — 逗号分隔的词语嵌入；句子练习 — 换行分隔的句子作为路径 | Characters — one maze per character; Phrases — comma-separated phrases; Sentences — newline-separated sentences as paths |\n| **注意事项** | 切换模式会清空已输入内容（有确认提示） | Switching modes clears existing input (with confirmation dialog) |\n\n#### ⭐ 预设字库 / Preset Library\n<!-- anchor: field-preset-library -->\n\n| | 中文 | English |\n|---|---|---|\n| **是什么** | 标签随 Mode 动态变化（\"预设字库\"/\"预设词库\"/\"预设句库\"），从内置教材加载对应类型的内容 | Label changes with Mode — loads textbook content of the matching type |\n\n#### 迷宫尺寸 / Maze Size\n<!-- anchor: field-maze-size -->\n\n| | 中文 | English |\n|---|---|---|\n| **是什么** | 控制迷宫网格的行列数 | Controls maze grid dimensions |\n| **注意事项** | 句子模式下，句子长度不能超过总格数（如 8×8=64 格），超长时系统会报错提示 | In Sentence mode, sentence length cannot exceed total cells (e.g. 8×8=64 cells) — the system shows an error if too long |\n\n---"
+    },
+    "input-syntax": {
+      "title": "⌨️ 输入格式说明 / Input Syntax",
+      "content": "<!-- anchor: input-syntax -->\n\n> 同一段文字，在不同模式下会被不同地解析。\n> The same text is parsed differently depending on the mode.\n\n**单字模式（Characters）/ 词语模式（Phrases）**\n\n| 输入 | 解析方式 | 输出结果 |\n|---|---|---|\n| `日月水火` | 按分隔符拆分（无分隔符 = 整体） | 1 个条目「日月水火」 |\n| `日,月,水,火` | 按逗号拆分为 4 个条目 | 4 个独立条目 |\n| `日 月` | 按空格拆分 | 2 个条目 |\n\n**句子模式（Sentences）**\n\n| 输入 | 解析方式 | 输出结果 |\n|---|---|---|\n| `你好世界` | 整体作为 1 个句子，逐字拆分 | 1 页迷宫，路径上依次为「你」「好」「世」「界」 |\n| `你好\\n世界` | 按换行拆分为 2 个句子 | 2 页迷宫，每页一个句子 |\n\n> ⚠️ **关键差异**：句子模式下逗号**不是**分隔符，而是句子内容的一部分。\n> 但在单字/词语模式下，逗号就是分隔符。\n\n> ⚠️ **Key difference**: In Sentence mode, commas are NOT separators — they stay as content.\n> In Character/Phrase mode, commas ARE separators.\n\n---"
+    },
+    "faq": {
+      "title": "❓ 常见问题 / FAQ",
+      "content": "<!-- anchor: faq -->\n\n**Q: 切换模式后我之前输入的内容不见了？**\n**Q: My input disappeared after switching modes?**\n\n中文：系统会弹出确认提示。不同模式对输入格式的要求不同（如单字模式用逗号分隔，句子模式用换行分隔），所以切换模式需要清空并重新输入。\n\nEnglish: A confirmation dialog appears. Each mode expects a different input format, so switching requires clearing and re-entering content.\n\n**Q: 迷宫里的格子显示的不是我输入的字？**\n**Q: The maze shows different characters than what I typed?**\n\n中文：你输入的字只会出现在迷宫路径上（需要被找到的）。其他格子是系统自动填充的随机干扰字。干扰字来自内置词库，与你输入的语言相关（中文/英文）。\n\nEnglish: Your input characters only appear on the maze path (the ones to find). Other cells are filled with random distractor characters from the built-in vocabulary.\n\n**Q: 为什么我的词语没有出现在迷宫里？**\n**Q: Why isn't my word showing in the maze?**\n\n中文：如果某个词语太长，超出了迷宫网格的容纳空间，系统会报错提示\"以下词语无法放入迷宫\"。增大迷宫尺寸（如从 8×8 改为 12×12）可以解决。\n\nEnglish: If a word is too long for the grid, the system shows an error listing the unplaced words. Increase the maze size (e.g. 8×8 → 12×12) to fix this.\n\n---"
+    },
+    "glossary": {
+      "title": "📚 术语表 / Glossary",
+      "content": "<!-- anchor: glossary -->\n\n**干扰字 / Distractor Characters**\n中文：迷宫中除路径上的目标字外，其他格子填充的随机字符。干扰字来自内置词库，与输入语言保持一致（中文输入→中文干扰字，英文→英文字母）。\nEnglish: Random characters filling the non-path cells of the maze, drawn from the built-in vocabulary matching your input language."
+    }
+  },
+  "fieldRefs": {
+    "field-mode": {
+      "what": {
+        "zh": "决定输入内容被解析为什么类型",
+        "en": "Determines how input is parsed"
+      },
+      "options": {
+        "zh": "单字练习 — 每个字独立迷宫；词语练习 — 逗号分隔的词语嵌入；句子练习 — 换行分隔的句子作为路径",
+        "en": "Characters — one maze per character; Phrases — comma-separated phrases; Sentences — newline-separated sentences as paths"
+      },
+      "note": {
+        "zh": "切换模式会清空已输入内容（有确认提示）",
+        "en": "Switching modes clears existing input (with confirmation dialog)"
+      },
+      "_title_zh": "模式",
+      "_title_en": "Mode"
+    },
+    "field-preset-library": {
+      "what": {
+        "zh": "标签随 Mode 动态变化（\"预设字库\"/\"预设词库\"/\"预设句库\"），从内置教材加载对应类型的内容",
+        "en": "Label changes with Mode — loads textbook content of the matching type"
+      },
+      "_title_zh": "⭐ 预设字库",
+      "_title_en": "Preset Library"
+    },
+    "field-maze-size": {
+      "what": {
+        "zh": "控制迷宫网格的行列数",
+        "en": "Controls maze grid dimensions"
+      },
+      "note": {
+        "zh": "句子模式下，句子长度不能超过总格数（如 8×8=64 格），超长时系统会报错提示",
+        "en": "In Sentence mode, sentence length cannot exceed total cells (e.g. 8×8=64 cells) — the system shows an error if too long"
+      },
+      "_title_zh": "迷宫尺寸",
+      "_title_en": "Maze Size"
+    }
+  },
+  "syntaxRules": [
+    {
+      "input": "`日月水火`",
+      "parsed": "按分隔符拆分（无分隔符 = 整体）",
+      "result": "1 个条目「日月水火」"
+    },
+    {
+      "input": "`日,月,水,火`",
+      "parsed": "按逗号拆分为 4 个条目",
+      "result": "4 个独立条目"
+    },
+    {
+      "input": "`日 月`",
+      "parsed": "按空格拆分",
+      "result": "2 个条目"
+    },
+    {
+      "input": "`你好世界`",
+      "parsed": "整体作为 1 个句子，逐字拆分",
+      "result": "1 页迷宫，路径上依次为「你」「好」「世」「界」"
+    },
+    {
+      "input": "`你好\\n世界`",
+      "parsed": "按换行拆分为 2 个句子",
+      "result": "2 页迷宫，每页一个句子"
+    }
+  ],
+  "featureItems": [
+    {
+      "feature_zh": "⭐ WORD 模式",
+      "feature_en": "⭐ WORD mode",
+      "location_zh": "加载 → Mode 下拉框",
+      "location_en": "Load → Mode dropdown",
+      "description_zh": "每个字独立生成一页迷宫",
+      "description_en": "One page per character maze"
+    },
+    {
+      "feature_zh": "⭐ PHRASE 模式",
+      "feature_en": "⭐ PHRASE mode",
+      "location_zh": "加载 → Mode 下拉框",
+      "location_en": "Load → Mode dropdown",
+      "description_zh": "词语嵌入迷宫，横向或纵向排列",
+      "description_en": "Phrases placed as paths"
+    },
+    {
+      "feature_zh": "⭐ SENTENCE 模式",
+      "feature_en": "⭐ SENTENCE mode",
+      "location_zh": "加载 → Mode 下拉框",
+      "location_en": "Load → Mode dropdown",
+      "description_zh": "整句作为连续的迷宫路径",
+      "description_en": "Full sentence as a single maze path"
+    },
+    {
+      "feature_zh": "预设字/词/句库",
+      "feature_en": "Preset word/phrase/sentence library",
+      "location_zh": "加载 → 预设库下拉框（标签随 Mode 变化）",
+      "location_en": "Load → Library dropdown (label changes with mode)",
+      "description_zh": "一键加载教材内容",
+      "description_en": "One-click textbook content load"
+    },
+    {
+      "feature_zh": "预设书册",
+      "feature_en": "Preset lesson book",
+      "location_zh": "加载 → 预设书册",
+      "location_en": "Load → Lesson Book",
+      "description_zh": "加载某一课内容",
+      "description_en": "Load one lesson's content"
+    },
+    {
+      "feature_zh": "迷宫尺寸",
+      "feature_en": "Maze size",
+      "location_zh": "选项 → 迷宫尺寸",
+      "location_en": "Options → Maze Size",
+      "description_zh": "4 种尺寸：8×8 / 9×9 / 10×10 / 12×12",
+      "description_en": "4 sizes: 8×8 / 9×9 / 10×10 / 12×12"
+    },
+    {
+      "feature_zh": "每页字数",
+      "feature_en": "Words per page",
+      "location_zh": "选项 → 每页字数（仅 PHRASE 模式）",
+      "location_en": "Options → Words Per Page (PHRASE only)",
+      "description_zh": "控制每页放置几个词语",
+      "description_en": "Phrases per maze page"
+    }
+  ],
+  "faq": [
+    {
+      "question_zh": "切换模式后我之前输入的内容不见了？",
+      "question_en": "My input disappeared after switching modes?",
+      "answer_zh": "系统会弹出确认提示。不同模式对输入格式的要求不同（如单字模式用逗号分隔，句子模式用换行分隔），所以切换模式需要清空并重新输入。",
+      "answer_en": "A confirmation dialog appears. Each mode expects a different input format, so switching requires clearing and re-entering content."
+    },
+    {
+      "question_zh": "迷宫里的格子显示的不是我输入的字？",
+      "question_en": "The maze shows different characters than what I typed?",
+      "answer_zh": "你输入的字只会出现在迷宫路径上（需要被找到的）。其他格子是系统自动填充的随机干扰字。干扰字来自内置词库，与你输入的语言相关（中文/英文）。",
+      "answer_en": "Your input characters only appear on the maze path (the ones to find). Other cells are filled with random distractor characters from the built-in vocabulary."
+    },
+    {
+      "question_zh": "为什么我的词语没有出现在迷宫里？",
+      "question_en": "Why isn't my word showing in the maze?",
+      "answer_zh": "如果某个词语太长，超出了迷宫网格的容纳空间，系统会报错提示\"以下词语无法放入迷宫\"。增大迷宫尺寸（如从 8×8 改为 12×12）可以解决。",
+      "answer_en": "If a word is too long for the grid, the system shows an error listing the unplaced words. Increase the maze size (e.g. 8×8 → 12×12) to fix this.\n\n---"
+    }
+  ],
+  "glossary": [
+    {
+      "term": "干扰字 / Distractor Characters",
+      "definition": "中文：迷宫中除路径上的目标字外，其他格子填充的随机字符。干扰字来自内置词库，与输入语言保持一致（中文输入→中文干扰字，英文→英文字母）。\nEnglish: Random characters filling the non-path cells of the maze, drawn from the built-in vocabulary matching your input language."
+    }
+  ],
+  "quickStarts": [
+    {
+      "anchor": "quick-start-word-maze",
+      "content": "#### 场景一：生成一个单字迷宫\n<!-- anchor: quick-start-word-maze -->\n\n**中文**\n1. 确认「模式」选择为「单字练习」（默认）\n2. 在手动输入框中输入要练习的字（如 `日,月,水,火`）\n3. 预览区自动生成迷宫 — 每个字一个独立迷宫页，孩子沿着路径找到目标字\n\n**English**\n1. Make sure **Mode** is set to **Characters** (the default)\n2. Type the characters in the manual input box (e.g. `日,月,水,火`)\n3. Preview auto-generates — one maze page per character. Kids follow the path to find the target character\n\n---"
+    },
+    {
+      "anchor": "quick-start-phrase-maze",
+      "content": "#### 场景二：生成一个词语迷宫\n<!-- anchor: quick-start-phrase-maze -->\n\n**中文**\n1. 将「模式」切换为「词语练习」\n2. 输入词语，用逗号分隔（如 `中国,北京,上海`）\n3. 每个词语作为一条路径嵌入迷宫，孩子需要在网格中找到并连起来\n\n**English**\n1. Switch **Mode** to **Phrases**\n2. Type phrases separated by commas (e.g. `中国,北京,上海`)\n3. Each phrase is embedded as a path in the maze — kids find and connect them\n\n---"
+    }
+  ]
+}

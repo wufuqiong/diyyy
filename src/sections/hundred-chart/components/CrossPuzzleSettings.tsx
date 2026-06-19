@@ -32,7 +32,7 @@ const DIFF_OPTS: { value: Difficulty; key: string }[] = [
 const CrossPuzzleSettings: React.FC<Props> = ({ config, onChange }) => {
   const { t } = useTranslation();
   const update = (patch: Partial<HundredChartConfig>) => onChange({ ...config, ...patch });
-  const [showDisplayOpts, setShowDisplayOpts] = useState(false);
+  const [showDisplayOpts, setShowDisplayOpts] = useState(true);
 
   return (
     <>

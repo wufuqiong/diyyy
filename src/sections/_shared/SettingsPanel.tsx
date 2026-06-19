@@ -9,6 +9,7 @@ import React from 'react';
 import { Box, Paper, Stack, Divider, Tooltip, Typography } from '@mui/material';
 
 import { colors } from 'src/theme/tokens';
+import { HelpTooltip } from 'src/shared/worksheet/HelpTooltip';
 
 // ---------- SettingsPanel ----------
 
@@ -136,16 +137,21 @@ interface SettingsFieldProps {
   label?: string;
   caption?: React.ReactNode;
   children: React.ReactNode;
+  /** toolId for help documentation lookup */
+  toolId?: string;
+  /** anchor in the help doc for field reference */
+  helpAnchor?: string;
 }
 
 /**
  * Optional bold label, child control, optional small caption.
  */
-export const SettingsField: React.FC<SettingsFieldProps> = ({ label, caption, children }) => (
+export const SettingsField: React.FC<SettingsFieldProps> = ({ label, caption, children, toolId, helpAnchor }) => (
   <Box>
     {label && (
-      <Typography variant="body2" fontWeight={600} sx={{ mb: 0.75 }}>
+      <Typography variant="body2" fontWeight={600} sx={{ mb: 0.75, display: 'flex', alignItems: 'center' }}>
         {label}
+        {toolId && helpAnchor && <HelpTooltip toolId={toolId} anchor={helpAnchor} />}
       </Typography>
     )}
     {children}

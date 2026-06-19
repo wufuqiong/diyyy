@@ -1,0 +1,264 @@
+{
+  "tool_id": "chartrace",
+  "title": {
+    "zh": "描红写字",
+    "en": "Character Tracing"
+  },
+  "route": "/chartrace",
+  "sections": {
+    "quick-start": {
+      "title": "🚀 快速上手 / Quick Start",
+      "content": "<!-- anchor: quick-start -->\n\n#### 场景一：生成一张汉字描红练习页\n<!-- anchor: quick-start-basic-tracing -->\n\n**中文**\n1. 在「手动输入」框中输入要练习的汉字（如 `你好世界`），每字独立描红\n2. 预览区实时更新，A4 纸尺寸展示描红格\n3. 调整「描红次数」控制每个字后面几个虚线描红格\n4. 点击「保存 PDF」导出打印\n\n**English**\n1. Type the characters to trace (e.g. `你好世界`) — each character gets its own row\n2. Preview updates live, showing A4-paper-sized tracing grids\n3. Use **Trace Copies** slider to control how many dotted trace boxes follow each character\n4. Click **Save PDF** to print\n\n---\n\n#### 场景二：快速生成拼音描红\n<!-- anchor: quick-start-pinyin -->\n\n**中文**\n1. 在「快速预设」区点击 **All Pinyin** 按钮\n2. 系统自动填入完整拼音表，切换为英文四线格 + 印刷字体\n3. 即可直接打印\n\n**English**\n1. Under **Quick Presets**, click **All Pinyin**\n2. The full pinyin table auto-fills with English 4-line grid + print font\n3. Ready to print\n\n---\n\n#### 场景三：打印英文单词描红\n<!-- anchor: quick-start-english -->\n\n**中文**\n1. 输入英文内容，用逗号或空格分隔（如 `hello,world`）\n2. 系统自动检测英文，切换到四线格和英文字体\n3. 调整格子大小（14/17/20mm）和描红次数\n\n**English**\n1. Type English content, separated by commas or spaces (e.g. `hello,world`)\n2. The system auto-detects English and switches to 4-line staff + English font\n3. Adjust grid size (14/17/20mm) and trace copies\n\n---"
+    },
+    "feature-map": {
+      "title": "🗺️ 功能地图 / Feature Map",
+      "content": "<!-- anchor: feature-map -->\n\n| 功能 | 在哪里找到 | 它能做什么 |\n|---|---|---|\n| 智能内容识别 | 手动输入 — 自动检测 | 换行→句子模式 / 逗号→词组模式 / 无分隔→单字模式 |\n| ⭐ 五种格子类型 | Grid & Layout → Grid Type 按钮 | 田字格 / 米字格 / 方格 / 英文四线格 / 无格子 |\n| ⭐ All Pinyin 预设 | 快速预设按钮 | 一键生成完整拼音描红表 |\n| ⭐ Alphabet 预设 | 快速预设按钮 | 一键生成完整字母描红表 |\n| 格子颜色/透明度 | Grid & Layout | 自定义格子线颜色和透明度 |\n| 字体切换 | Text Style → Font Family | 楷体/马正萧/智芒行/衬线体；英文：Fredoka/Patrick Hand/Sans Serif |\n| 描红颜色 | Text Style → Trace Color | 虚线描红字的颜色和透明度 |\n| 拼音显示 | Page Setup → Pinyin 复选框 | 每个字上方显示拼音（四线格 + 声调） |\n| 笔画数显示 | Page Setup → Stroke Count 复选框 | 每个字旁显示笔画数 |\n| 页标题/副标题 | Page Setup → Page Title / Right Info | 自定义打印页的标题 |\n\n| Feature | Where to find it | What it does |\n|---|---|---|\n| Smart content detection | Manual Input — auto | Newlines→sentences / commas→phrases / else→characters |\n| ⭐ Five grid types | Grid & Layout → Grid Type buttons | Tian / Mi / Square / English 4-line / None |\n| ⭐ All Pinyin preset | Quick Presets button | One-click full pinyin table |\n| ⭐ Alphabet preset | Quick Presets button | One-click full alphabet |\n| Grid color/opacity | Grid & Layout | Custom grid line color and opacity |\n| Font switch | Text Style → Font Family | KaiTi/Ma Shan Zheng/Zhi Mang Xing/Serif; English: Fredoka/Patrick Hand/Sans |\n| Trace color | Text Style → Trace Color | Color and opacity for dotted trace characters |\n| Pinyin display | Page Setup → Pinyin checkbox | Show pinyin above each character with tone marks |\n| Stroke count | Page Setup → Stroke Count checkbox | Show stroke count label per character |\n| Page title/subtitle | Page Setup | Customize printed header text |\n\n---"
+    },
+    "field-reference": {
+      "title": "📖 配置项参考 / Field Reference",
+      "content": "<!-- anchor: field-reference -->\n\n#### ⭐ Quick Presets（快速预设）\n<!-- anchor: field-quick-presets -->\n\n| | 中文 | English |\n|---|---|---|\n| **是什么** | 两个一键直达按钮：All Pinyin 和 Alphabet | Two one-click shortcuts: All Pinyin and Alphabet |\n| **All Pinyin** | 自动填入完整拼音音节表 + 切换到四线格 + 印刷英文字体 | Auto-fills full pinyin syllable table + switches to English 4-line grid + print font |\n| **Alphabet** | 自动填入 26 个字母 + 切换到四线格 + 印刷英文字体 | Auto-fills alphabet + switches to 4-line grid + print font |\n\n#### 手动输入 / Manual Input + 智能解析\n<!-- anchor: field-manual-input -->\n\n| | 中文 | English |\n|---|---|---|\n| **是什么** | 输入要描红的内容。系统自动检测格式并选择对应模式 | Type tracing content. The system auto-detects format and selects the matching mode |\n| **检测规则** | 含换行 → 句子模式 / 含逗号 → 词组模式 / 无特殊符号 → 单字模式 | Newlines → Sentences / commas → Phrases / else → Characters |\n| **提示** | 输入框下方 caption 实时显示当前检测到的模式和解析规则 | A caption below the input dynamically shows the detected mode and parsing rule |\n\n#### ⭐ Grid Type（格子类型）\n<!-- anchor: field-grid-type -->\n\n| | 中文 | English |\n|---|---|---|\n| **是什么** | 选择描红练习的格子样式 | Choose the grid pattern for tracing |\n| **田 (TIAN)** | 传统田字格，十字线分四等份 | Traditional Chinese grid with crosshair dividing into four quadrants |\n| **米 (MI)** | 米字格，十字+对角线 | Rice grid with crosshair + diagonals |\n| **口 (SQUARE)** | 纯方格 | Plain square grid |\n| **四线 (ENGLISH)** | 英文四线格，含基准线（红色） | English 4-line staff with red baseline |\n| **无 (NONE)** | 无格子 | No grid |\n\n#### Trace Copies（描红次数）\n<!-- anchor: field-trace-copies -->\n\n| | 中文 | English |\n|---|---|---|\n| **是什么** | 每个示范字后面跟几个虚线描红格 | How many dotted trace boxes follow each model character |\n| **注意事项** | 句子模式下强制为 1（长句子 + 多次描红会超出 A4 空间） | Forced to 1 in Sentence mode |\n\n#### 字体 / Font Family\n<!-- anchor: field-font-family -->\n\n| | 中文 | English |\n|---|---|---|\n| **中文可选** | 楷体（标准）/ 马正萧（行书）/ 智芒行（毛笔）/ 衬线体 | KaiTi (standard) / Ma Shan Zheng (cursive) / Zhi Mang Xing (brush) / Serif |\n| **英文可选** | Fredoka（圆体印刷）/ Patrick Hand（手写体）/ Sans Serif（标准） | Fredoka (rounded print) / Patrick Hand (handwriting) / Sans Serif (standard) |\n| **注意事项** | 中/英文字体选项根据输入内容自动切换显示 | Font options auto-switch based on input content (Chinese vs English) |\n\n---"
+    },
+    "input-syntax": {
+      "title": "⌨️ 输入格式说明 / Input Syntax",
+      "content": "<!-- anchor: input-syntax -->\n\n> 同一个输入框，格式不同 → 解析方式不同 → 输出结果不同。\n> The same text box: different format → different parsing → different output.\n\n#### 中文内容\n\n| 输入 | 检测模式 | 输出结果 |\n|---|---|---|\n| `你好世界` | 单字 | 4 行：你 / 好 / 世 / 界，每行 + 描红副本 |\n| `你好,世界` | 词组 | 2 组：你好（横向重复）、世界 |\n| `你好\\n世界` | 句子 | 2 句，每句逐字排列，traceCount=1 |\n\n#### 英文内容（自动切换四线格）\n\n| 输入 | 输出结果 |\n|---|---|\n| `abc` | 逐个字母：a / b / c，各占一行 |\n| `hello,world` | 两个单词：hello / world，各占一行 |\n| `hello world` | 同上（按空格拆分） |\n\n> ⚠️ **控制字符**：换行符 `⏎` 和逗号 `,` `，` 是控制字符，决定解析模式。\n> ⚠️ **Control characters**: newline `⏎` and comma `,` `，` determine the parsing mode.\n\n---"
+    },
+    "faq": {
+      "title": "❓ 常见问题 / FAQ",
+      "content": "<!-- anchor: faq -->\n\n**Q: 为什么我的逗号让描红结果完全变了？**\n**Q: Why did a comma change my entire tracing output?**\n\n中文：逗号在描红系统中是控制字符——检测到逗号会自动切换为\"词组模式\"，每个逗号分隔的片段作为一整行去描红，而不是逐字拆开。详情见上方「输入格式说明」。\n\nEnglish: The comma is a control character — it auto-switches to Phrase mode, where each comma-separated segment becomes one tracing row instead of being split per character. See Input Syntax above.\n\n**Q: 英文四线格按钮为什么是灰色的？**\n**Q: Why is the English 4-line grid button disabled?**\n\n中文：输入中检测到了中文字符时，英文四线格不可用（中文不适合在四线格上显示）。清空文本框或只输入英文/拼音即可启用。\n\nEnglish: The English 4-line staff is disabled when Chinese characters are detected in the input. Clear the text or use only English/pinyin to enable it.\n\n---"
+    },
+    "glossary": {
+      "title": "📚 术语表 / Glossary",
+      "content": "<!-- anchor: glossary -->\n\n**田字格 / Tian Grid**\n中文：传统汉字书写格，由十字虚线将方格四等分，帮助掌握汉字笔画位置和比例。\nEnglish: Traditional Chinese writing grid with a crosshair dividing the square into four quadrants for stroke placement.\n\n**米字格 / Mi Grid**\n中文：在田字格基础上增加两条对角线，提供更多位置参考线。\nEnglish: Tian grid plus two diagonal lines for extra position reference.\n\n**四线格 / Four-line Staff (ENGLISH_LINES)**\n中文：英文书写练习的三线两格系统（含红色基准线），用于拼音或英文字母描红。\nEnglish: A 3-line, 2-space writing system with a red baseline, used for pinyin or English letter tracing."
+    }
+  },
+  "fieldRefs": {
+    "field-quick-presets": {
+      "what": {
+        "zh": "两个一键直达按钮：All Pinyin 和 Alphabet",
+        "en": "Two one-click shortcuts: All Pinyin and Alphabet"
+      },
+      "alphabet": {
+        "zh": "自动填入 26 个字母 + 切换到四线格 + 印刷英文字体",
+        "en": "Auto-fills alphabet + switches to 4-line grid + print font"
+      },
+      "_title_zh": "⭐ Quick Presets（快速预设）",
+      "_title_en": "⭐ Quick Presets（快速预设）"
+    },
+    "field-manual-input": {
+      "what": {
+        "zh": "输入要描红的内容。系统自动检测格式并选择对应模式",
+        "en": "Type tracing content. The system auto-detects format and selects the matching mode"
+      },
+      "检测规则": {
+        "zh": "含换行 → 句子模式 / 含逗号 → 词组模式 / 无特殊符号 → 单字模式",
+        "en": "Newlines → Sentences / commas → Phrases / else → Characters"
+      },
+      "提示": {
+        "zh": "输入框下方 caption 实时显示当前检测到的模式和解析规则",
+        "en": "A caption below the input dynamically shows the detected mode and parsing rule"
+      },
+      "_title_zh": "手动输入",
+      "_title_en": "Manual Input + 智能解析"
+    },
+    "field-grid-type": {
+      "what": {
+        "zh": "选择描红练习的格子样式",
+        "en": "Choose the grid pattern for tracing"
+      },
+      "田_(tian)": {
+        "zh": "传统田字格，十字线分四等份",
+        "en": "Traditional Chinese grid with crosshair dividing into four quadrants"
+      },
+      "米_(mi)": {
+        "zh": "米字格，十字+对角线",
+        "en": "Rice grid with crosshair + diagonals"
+      },
+      "口_(square)": {
+        "zh": "纯方格",
+        "en": "Plain square grid"
+      },
+      "无_(none)": {
+        "zh": "无格子",
+        "en": "No grid"
+      },
+      "_title_zh": "⭐ Grid Type（格子类型）",
+      "_title_en": "⭐ Grid Type（格子类型）"
+    },
+    "field-trace-copies": {
+      "what": {
+        "zh": "每个示范字后面跟几个虚线描红格",
+        "en": "How many dotted trace boxes follow each model character"
+      },
+      "note": {
+        "zh": "句子模式下强制为 1（长句子 + 多次描红会超出 A4 空间）",
+        "en": "Forced to 1 in Sentence mode"
+      },
+      "_title_zh": "Trace Copies（描红次数）",
+      "_title_en": "Trace Copies（描红次数）"
+    },
+    "field-font-family": {
+      "英文可选": {
+        "zh": "Fredoka（圆体印刷）/ Patrick Hand（手写体）/ Sans Serif（标准）",
+        "en": "Fredoka (rounded print) / Patrick Hand (handwriting) / Sans Serif (standard)"
+      },
+      "_title_zh": "字体",
+      "_title_en": "Font Family"
+    }
+  },
+  "syntaxRules": [
+    {
+      "input": "`你好世界`",
+      "parsed": "单字",
+      "result": "4 行：你 / 好 / 世 / 界，每行 + 描红副本"
+    },
+    {
+      "input": "`你好,世界`",
+      "parsed": "词组",
+      "result": "2 组：你好（横向重复）、世界"
+    },
+    {
+      "input": "`你好\\n世界`",
+      "parsed": "句子",
+      "result": "2 句，每句逐字排列，traceCount=1"
+    },
+    {
+      "input": "`abc`",
+      "parsed": "逐个字母：a / b / c，各占一行",
+      "result": ""
+    },
+    {
+      "input": "`hello,world`",
+      "parsed": "两个单词：hello / world，各占一行",
+      "result": ""
+    },
+    {
+      "input": "`hello world`",
+      "parsed": "同上（按空格拆分）",
+      "result": ""
+    }
+  ],
+  "featureItems": [
+    {
+      "feature_zh": "智能内容识别",
+      "feature_en": "Smart content detection",
+      "location_zh": "手动输入 — 自动检测",
+      "location_en": "Manual Input — auto",
+      "description_zh": "换行→句子模式 / 逗号→词组模式 / 无分隔→单字模式",
+      "description_en": "Newlines→sentences / commas→phrases / else→characters"
+    },
+    {
+      "feature_zh": "⭐ 五种格子类型",
+      "feature_en": "⭐ Five grid types",
+      "location_zh": "Grid & Layout → Grid Type 按钮",
+      "location_en": "Grid & Layout → Grid Type buttons",
+      "description_zh": "田字格 / 米字格 / 方格 / 英文四线格 / 无格子",
+      "description_en": "Tian / Mi / Square / English 4-line / None"
+    },
+    {
+      "feature_zh": "⭐ All Pinyin 预设",
+      "feature_en": "⭐ All Pinyin preset",
+      "location_zh": "快速预设按钮",
+      "location_en": "Quick Presets button",
+      "description_zh": "一键生成完整拼音描红表",
+      "description_en": "One-click full pinyin table"
+    },
+    {
+      "feature_zh": "⭐ Alphabet 预设",
+      "feature_en": "⭐ Alphabet preset",
+      "location_zh": "快速预设按钮",
+      "location_en": "Quick Presets button",
+      "description_zh": "一键生成完整字母描红表",
+      "description_en": "One-click full alphabet"
+    },
+    {
+      "feature_zh": "格子颜色/透明度",
+      "feature_en": "Grid color/opacity",
+      "location_zh": "Grid & Layout",
+      "location_en": "Grid & Layout",
+      "description_zh": "自定义格子线颜色和透明度",
+      "description_en": "Custom grid line color and opacity"
+    },
+    {
+      "feature_zh": "字体切换",
+      "feature_en": "Font switch",
+      "location_zh": "Text Style → Font Family",
+      "location_en": "Text Style → Font Family",
+      "description_zh": "楷体/马正萧/智芒行/衬线体；英文：Fredoka/Patrick Hand/Sans Serif",
+      "description_en": "KaiTi/Ma Shan Zheng/Zhi Mang Xing/Serif; English: Fredoka/Patrick Hand/Sans"
+    },
+    {
+      "feature_zh": "描红颜色",
+      "feature_en": "Trace color",
+      "location_zh": "Text Style → Trace Color",
+      "location_en": "Text Style → Trace Color",
+      "description_zh": "虚线描红字的颜色和透明度",
+      "description_en": "Color and opacity for dotted trace characters"
+    },
+    {
+      "feature_zh": "拼音显示",
+      "feature_en": "Pinyin display",
+      "location_zh": "Page Setup → Pinyin 复选框",
+      "location_en": "Page Setup → Pinyin checkbox",
+      "description_zh": "每个字上方显示拼音（四线格 + 声调）",
+      "description_en": "Show pinyin above each character with tone marks"
+    },
+    {
+      "feature_zh": "笔画数显示",
+      "feature_en": "Stroke count",
+      "location_zh": "Page Setup → Stroke Count 复选框",
+      "location_en": "Page Setup → Stroke Count checkbox",
+      "description_zh": "每个字旁显示笔画数",
+      "description_en": "Show stroke count label per character"
+    },
+    {
+      "feature_zh": "页标题/副标题",
+      "feature_en": "Page title/subtitle",
+      "location_zh": "Page Setup → Page Title / Right Info",
+      "location_en": "Page Setup",
+      "description_zh": "自定义打印页的标题",
+      "description_en": "Customize printed header text"
+    }
+  ],
+  "faq": [
+    {
+      "question_zh": "为什么我的逗号让描红结果完全变了？",
+      "question_en": "Why did a comma change my entire tracing output?",
+      "answer_zh": "逗号在描红系统中是控制字符——检测到逗号会自动切换为\"词组模式\"，每个逗号分隔的片段作为一整行去描红，而不是逐字拆开。详情见上方「输入格式说明」。",
+      "answer_en": "The comma is a control character — it auto-switches to Phrase mode, where each comma-separated segment becomes one tracing row instead of being split per character. See Input Syntax above."
+    },
+    {
+      "question_zh": "英文四线格按钮为什么是灰色的？",
+      "question_en": "Why is the English 4-line grid button disabled?",
+      "answer_zh": "输入中检测到了中文字符时，英文四线格不可用（中文不适合在四线格上显示）。清空文本框或只输入英文/拼音即可启用。",
+      "answer_en": "The English 4-line staff is disabled when Chinese characters are detected in the input. Clear the text or use only English/pinyin to enable it.\n\n---"
+    }
+  ],
+  "glossary": [
+    {
+      "term": "田字格 / Tian Grid",
+      "definition": "中文：传统汉字书写格，由十字虚线将方格四等分，帮助掌握汉字笔画位置和比例。\nEnglish: Traditional Chinese writing grid with a crosshair dividing the square into four quadrants for stroke placement."
+    },
+    {
+      "term": "米字格 / Mi Grid",
+      "definition": "中文：在田字格基础上增加两条对角线，提供更多位置参考线。\nEnglish: Tian grid plus two diagonal lines for extra position reference."
+    },
+    {
+      "term": "四线格 / Four-line Staff (ENGLISH_LINES)",
+      "definition": "中文：英文书写练习的三线两格系统（含红色基准线），用于拼音或英文字母描红。\nEnglish: A 3-line, 2-space writing system with a red baseline, used for pinyin or English letter tracing."
+    }
+  ],
+  "quickStarts": [
+    {
+      "anchor": "quick-start-basic-tracing",
+      "content": "#### 场景一：生成一张汉字描红练习页\n<!-- anchor: quick-start-basic-tracing -->\n\n**中文**\n1. 在「手动输入」框中输入要练习的汉字（如 `你好世界`），每字独立描红\n2. 预览区实时更新，A4 纸尺寸展示描红格\n3. 调整「描红次数」控制每个字后面几个虚线描红格\n4. 点击「保存 PDF」导出打印\n\n**English**\n1. Type the characters to trace (e.g. `你好世界`) — each character gets its own row\n2. Preview updates live, showing A4-paper-sized tracing grids\n3. Use **Trace Copies** slider to control how many dotted trace boxes follow each character\n4. Click **Save PDF** to print\n\n---"
+    },
+    {
+      "anchor": "quick-start-pinyin",
+      "content": "#### 场景二：快速生成拼音描红\n<!-- anchor: quick-start-pinyin -->\n\n**中文**\n1. 在「快速预设」区点击 **All Pinyin** 按钮\n2. 系统自动填入完整拼音表，切换为英文四线格 + 印刷字体\n3. 即可直接打印\n\n**English**\n1. Under **Quick Presets**, click **All Pinyin**\n2. The full pinyin table auto-fills with English 4-line grid + print font\n3. Ready to print\n\n---"
+    },
+    {
+      "anchor": "quick-start-english",
+      "content": "#### 场景三：打印英文单词描红\n<!-- anchor: quick-start-english -->\n\n**中文**\n1. 输入英文内容，用逗号或空格分隔（如 `hello,world`）\n2. 系统自动检测英文，切换到四线格和英文字体\n3. 调整格子大小（14/17/20mm）和描红次数\n\n**English**\n1. Type English content, separated by commas or spaces (e.g. `hello,world`)\n2. The system auto-detects English and switches to 4-line staff + English font\n3. Adjust grid size (14/17/20mm) and trace copies\n\n---"
+    }
+  ]
+}

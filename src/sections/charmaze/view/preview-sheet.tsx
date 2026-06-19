@@ -333,7 +333,7 @@ export class PreviewSheet extends React.Component<PreviewSheetProps, PreviewShee
       return (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="textSecondary">
-            没有可预览的页面
+            请输入文字来生成迷宫
           </Typography>
         </Box>
       );
