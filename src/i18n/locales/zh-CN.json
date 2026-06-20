@@ -5,7 +5,8 @@
     "charmaze": "识字迷宫",
     "chartrace": "描红写字",
     "mathGenie": "算术天地",
-    "hundredChart": "百数板"
+    "hundredChart": "百数板",
+    "wordSearch": "单词搜索"
   },
   "common": {
     "print": "打印",
@@ -351,7 +352,42 @@
       "charMazeDesc": "跟着汉字闯迷宫，练眼力、认字形！",
       "charTraceDesc": "一笔一画描红练字，写字越练越漂亮！",
       "mathGenieDesc": "一键生成加减法练习题，数学启蒙好帮手！",
-      "hundredChartDesc": "填数字、学数序，百数板上练数感！"
+      "hundredChartDesc": "填数字、学数序，百数板上练数感！",
+      "wordSearchDesc": "在字母网格中找出隐藏单词，趣味记单词！"
+    }
+  },
+  "wordSearch": {
+    "title": "单词搜索 - DIYYY",
+    "description": "免费的英文单词搜索练习单生成器，支持自定义网格大小、难度等级和预设主题词库。",
+    "emptyState": "请输入单词或选择主题词库",
+    "findTheWords": "请找出以下单词：",
+    "unplacedWordsWarning": "以下单词无法放入当前网格：{{words}}，请增大网格或减少单词数量。",
+    "settings": {
+      "words": "单词",
+      "wordsInput": "单词输入",
+      "wordsPlaceholder": "输入单词，每行一个或用逗号分隔\n示例：cat, dog, fish, bird",
+      "wordsParsed": "个单词",
+      "capacityHint": "当前网格建议最多约 {{capacity}} 个单词",
+      "themeLibrary": "主题词库",
+      "manualInput": "手动输入",
+      "gridSettings": "网格设置",
+      "gridSize": "网格大小",
+      "difficulty": "难度",
+      "display": "显示",
+      "titleLabel": "标题",
+      "listColumns": "单词列表列数",
+      "letterCase": "字母大小写",
+      "showAnswerKey": "包含答案页"
+    },
+    "gridSize": {
+      "small": "小",
+      "medium": "中",
+      "large": "大"
+    },
+    "difficulty": {
+      "easy": "简单（横+纵）",
+      "medium": "中等（+斜向）",
+      "hard": "困难（+反向）"
     }
   },
   "language": {

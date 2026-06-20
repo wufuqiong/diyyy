@@ -10,6 +10,7 @@ import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import GridOnIcon from '@mui/icons-material/GridOn';
+import SearchIcon from '@mui/icons-material/Search';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import ExtensionIcon from '@mui/icons-material/Extension';
@@ -120,6 +121,13 @@ function DashboardContent() {
       icon: <GridOnIcon sx={{ fontSize: 30, color: 'primary.main' }} />,
       to: '/hundred-chart',
       color: 'primary'
+    },
+    {
+      title: t('nav.wordSearch'),
+      description: t('dashboard.features.wordSearchDesc'),
+      icon: <SearchIcon sx={{ fontSize: 30, color: 'secondary.main' }} />,
+      to: '/word-search',
+      color: 'secondary'
     }
   ];
 

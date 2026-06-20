@@ -50,7 +50,7 @@ export function Workbench<Config = any, Problem = any>({
 
   const isAuto = typeof autoGenerate === 'function' ? autoGenerate(config) : autoGenerate;
 
-  const navKey = tool.id === 'math-genie' ? 'mathGenie' : tool.id === 'hundred-chart' ? 'hundredChart' : tool.id;
+  const navKey = tool.id === 'math-genie' ? 'mathGenie' : tool.id === 'hundred-chart' ? 'hundredChart' : tool.id === 'word-search' ? 'wordSearch' : tool.id;
 
   const generate = useCallback(async () => {
     setIsGenerating(true);

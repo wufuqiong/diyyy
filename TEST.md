@@ -4,7 +4,9 @@
 
 - **Framework:** Vitest with `jsdom` environment
 - **Globals:** `true` (no imports needed for `describe`/`it`/`expect`)
-- **Test file:** `src/sections/math-genie/__tests__/generators.test.ts` (29 test cases)
+- **Test files:**
+  - `src/sections/math-genie/__tests__/generators.test.ts` (29 cases)
+  - `src/features/word-search/generators/__tests__/grid-generator.test.ts`
 - **Run:** `yarn test` (watch) / `yarn test:run` (single run) / `npx vitest run path/to/file`
 
 ---
@@ -195,6 +197,44 @@ All tests dynamically import modules (`await import(...)`) to match the project'
 
 ---
 
+## Test Suite: Word Search Generators
+
+File: `src/features/word-search/generators/__tests__/grid-generator.test.ts`. All randomness is seeded (`lcg`) so cases are reproducible.
+
+### rng.ts
+
+- **deterministic output for a given seed** — `lcg(42)` twice yields identical 10-value sequences.
+- **different output for different seeds** — `lcg(1)` vs `lcg(9999)` differ.
+
+### word-placement.ts (`tryPlaceWord`)
+
+- **places a horizontal word** — returns non-null with correct word, direction, and 3 cells for `CAT`.
+- **placed cells match grid content** — writing the word along `cells` and reading back equals the word.
+- **conflict detection** — across 50 seeded attempts, never overwrites a differing pre-filled character.
+- **cross-sharing allowed** — when crossing an existing cell, the shared character always matches.
+- **out of bounds returns null** — a 20-char word cannot fit a 5×5 grid.
+
+### filler.ts
+
+- **fillEmpty fills all empty cells** — no empty cells remain; uppercase output matches `/[A-Z]/`.
+- **fillEmpty respects lowercase** — output matches `/[a-z]/` when `letterCase='lower'`.
+- **detectAccidentalWords** — detects a target word forward, case-insensitively, and reversed; does not flag non-targets; returns false for an empty target list.
+
+### grid-generator.ts (`generateWordSearchGrid`, integration)
+
+- **fully filled grid** — SMALL grid is 10×10 with no empty cells and at least one placed word.
+- **places all words with enough space** — `['cat','dog']` on MEDIUM places both, zero unplaced.
+- **unplaceable words → `unplacedWords`** — a 20-char word in SMALL goes to unplaced without throwing.
+- **no throw on extreme input** — 50 long words on SMALL/HARD does not throw (soft timeout).
+- **reproducible with same seed** — identical `grid`, `placedWords`, `unplacedWords` for the same seed.
+- **empty word list handled** — no placed/unplaced words; grid still initialized.
+- **deduplicates words** — duplicate inputs yield unique placed words.
+- **respects difficulty** — EASY only produces `horizontal`/`vertical` placements.
+
+Run: `npx vitest run src/features/word-search/generators/__tests__/grid-generator.test.ts`
+
+---
+
 ## Test Coverage Summary
 
 | Category | Tests | What's Covered |
@@ -212,7 +252,18 @@ All tests dynamically import modules (`await import(...)`) to match the project'
 | Word problem | 3 | Content generation, subtraction constraint, zero exclusion |
 | Optimal problems per page | 8 | All display modes, column counts, special practices |
 
-**Total: 29 test cases**
+**Math Genie total: 29 test cases**
+
+### Word Search
+
+| Category | Tests | What's Covered |
+|----------|-------|---------------|
+| Seeded RNG (`lcg`) | 2 | Determinism, seed sensitivity |
+| Word placement | 5 | Direction, read-back, conflict, cross-share, bounds |
+| Filler + accidental words | 7 | Case-correct fill, target detection (fwd/rev/case), non-targets |
+| Grid generator (integration) | 8 | Full fill, capacity, reproducibility, dedupe, difficulty, no-throw |
+
+**Word Search total: 22 test cases**
 
 ## Running Tests
 
@@ -222,6 +273,7 @@ npx vitest run
 
 # Single test file
 npx vitest run src/sections/math-genie/__tests__/generators.test.ts
+npx vitest run src/features/word-search/generators/__tests__/grid-generator.test.ts
 
 # Watch mode
 yarn test

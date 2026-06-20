@@ -1,0 +1,1 @@
+export { wordSearchTool } from './config';

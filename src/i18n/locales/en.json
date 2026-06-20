@@ -5,7 +5,8 @@
     "charmaze": "Char Maze",
     "chartrace": "Char Trace",
     "mathGenie": "Math Genie",
-    "hundredChart": "Hundred Chart"
+    "hundredChart": "Hundred Chart",
+    "wordSearch": "Word Search"
   },
   "common": {
     "print": "Print",
@@ -351,7 +352,42 @@
       "charMazeDesc": "Follow the right character through the maze — sharpen your eyes and your mind!",
       "charTraceDesc": "Trace stroke by stroke, write with confidence — handwriting practice made fun!",
       "mathGenieDesc": "Generate worksheets for addition and subtraction — math made easy!",
-      "hundredChartDesc": "Fill in the missing numbers on a 100-chart — build number sense!"
+      "hundredChartDesc": "Fill in the missing numbers on a 100-chart — build number sense!",
+      "wordSearchDesc": "Find hidden words in a letter grid — fun vocabulary practice!"
+    }
+  },
+  "wordSearch": {
+    "title": "Word Search - DIYYY",
+    "description": "Free word search worksheet generator with customizable grid sizes, difficulty levels, and preset theme libraries.",
+    "emptyState": "Enter words or select a theme library to get started",
+    "findTheWords": "Find the following words:",
+    "unplacedWordsWarning": "The following words could not fit in the current grid: {{words}}. Try a larger grid or fewer words.",
+    "settings": {
+      "words": "Words",
+      "wordsInput": "Word Input",
+      "wordsPlaceholder": "Enter words, one per line or comma-separated\nExample: cat, dog, fish, bird",
+      "wordsParsed": "words",
+      "capacityHint": "Suggested max ~{{capacity}} words for current grid",
+      "themeLibrary": "Theme Library",
+      "manualInput": "Manual Input",
+      "gridSettings": "Grid Settings",
+      "gridSize": "Grid Size",
+      "difficulty": "Difficulty",
+      "display": "Display",
+      "titleLabel": "Title",
+      "listColumns": "Word List Columns",
+      "letterCase": "Letter Case",
+      "showAnswerKey": "Include Answer Key"
+    },
+    "gridSize": {
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
     }
   },
   "language": {

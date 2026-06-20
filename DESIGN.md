@@ -2,7 +2,7 @@
 
 ## Overview
 
-DIYYY is a client-side worksheet generator for kids' education. It produces A4-printable worksheets across five tools: arithmetic practice, Chinese character coloring, character mazes, character tracing, and hundred-chart puzzles. All generation runs in the browser — no server.
+DIYYY is a client-side worksheet generator for kids' education. It produces A4-printable worksheets across six tools: arithmetic practice, Chinese character coloring, character mazes, character tracing, hundred-chart puzzles, and English word search. All generation runs in the browser — no server.
 
 **Tech stack:** React 19, MUI v7, TypeScript, Vite 6, React Router 7, i18next (zh-CN/en), jsPDF + html2canvas (PDF export).
 
@@ -38,7 +38,7 @@ interface WorksheetTool<Config, Problem> {
 }
 ```
 
-Five tools implement this interface. Each lives at `src/features/{tool}/config.tsx`.
+Six tools implement this interface. Each lives at `src/features/{tool}/config.tsx`.
 
 ### Workbench
 
@@ -70,6 +70,9 @@ Defined in `src/routes/sections.tsx`. All wrapped in `DashboardLayout` with lazy
 | `/chartrace` | CharTracePage | Character tracing |
 | `/math-genie` | MathGeniePage | Arithmetic worksheets |
 | `/hundred-chart` | HundredChartPage | Hundred-chart puzzles |
+| `/word-search` | WordSearchPage | English word search |
+
+Note: `Workbench.tsx` maps `tool.id` to its i18n nav key via a hardcoded ternary; `word-search` maps to `wordSearch` (`nav.wordSearch`).
 
 ---
 
@@ -82,7 +85,7 @@ Defined in `src/routes/sections.tsx`. All wrapped in `DashboardLayout` with lazy
 - **Main** — `<Outlet />` for page content
 - Built on primitives from `src/layouts/core/` (`LayoutSection`, `HeaderSection`, `MainSection`)
 
-Navigation items (from `nav-config-dashboard.tsx`): Dashboard, CharColor, CharMaze, CharTrace, MathGenie, HundredChart.
+Navigation items (from `nav-config-dashboard.tsx`): Dashboard, CharColor, CharMaze, CharTrace, MathGenie, HundredChart, WordSearch.
 
 ---
 
@@ -333,6 +336,89 @@ Key fields: `mode`, `pageTitle`, `pageInfo`, `startNumber`, `versionCount`, `bla
 
 ---
 
+## Tool 6: Word Search (`word-search`)
+
+**ID:** `word-search`
+**Route:** `/word-search`
+
+English word-search worksheets: target words are hidden in a letter grid (horizontal / vertical / diagonal, forward and backward depending on difficulty), with a word list printed below. Users type words manually or load a preset theme. Decorative illustrations are intentionally **not** implemented.
+
+### Config (`WordSearchConfig` in `features/word-search/types.ts`)
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `words` | string[] | `[]` | Target words (manual input or theme) |
+| `gridSize` | `GridSizePreset` | `MEDIUM` | small/medium/large |
+| `difficulty` | `WordSearchDifficulty` | `MEDIUM` | easy/medium/hard (allowed directions) |
+| `title` | string | `'Word Search'` | Sheet title (rendered as bubble letters) |
+| `showAnswerKey` | boolean | false | Append a separate answer-key page |
+| `listColumns` | 1 \| 2 \| 3 | 3 | Word-list column count |
+| `letterCase` | `'upper' \| 'lower'` | `'lower'` | Grid + list letter case (kept consistent) |
+| `selectedTheme` | string? | undefined | Active preset theme id |
+
+### Key Enums / Maps
+
+- `GridSizePreset`: SMALL (10×10), MEDIUM (14×14), LARGE (16×18) — see `GRID_DIMENSIONS`
+- `WordSearchDifficulty`: EASY (H+V), MEDIUM (+ diagonal), HARD (+ reverse, 8 directions) — see `DIFFICULTY_DIRECTIONS`
+- `Direction`: 8 values (`horizontal`, `vertical`, `diagonal-down`, `diagonal-up`, each with a `-reverse` variant)
+
+### Generation
+
+`generate()` in `config.tsx` returns `WordSearchSheet[]`: a question page plus, when `showAnswerKey` is on, an answer-key page that **shares the same grid and `placedWords`** (highlight is render-only). Seed comes from `generateSeed()` (`crypto.getRandomValues`, non-deterministic at runtime; tests pass a fixed seed).
+
+Core algorithm — `generateWordSearchGrid(words, gridSize, difficulty, seed, letterCase)` in `generators/grid-generator.ts`:
+
+1. Normalize: trim, dedupe, drop empties, sort by length descending
+2. Init empty `rows × cols` grid; create seeded RNG via `lcg(seed)`
+3. Place each word with `tryPlaceWord` (≤100 attempts); a **2s soft timeout** pushes the rest to `unplacedWords` instead of hanging
+4. Fill empties + accidental-word check with up to **20 retries** (re-seeded each time); on exceeding, accept current grid with a `console.warn`
+5. Return `{ grid, placedWords, unplacedWords }`
+
+Placement rule: crossings sharing the **same** letter are allowed; differing letters are a conflict (attempt fails). `detectAccidentalWords` only matches **complete target words** (case-insensitive, all 8 directions) — it does not fight an English dictionary.
+
+### Generator Files
+
+| File | Purpose |
+|------|---------|
+| `generators/rng.ts` | `lcg(seed)` seeded PRNG + direction vectors |
+| `generators/word-placement.ts` | `tryPlaceWord` — direction/position pick + conflict detection |
+| `generators/filler.ts` | `fillEmpty` (random A–Z by case) + `detectAccidentalWords` |
+| `generators/grid-generator.ts` | `generateWordSearchGrid` orchestrator + `generateSeed` |
+| `data/word-themes.ts` | Preset themes (`WordTheme`: id, label_zh, label_en, words) |
+
+### UI Components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `WordSearchView` | `sections/word-search/view/` | Mounts Workbench |
+| `ControlPanel` | `sections/word-search/components/` | Word input, theme loader, grid/difficulty, display options |
+| `PreviewSheet` | `sections/word-search/components/` | A4 preview: bubble title, grid card, instruction, word list, answer-key highlight |
+
+**ControlPanel behavior**
+
+- **Raw-text input:** the textarea is backed by a local `text` state so separators (space / comma / newline) are preserved while typing; `config.words` is derived via `parseWords` (`split(/[\s,]+/)`). A `useEffect` re-syncs the textarea only when `config.words` changes externally (theme load / reset).
+- **Caps:** `MAX_WORDS = 30`, `MAX_WORD_LEN = 18` enforced in `parseWords` to bound worst-case layout.
+- **Theme library:** selecting a theme replaces the word list (still editable); chips show parsed words; caption shows count + capacity hint.
+- **Grid Size / Difficulty:** `ToggleButtonGroup` with `HelpTooltip` (anchors `field-grid-size`, `field-difficulty`); switching does not clear words.
+- **Display options:** title, list columns (1/2/3), letter case, show-answer-key switch.
+
+**PreviewSheet behavior**
+
+- **Theme color:** all accents use the system **primary** palette (`theme.palette.primary.main`, list card uses `primary.lighter`).
+- **Bubble-letter title** rendered per character in rounded primary-bordered badges.
+- **Grid:** borderless letters inside a rounded primary-bordered card; cell/font size derived from grid columns.
+- **Instruction** between grid and list: bold "Find below words" plus a dynamic direction hint built from `DIFFICULTY_DIRECTIONS` (e.g. easy → "horizontally and vertically"; hard appends "(including backwards)").
+- **Word list:** rounded card, no bullets, distributed row-first; font size scales with grid size via `LIST_FONT_SIZE` (small 24 / medium 21 / large 18); long words wrap (`overflowWrap: 'anywhere'`).
+- **Answer key page:** same grid with each placed word's cells highlighted as colored circles.
+- **One-page auto-fit:** a `PageFit` wrapper fills exactly one A4 page (`height: 297mm`, `overflow: hidden`), measures content via `ResizeObserver`, and applies a uniform `transform: scale()` = `min(1, availW/naturalW, availH/naturalH)` so content always fits a single page — identical for on-screen preview and print (`scrollWidth/Height` are transform-independent, avoiding observer loops).
+- **Unplaced warning:** MUI `Alert` (`wordSearch.unplacedWordsWarning`) on the question page when words could not be placed. **Empty state** prompts to enter words or pick a theme.
+
+### Help Doc
+
+`docs/word-search.md` (frontmatter `tool_id: word-search`) builds to `src/data/docs/word-search.json`; provides `field-reference` anchors used by `HelpTooltip` plus drawer content.
+
+---
+
 ## i18n
 
 `src/i18n/config.ts` — i18next with `zh-CN` as fallback, detection from `localStorage` (key: `diyyy:lang`) then `navigator.language`.
@@ -434,6 +520,10 @@ WORD/PHRASE modes split by `/[\s,;，；、]+/`. SENTENCE mode splits by `\n` on
 
 Autocomplete freeSolo. Input is lowercased and matched against `THEME_EMOJIS` dictionary. Unmatched keys silently fall back to a default star emoji set. Preset labels (e.g. "Animals 🐶") are stripped to the key (`animals`) on input.
 
+### word-search `words` field
+
+Split by whitespace or comma (`/[\s,]+/`) — space, newline, tab, and comma are all separators. The textarea keeps the **raw typed text** in local state so separators are not stripped mid-typing; `config.words` is the parsed/trimmed/deduped result. Capped at `MAX_WORDS = 30` words and `MAX_WORD_LEN = 18` characters per word.
+
 ---
 
 ## Help System
@@ -483,6 +573,7 @@ The `SettingsField` component in `src/sections/_shared/SettingsPanel.tsx` accept
 | `docs/charmaze.md` | Character maze |
 | `docs/chartrace.md` | Character tracing |
 | `docs/hundred-chart.md` | Hundred chart puzzles |
+| `docs/word-search.md` | English word search |
 
 ---
 

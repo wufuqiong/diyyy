@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import DrawIcon from '@mui/icons-material/Draw';
 import GridOnIcon from '@mui/icons-material/GridOn';
+import SearchIcon from '@mui/icons-material/Search';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import ExtensionIcon from '@mui/icons-material/Extension';
@@ -50,6 +51,11 @@ export function useNavData(): NavItem[] {
       title: t('nav.hundredChart'),
       path: '/hundred-chart',
       icon: <GridOnIcon />,
+    },
+    {
+      title: t('nav.wordSearch'),
+      path: '/word-search',
+      icon: <SearchIcon />,
     },
   ];
 }
