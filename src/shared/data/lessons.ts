@@ -10,6 +10,8 @@ export function loadMiemieLessons(miemieDetails: MiemieDetails, field: LessonFie
   const result: MiemieData = {};
 
   Object.keys(miemieDetails).forEach((key) => {
+    // Skip phonics — handled by word-search tool
+    if (key === 'phonics') return;
     const lessons = miemieDetails[key as keyof MiemieDetails];
     if (!lessons) return;
 

@@ -11,6 +11,7 @@ import {
   Select,
   MenuItem,
   TextField,
+  Typography,
   InputLabel,
   FormControl,
   ToggleButton,
@@ -46,12 +47,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
   const { t, i18n } = useTranslation();
   const lang = i18n.language?.startsWith('zh') ? 'zh' : 'en';
 
-  // Split by whitespace (space / newline / tab) or comma
+  // Split by whitespace (space / newline / tab) or comma, keep only A-Z words
   const parseWords = (input: string): string[] =>
     input
       .split(/[\s,]+/)
       .map((w) => w.trim().slice(0, MAX_WORD_LEN))
-      .filter((w) => w.length > 0)
+      .filter((w) => w.length > 0 && /^[a-zA-Z]+$/.test(w))
       .slice(0, MAX_WORDS);
 
   // Keep the raw text the user types so separators are not stripped on re-render
@@ -103,6 +104,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
 
   const capacity = CAPACITY_HINTS[config.gridSize];
 
+  // Detect non-English characters in the raw text
+  const nonEnglishChars = [...text].filter((c) => {
+    if (c.trim() === '' || c === ',' || c === '\n') return false;
+    return !/^[a-zA-Z]$/.test(c);
+  });
+
   return (
     <>
       <SettingsSection title={t('wordSearch.settings.words')}>
@@ -125,7 +132,11 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
         </SettingsField>
         <SettingsField
           label={t('wordSearch.settings.wordsInput')}
-          caption={`${config.words.length} ${t('wordSearch.settings.wordsParsed')} · ${t('wordSearch.settings.capacityHint', { capacity })}`}
+          caption={
+            nonEnglishChars.length > 0
+              ? <Typography variant="caption" color="error.main">{config.words.length} {t('wordSearch.settings.wordsParsed')} — {t('wordSearch.settings.nonEnglishWarning')}</Typography>
+              : `${config.words.length} ${t('wordSearch.settings.wordsParsed')} · ${t('wordSearch.settings.capacityHint', { capacity })}`
+          }
         >
           <TextField
             multiline

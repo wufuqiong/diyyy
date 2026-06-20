@@ -270,6 +270,17 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           caption={
             (() => {
               const count = `${userInput.length}/${MAX_INPUT_LENGTH}`;
+
+              // Check for non-Chinese characters
+              const nonChinese = [...userInput].filter((c) => {
+                const trimmed = c.trim();
+                if (!trimmed) return false;
+                return !/[\u4e00-\u9fff]/.test(trimmed) && !/[\s,;，；、]/.test(c);
+              });
+              if (nonChinese.length > 0) {
+                return <Typography variant="caption" color="error.main">{count} — {t('charMaze.settings.nonChineseWarning')}</Typography>;
+              }
+
               if (mode === 'WORD') {
                 const tokens = userInput.split(/[\s,;，；、]+/).filter((c: string) => c.trim() !== '');
                 const multiChar = tokens.filter((token: string) => token.length > 1);

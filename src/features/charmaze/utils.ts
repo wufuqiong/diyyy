@@ -88,7 +88,14 @@ export function generateMazePages(
   let inputChars: string[] = [];
   if (userInput.trim() !== '') {
     const splitPattern = mode === 'SENTENCE' ? /[\n]+/ : /[\s,;，；、]+/;
-    inputChars = userInput.split(splitPattern).filter((char) => char.trim() !== '');
+    inputChars = userInput
+      .split(splitPattern)
+      .map((token) => {
+        // Keep only Chinese characters; strip everything else
+        const chineseOnly = [...token].filter((c) => /[\u4e00-\u9fff]/.test(c)).join('');
+        return chineseOnly.trim();
+      })
+      .filter((token) => token.length > 0);
   }
 
   if (inputChars.length === 0) {

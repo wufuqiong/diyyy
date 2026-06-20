@@ -1,7 +1,7 @@
 import type { HundredChartSheet } from 'src/features/hundred-chart/types';
 
-import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from 'react';
 
 import { Box, Paper, Typography, Pagination } from '@mui/material';
 
@@ -18,6 +18,13 @@ const ChartPageShell: React.FC<Props> = ({ sheets, pdfContainerRef, renderPage }
   const [currentPage, setCurrentPage] = useState(1);
   const { containerRef, scale } = usePreviewScale();
 
+  // Clamp currentPage when sheets shrink (e.g. user unchecks "include answer key")
+  useEffect(() => {
+    if (currentPage > sheets.length) {
+      setCurrentPage(Math.max(1, sheets.length));
+    }
+  }, [sheets.length, currentPage]);
+
   if (!sheets || sheets.length === 0) {
     return (
       <Box sx={{ width: '100%', height: '100%', bgcolor: 'grey.100', p: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'grey.400' }}>
@@ -27,7 +34,8 @@ const ChartPageShell: React.FC<Props> = ({ sheets, pdfContainerRef, renderPage }
   }
 
   const totalPages = sheets.length;
-  const sheet = sheets[currentPage - 1];
+  const safePage = Math.min(currentPage, totalPages);
+  const sheet = sheets[safePage - 1];
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => setCurrentPage(page);
 
@@ -36,12 +44,12 @@ const ChartPageShell: React.FC<Props> = ({ sheets, pdfContainerRef, renderPage }
       {/* Screen view */}
       <Box ref={containerRef} sx={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', '@media print': { display: 'none !important' } }}>
         <Paper elevation={0} sx={{ width: '210mm', minHeight: '297mm', overflow: 'hidden', margin: '0 auto', marginBottom: totalPages > 1 ? 0 : 4, padding: '20mm', paddingBottom: '15mm', backgroundColor: 'white', boxShadow: 'none', transform: scale < 1 ? `scale(${scale})` : undefined, transformOrigin: 'top center', '&:last-child': { marginBottom: 0 } }}>
-          {renderPage(sheet, currentPage - 1)}
+          {renderPage(sheet, safePage - 1)}
         </Paper>
 
         {totalPages > 1 && (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-            <Pagination count={totalPages} page={currentPage} onChange={handlePageChange} color="primary" size="large" />
+            <Pagination count={totalPages} page={safePage} onChange={handlePageChange} color="primary" size="large" />
           </Box>
         )}
       </Box>

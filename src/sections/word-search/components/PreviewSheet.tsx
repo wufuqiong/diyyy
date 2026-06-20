@@ -1,9 +1,9 @@
 import type { GridSizePreset, WordSearchSheet, WordSearchConfig, WordSearchDifficulty } from 'src/features/word-search/types';
 
 import { useTranslation } from 'react-i18next';
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useRef, useState, useLayoutEffect } from 'react';
 
-import { Box, Alert, Typography, useTheme } from '@mui/material';
+import { Box, Alert, useTheme, Typography } from '@mui/material';
 
 import { DIFFICULTY_DIRECTIONS } from 'src/features/word-search/types';
 

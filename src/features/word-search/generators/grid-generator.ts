@@ -30,11 +30,11 @@ export function generateWordSearchGrid(
 ): GridGenResult {
   const { rows, cols } = GRID_DIMENSIONS[gridSize];
 
-  // 1. Normalize: trim, deduplicate, filter empty, sort by length desc
+  // 1. Normalize: trim, deduplicate, filter empty, remove non-English, sort by length desc
   const normalized = [...new Set(
     words
       .map((w) => w.trim())
-      .filter((w) => w.length > 0),
+      .filter((w) => w.length > 0 && /^[a-zA-Z]+$/.test(w)),
   )].sort((a, b) => b.length - a.length);
 
   // 2. Init empty grid
