@@ -32,12 +32,22 @@ export default defineConfig(({ mode }) => ({
       },
     ],
   },
-  server: { 
-    port: PORT, 
+  server: {
+    port: PORT,
     host: true,
     hmr: {
       overlay: false, // Disable error overlay which can conflict with DevTools
     }
   },
   preview: { port: PORT, host: true },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router', 'react-router-dom'],
+          mui: ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+        },
+      },
+    },
+  },
 }));

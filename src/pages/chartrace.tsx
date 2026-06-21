@@ -1,3 +1,5 @@
+import '@fontsource/andika/latin.css';
+
 import { CONFIG } from 'src/config-global';
 
 import { CharTraceView } from 'src/sections/chartrace/view';

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>DIYYY · 彩虹糖果风原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* ===== Super Simple Songs 风格糖果色：纯色、高饱和、低邻近色冲突 ===== */
+    --candy-red:     #FF6B6B;
+    --candy-orange:  #FFA63D;
+    --candy-yellow:  #FFD23F;
+    --candy-green:   #4ECB71;
+    --candy-teal:    #2EC4B6;
+    --candy-blue:    #4D9DE0;
+    --candy-purple:  #9B72CF;
+    --candy-pink:    #FF7AAE;
+
+    --sky: #EAF6FF;          /* 主背景：浅天蓝，而非白或暖灰 */
+    --cloud-white: #FFFFFF;
+    --ink: #3A3550;          /* 深紫黑，比纯黑更柔和 */
+    --ink-soft: #6E6A85;
+
+    --font-display: 'Baloo 2', 'Noto Sans SC', sans-serif;
+    --font-body: 'Quicksand', 'Noto Sans SC', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--sky);
+    font-family: var(--font-body);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ===== 背景装饰：云朵 + 太阳，营造 Super Simple Songs 式天空场景 ===== */
+  .bg-decor { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .cloud {
+    position: absolute;
+    background: var(--cloud-white);
+    border-radius: 50px;
+    opacity: 0.85;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: var(--cloud-white);
+    border-radius: 50%;
+  }
+  .cloud1 { width: 140px; height: 50px; top: 60px; left: 6%; }
+  .cloud1::before { width: 70px; height: 70px; top: -35px; left: 15px; }
+  .cloud1::after { width: 50px; height: 50px; top: -25px; left: 75px; }
+  .cloud2 { width: 100px; height: 38px; top: 320px; right: 4%; opacity: 0.7; }
+  .cloud2::before { width: 50px; height: 50px; top: -25px; left: 12px; }
+  .cloud2::after { width: 36px; height: 36px; top: -16px; left: 55px; }
+  .sun {
+    position: absolute;
+    top: -60px; right: 8%;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: var(--candy-yellow);
+    opacity: 0.9;
+  }
+
+  .app { position: relative; z-index: 1; display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+
+  /* ============ 侧边栏 ============ */
+  .sidebar {
+    background: var(--cloud-white);
+    padding: 26px 16px;
+    display: flex;
+    flex-direction: column;
+    border-right: 4px solid rgba(74,157,224,0.15);
+  }
+
+  .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 26px; }
+  .brand-mark {
+    width: 44px; height: 44px;
+    border-radius: 16px;
+    background: var(--candy-orange);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 20px;
+    color: #fff;
+    box-shadow: 0 4px 0 0 rgba(0,0,0,0.08);
+    transform: rotate(-4deg);
+  }
+  .brand-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--candy-orange);
+    letter-spacing: 0.5px;
+  }
+
+  .nav { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px;
+    border-radius: 16px;
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 2px solid transparent;
+  }
+  .nav-item .emoji { font-size: 17px; }
+  .nav-item:hover { background: var(--sky); }
+  .nav-item.active {
+    background: var(--item-bg);
+    color: var(--item-fg);
+    border: 2px solid var(--item-fg);
+  }
+  .nav-item[data-tool="dashboard"].active { --item-bg: #EAF6FF; --item-fg: var(--candy-blue); }
+  .nav-item[data-tool="charcolor"] { --item-bg: #FFE9E9; --item-fg: var(--candy-red); }
+  .nav-item[data-tool="charmaze"] { --item-bg: #FFF3DC; --item-fg: var(--candy-orange); }
+  .nav-item[data-tool="chartrace"] { --item-bg: #E6F8EB; --item-fg: var(--candy-green); }
+  .nav-item[data-tool="mathgenie"] { --item-bg: #E3F6FF; --item-fg: var(--candy-blue); }
+  .nav-item[data-tool="hundredchart"] { --item-bg: #EFE7FB; --item-fg: var(--candy-purple); }
+  .nav-item[data-tool="wordsearch"] { --item-bg: #FFEAF3; --item-fg: var(--candy-pink); }
+
+  .sidebar-footer { margin-top: auto; padding-top: 18px; }
+  .lang-label { font-size: 11.5px; color: var(--ink-soft); padding: 0 4px 8px; font-weight: 600; }
+  .lang-toggle { display: flex; background: var(--sky); border-radius: 14px; padding: 4px; }
+  .lang-toggle span {
+    flex: 1; text-align: center; padding: 8px 0; font-size: 13px; font-weight: 700;
+    border-radius: 10px; cursor: pointer; color: var(--ink-soft); font-family: var(--font-display);
+  }
+  .lang-toggle span.active { background: var(--candy-blue); color: #fff; }
+
+  /* ============ 主区域 ============ */
+  .main { padding: 32px 50px 56px; }
+
+  .topbar { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+  .lang-pill-top {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--cloud-white); border-radius: 999px; padding: 4px;
+    box-shadow: 0 2px 0 0 rgba(0,0,0,0.04);
+  }
+  .lang-pill-top span { font-size: 12.5px; font-weight: 700; padding: 7px 16px; border-radius: 999px; color: var(--ink-soft); cursor: pointer; font-family: var(--font-display); }
+  .lang-pill-top span.active { background: var(--candy-blue); color: #fff; }
+
+  .hero { padding: 20px 4px 36px; text-align: left; }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 42px;
+    line-height: 1.2;
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+  .hero h1 .rainbow span:nth-child(1) { color: var(--candy-red); }
+  .hero h1 .rainbow span:nth-child(2) { color: var(--candy-orange); }
+  .hero h1 .rainbow span:nth-child(3) { color: var(--candy-yellow); }
+  .hero h1 .rainbow span:nth-child(4) { color: var(--candy-green); }
+  .hero h1 .rainbow span:nth-child(5) { color: var(--candy-blue); }
+  .hero p {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 480px;
+  }
+
+  /* ============ 工具卡片：纯色大色块，糖果质感 ============ */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+  .card {
+    border-radius: 28px;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.18s ease;
+    box-shadow: 0 6px 0 0 rgba(0,0,0,0.08);
+  }
+  .card:hover { transform: translateY(-6px) scale(1.02); }
+  .card:active { transform: translateY(-2px) scale(0.99); }
+
+  .card-top {
+    padding: 26px 22px 70px;
+    position: relative;
+    background: var(--bg);
+  }
+  .card-blob {
+    position: absolute;
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    top: -40px; right: -30px;
+  }
+  .card-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px;
+    margin-bottom: 14px;
+    position: relative;
+    box-shadow: 0 3px 0 0 rgba(0,0,0,0.06);
+  }
+  .card-top h3 {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 700;
+    margin: 0;
+    color: #fff;
+    text-shadow: 0 2px 0 rgba(0,0,0,0.08);
+    position: relative;
+  }
+
+  .card-bottom {
+    background: var(--cloud-white);
+    padding: 16px 22px 22px;
+    margin-top: -36px;
+    border-radius: 24px 24px 0 0;
+    position: relative;
+  }
+  .card-bottom p {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0 0 16px;
+    min-height: 42px;
+  }
+  .card-cta {
+    width: 100%;
+    border: none;
+    border-radius: 16px;
+    padding: 12px 0;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--bg);
+    cursor: pointer;
+    box-shadow: 0 4px 0 0 rgba(0,0,0,0.12);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  .card-cta:hover { transform: translateY(1px); box-shadow: 0 3px 0 0 rgba(0,0,0,0.12); }
+  .card-cta:active { transform: translateY(3px); box-shadow: 0 1px 0 0 rgba(0,0,0,0.12); }
+
+  .card.charcolor { --bg: var(--candy-red); }
+  .card.charmaze { --bg: var(--candy-orange); }
+  .card.chartrace { --bg: var(--candy-green); }
+  .card.mathgenie { --bg: var(--candy-blue); }
+  .card.hundredchart { --bg: var(--candy-purple); }
+  .card.wordsearch { --bg: var(--candy-pink); }
+
+  /* 注释面板 */
+  .annotations { margin-top: 50px; padding-top: 28px; border-top: 3px dashed rgba(74,157,224,0.3); }
+  .annotations h2 { font-family: var(--font-display); font-size: 19px; margin: 0 0 16px; color: var(--ink); }
+  .anno-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .anno-item { background: var(--cloud-white); border-radius: 16px; padding: 16px 18px; }
+  .anno-item .label { font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--candy-blue); margin-bottom: 6px; }
+  .anno-item .body { font-size: 13.5px; color: var(--ink-soft); line-height: 1.6; }
+  .anno-item code { background: var(--sky); padding: 1px 5px; border-radius: 5px; font-size: 12.5px; }
+</style>
+</head>
+<body>
+  <div class="bg-decor">
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    <div class="sun"></div>
+  </div>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">D</div>
+        <div class="brand-name">DIYYY</div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item active" data-tool="dashboard"><span class="emoji">🏠</span>工作台</div>
+        <div class="nav-item" data-tool="charcolor"><span class="emoji">🎨</span>识字涂色</div>
+        <div class="nav-item" data-tool="charmaze"><span class="emoji">🧩</span>识字迷宫</div>
+        <div class="nav-item" data-tool="chartrace"><span class="emoji">✍️</span>描红写字</div>
+        <div class="nav-item" data-tool="mathgenie"><span class="emoji">🔢</span>算术天地</div>
+        <div class="nav-item" data-tool="hundredchart"><span class="emoji">⊞</span>百数板</div>
+        <div class="nav-item" data-tool="wordsearch"><span class="emoji">🔍</span>单词搜索</div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="lang-label">Language / 语言</div>
+        <div class="lang-toggle"><span class="active">中文</span><span>EN</span></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="lang-pill-top"><span class="active">中文</span><span>EN</span></div>
+      </div>
+
+      <div class="hero">
+        <h1 class="rainbow">欢迎使用 <span>D</span><span>I</span><span>Y</span><span>Y</span><span>Y</span> !</h1>
+        <p>挑一个彩虹工具，三十秒做一份好玩的练习页吧！</p>
+      </div>
+
+      <div class="grid">
+        <div class="card charcolor">
+          <div class="card-top">
+            <div class="card-blob"></div>
+            <div class="card-icon">🎨</div>
+            <h3>识字涂色</h3>
+          </div>
+          <div class="card-bottom">
+            <p>选颜色、涂汉字，边玩边认字！</p>
+            <button class="card-cta">开始使用</button>
+          </div>
+        </div>
+
+        <div class="card charmaze">
+          <div class="card-top">
+            <div class="card-blob"></div>
+            <div class="card-icon">🧩</div>
+            <h3>识字迷宫</h3>
+          </div>
+          <div class="card-bottom">
+            <p>跟着汉字闯迷宫，练眼力、认字形！</p>
+            <button class="card-cta">开始使用</button>
+          </div>
+        </div>
+
+        <div class="card chartrace">
+          <div class="card-top">
+            <div class="card-blob"></div>
+            <div class="card-icon">✍️</div>
+            <h3>描红写字</h3>
+          </div>
+          <div class="card-bottom">
+            <p>一笔一画描红练字，写字越练越漂亮！</p>
+            <button class="card-cta">开始使用</button>
+          </div>
+        </div>
+
+        <div class="card mathgenie">
+          <div class="card-top">
+            <div class="card-blob"></div>
+            <div class="card-icon">🔢</div>
+            <h3>算术天地</h3>
+          </div>
+          <div class="card-bottom">
+            <p>一键生成加减法练习题，数学启蒙好帮手！</p>
+            <button class="card-cta">开始使用</button>
+          </div>
+        </div>
+
+        <div class="card hundredchart">
+          <div class="card-top">
+            <div class="card-blob"></div>
+            <div class="card-icon">⊞</div>
+            <h3>百数板</h3>
+          </div>
+          <div class="card-bottom">
+            <p>填数字、学数序，百数板上练数感！</p>
+            <button class="card-cta">开始使用</button>
+          </div>
+        </div>
+
+        <div class="card wordsearch">
+          <div class="card-top">
+            <div class="card-blob"></div>
+            <div class="card-icon">🔍</div>
+            <h3>单词搜索</h3>
+          </div>
+          <div class="card-bottom">
+            <p>在字母网格中找出隐藏单词，趣味记单词！</p>
+            <button class="card-cta">开始使用</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="annotations">
+        <h2>设计说明（给开发同学）</h2>
+        <div class="anno-grid">
+          <div class="anno-item">
+            <div class="label">配色逻辑</div>
+            <div class="body">8 个高饱和糖果色 <code>--candy-*</code>，每个工具用一个纯色作为卡片整体背景（而非小图标点缀），色彩本身就是视觉主角，参照 Super Simple Songs 的角色用色方式。</div>
+          </div>
+          <div class="anno-item">
+            <div class="label">卡片结构：上色块 + 下白底</div>
+            <div class="body"><code>.card-top</code>（纯色）+ <code>.card-bottom</code>（白底，向上圆角叠在色块上）模拟"贴纸卡片"，文案放白底上保证可读性，标题放色块上靠 <code>text-shadow</code> 保证可读性。</div>
+          </div>
+          <div class="anno-item">
+            <div class="label">按钮的"按压"质感</div>
+            <div class="body"><code>box-shadow: 0 4px 0 0</code> 模拟实体按键厚度，hover/active 时位移+缩小阴影，模仿真实按下的物理反馈，呼应儿童向 UI 常见的"糖果按钮"手法。</div>
+          </div>
+          <div class="anno-item">
+            <div class="label">背景装饰：云朵+太阳</div>
+            <div class="body">固定定位的纯 CSS 云朵和太阳形状（<code>.cloud</code> / <code>.sun</code>），营造天空场景，呼应 Super Simple Songs 标志性的简笔云朵元素，全部用纯色圆形拼接，无需图片资源。</div>
+          </div>
+          <div class="anno-item">
+            <div class="label">字体：Baloo 2 + Quicksand</div>
+            <div class="body">替换上一版的 Fredoka，改用更圆润饱满的 <code>Baloo 2</code> 做标题（笔画粗、转角圆），<code>Quicksand</code> 做正文，两者都属于"圆体"家族，统一可爱基调。</div>
+          </div>
+          <div class="anno-item">
+            <div class="label">侧边栏改回浅色</div>
+            <div class="body">上一版深色侧边栏偏"成熟科技感"，这版改回白底+天蓝背景，每个导航项 hover/active 用对应工具的浅色底+深色字，和卡片配色呼应，整体更轻快。</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

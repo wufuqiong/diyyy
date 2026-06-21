@@ -5,7 +5,6 @@ import { Box, Alert, Snackbar, LinearProgress } from '@mui/material';
 
 import { isSafari } from './is-safari';
 import { HelpDrawer } from './HelpDrawer';
-import { saveWorksheetAsPdf } from './save-pdf';
 import { WorksheetToolbar } from './WorksheetToolbar';
 import { usePersistedConfig } from './use-persisted-config';
 import { ResponsiveWorkbench } from '../../sections/_shared/ResponsiveWorkbench';
@@ -127,6 +126,7 @@ export function Workbench<Config = any, Problem = any>({
     const sanitized = baseName.replace(/[/\\:*?"<>|]/g, '-').replace(/\s+/g, '_');
     setIsSavingPdf(true);
     try {
+      const { saveWorksheetAsPdf } = await import('./save-pdf');
       await saveWorksheetAsPdf(pdfContainerRef.current, `${sanitized}.pdf`);
     } finally {
       setIsSavingPdf(false);

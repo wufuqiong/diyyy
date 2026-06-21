@@ -51,7 +51,7 @@ export function DashboardLayout({
     <Box sx={{ px: 2.5, py: 3, display: 'inline-flex', alignItems: 'center' }}>
       <Box
         component="img"
-        src={`${import.meta.env.BASE_URL}assets/images/diyyy.svg`}
+        src={`${import.meta.env.BASE_URL}assets/images/diyyy.png`}
         sx={{
           width: 40,
           height: 40,
