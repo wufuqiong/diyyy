@@ -16,7 +16,10 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 
-import { SettingsField, SettingsSection } from 'src/sections/_shared/SettingsPanel';
+import { candyColors } from 'src/theme/tokens';
+
+import { SettingCard } from 'src/sections/_shared/SettingCard';
+import { SettingsField } from 'src/sections/_shared/SettingsPanel';
 
 interface Props {
   config: HundredChartConfig;
@@ -36,35 +39,7 @@ const CrossPuzzleSettings: React.FC<Props> = ({ config, onChange }) => {
 
   return (
     <>
-      <SettingsSection title={t('hundredChart.settings.pageSetup')}>
-        <SettingsField label={t('hundredChart.settings.pageTitle')}>
-          <TextField value={config.pageTitle} onChange={(e) => update({ pageTitle: e.target.value })} size="small" fullWidth />
-        </SettingsField>
-      </SettingsSection>
-
-      <SettingsSection title={t('hundredChart.cross.displayOptions')}>
-        <Box
-          onClick={() => setShowDisplayOpts(!showDisplayOpts)}
-          sx={{ cursor: 'pointer', userSelect: 'none', mb: showDisplayOpts ? 1 : 0, '&:hover': { opacity: 0.7 } }}
-        >
-          <Typography variant="body2" color="text.secondary">{showDisplayOpts ? '▾' : '▸'} {showDisplayOpts ? t('hundredChart.cross.hideOptions') : t('hundredChart.cross.showOptions')}</Typography>
-        </Box>
-        <Collapse in={showDisplayOpts}>
-          <Stack spacing={2}>
-            <SettingsField>
-              <FormControlLabel control={<Switch checked={config.showFormula} onChange={(e) => update({ showFormula: e.target.checked })} size="small" />} label={t('hundredChart.cross.showFormula')} />
-            </SettingsField>
-            <SettingsField>
-              <FormControlLabel control={<Switch checked={config.showExample} onChange={(e) => update({ showExample: e.target.checked })} size="small" />} label={t('hundredChart.cross.showExample')} />
-            </SettingsField>
-            <SettingsField>
-              <FormControlLabel control={<Switch checked={config.showNumbering} onChange={(e) => update({ showNumbering: e.target.checked })} size="small" />} label={t('hundredChart.cross.showNumbering')} />
-            </SettingsField>
-          </Stack>
-        </Collapse>
-      </SettingsSection>
-
-      <SettingsSection title={t('hundredChart.cross.numberRange')}>
+      <SettingCard toolColor={candyColors.purple} label={t('hundredChart.cross.numberRange')}>
         <SettingsField>
           <Box sx={{ display: 'flex', gap: 1.5 }}>
             <TextField label={t('hundredChart.cross.minCenter')} type="number" value={config.minCenter}
@@ -73,9 +48,9 @@ const CrossPuzzleSettings: React.FC<Props> = ({ config, onChange }) => {
               onChange={(e) => update({ maxCenter: Math.max(config.minCenter, Math.min(90, Number(e.target.value) || 11)) })} size="small" sx={{ width: 100 }} slotProps={{ htmlInput: { min: 1, max: 90 } }} />
           </Box>
         </SettingsField>
-      </SettingsSection>
+      </SettingCard>
 
-      <SettingsSection title={t('hundredChart.cross.difficulty')}>
+      <SettingCard toolColor={candyColors.purple} label={t('hundredChart.cross.difficulty')}>
         <SettingsField>
           <ToggleButtonGroup value={config.difficulty} exclusive onChange={(_, v) => v !== null && update({ difficulty: v as Difficulty })} size="small" fullWidth>
             {DIFF_OPTS.map((opt) => (<ToggleButton key={opt.value} value={opt.value}>{t(`hundredChart.cross.${opt.key}`)}</ToggleButton>))}
@@ -133,9 +108,9 @@ const CrossPuzzleSettings: React.FC<Props> = ({ config, onChange }) => {
             <SettingsField caption={t('hundredChart.cross.hardFixedHint')}><Box /></SettingsField>
           </>
         )}
-      </SettingsSection>
+      </SettingCard>
 
-      <SettingsSection title={t('hundredChart.cross.questionCount')}>
+      <SettingCard toolColor={candyColors.purple} label={t('hundredChart.cross.questionCount')}>
         <SettingsField label={t('hundredChart.cross.numberOfQuestions')}>
           <ToggleButtonGroup value={config.questionsPerPage} exclusive onChange={(_, v) => v !== null && update({ questionsPerPage: v })} size="small">
             {[4, 6, 8, 10, 12, 14, 16].map((n) => (<ToggleButton key={n} value={n}>{n}</ToggleButton>))}
@@ -146,9 +121,31 @@ const CrossPuzzleSettings: React.FC<Props> = ({ config, onChange }) => {
             {[2, 3, 4].map((n) => (<ToggleButton key={n} value={n}>{n}</ToggleButton>))}
           </ToggleButtonGroup>
         </SettingsField>
-      </SettingsSection>
+      </SettingCard>
 
-      <SettingsSection title={t('hundredChart.settings.multiVersion')}>
+      <SettingCard toolColor={candyColors.purple} label={t('hundredChart.settings.pageSetup')}>
+        <SettingsField>
+          <TextField label={t('hundredChart.settings.pageTitle')} value={config.pageTitle} onChange={(e) => update({ pageTitle: e.target.value })} size="small" fullWidth />
+        </SettingsField>
+        <Box
+          onClick={() => setShowDisplayOpts(!showDisplayOpts)}
+          sx={{ cursor: 'pointer', userSelect: 'none', mt: 2, mb: showDisplayOpts ? 1 : 0, '&:hover': { opacity: 0.7 } }}
+        >
+          <Typography variant="body2" color="text.secondary">{showDisplayOpts ? '▾' : '▸'} {showDisplayOpts ? t('hundredChart.cross.hideOptions') : t('hundredChart.cross.showOptions')}</Typography>
+        </Box>
+        <Collapse in={showDisplayOpts}>
+          <Stack spacing={2}>
+            <SettingsField>
+              <FormControlLabel control={<Switch checked={config.showFormula} onChange={(e) => update({ showFormula: e.target.checked })} size="small" />} label={t('hundredChart.cross.showFormula')} />
+            </SettingsField>
+            <SettingsField>
+              <FormControlLabel control={<Switch checked={config.showExample} onChange={(e) => update({ showExample: e.target.checked })} size="small" />} label={t('hundredChart.cross.showExample')} />
+            </SettingsField>
+            <SettingsField>
+              <FormControlLabel control={<Switch checked={config.showNumbering} onChange={(e) => update({ showNumbering: e.target.checked })} size="small" />} label={t('hundredChart.cross.showNumbering')} />
+            </SettingsField>
+          </Stack>
+        </Collapse>
         <SettingsField label={t('hundredChart.settings.versionCount')}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Slider value={config.versionCount} onChange={(_, v) => update({ versionCount: v as number })} min={1} max={10} step={1} marks valueLabelDisplay="auto" sx={{ flex: 1 }} />
@@ -158,7 +155,7 @@ const CrossPuzzleSettings: React.FC<Props> = ({ config, onChange }) => {
         <SettingsField>
           <FormControlLabel control={<Switch checked={config.includeAnswerKey} onChange={(e) => update({ includeAnswerKey: e.target.checked })} size="small" />} label={t('hundredChart.settings.includeAnswerKey')} />
         </SettingsField>
-      </SettingsSection>
+      </SettingCard>
     </>
   );
 };

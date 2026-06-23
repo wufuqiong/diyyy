@@ -16,6 +16,7 @@ import { generateMazePages } from './utils';
 import type { MazePageData, CharMazeConfig } from './types';
 
 const miemieDetailsTyped = miemieDetails as MiemieDetails;
+const miemieWordData = loadMiemieLessons(miemieDetailsTyped, 'word');
 
 const defaultConfig: CharMazeConfig = {
   userInput: '',
@@ -28,8 +29,7 @@ const defaultConfig: CharMazeConfig = {
 };
 
 function generate(config: CharMazeConfig): MazePageData[] {
-  const wordData = loadMiemieLessons(miemieDetailsTyped, 'word');
-  return generateMazePages(config, wordData);
+  return generateMazePages(config, miemieWordData);
 }
 
 const Preview: React.FC<{ config: CharMazeConfig; problems: MazePageData[]; pdfContainerRef?: React.RefObject<HTMLDivElement | null> }> = ({ problems, pdfContainerRef }) => (

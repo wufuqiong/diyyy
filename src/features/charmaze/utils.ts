@@ -7,6 +7,8 @@ import { parseSelectedMode, TABLE_SIZE_PRESETS } from './types';
 
 import type { MazePageData, CharMazeConfig } from './types';
 
+const MAX_PAGES = 50;
+
 function hasChineseCharacters(characters: string[]): boolean {
   const chineseRegex = /[\u4e00-\u9fff]/;
   return characters.some((char) => chineseRegex.test(char));
@@ -17,20 +19,23 @@ export function generateMaze(
   rows: number,
   cols: number,
   mode: string,
-  miemieWordData: MiemieData
+  miemieWordData: MiemieData,
+  fillerChars?: string[]
 ): string[][] {
   const maze: string[][] = [];
-  let simpleChars: string[] = [];
+  let simpleChars: string[];
 
-  if (hasChineseCharacters(chars)) {
+  if (fillerChars) {
+    simpleChars = fillerChars;
+  } else if (hasChineseCharacters(chars)) {
     simpleChars = Object.values(miemieWordData['Chinese'] || {}).flat();
     simpleChars = ['，', '。', '！', ...simpleChars];
+    simpleChars = shuffleArray(simpleChars);
   } else {
     simpleChars = miemieWordData['English']?.['英语字母'] || [];
     simpleChars = [...simpleChars, ...simpleChars, ...simpleChars];
+    simpleChars = shuffleArray(simpleChars);
   }
-
-  simpleChars = shuffleArray(simpleChars);
 
   for (let i = 0; i < rows; i++) {
     const row: string[] = [];
@@ -102,28 +107,45 @@ export function generateMazePages(
     return [];
   }
 
+  // Precompute the filler character pool once for all pages (avoid per-page rebuild).
+  const isChinese = hasChineseCharacters(inputChars);
+  let fillerPool: string[];
+  if (isChinese) {
+    fillerPool = Object.values(miemieWordData['Chinese'] || {}).flat();
+    fillerPool = ['，', '。', '！', ...fillerPool];
+  } else {
+    fillerPool = miemieWordData['English']?.['英语字母'] || [];
+    fillerPool = [...fillerPool, ...fillerPool, ...fillerPool];
+  }
+  fillerPool = shuffleArray(fillerPool);
+
+  // Re-shuffle per page for variation (maze-tools uses per-cell cycling).
+  const shuffledFiller = () => shuffleArray([...fillerPool]);
+
   if (mode === 'WORD') {
-    for (let i = 0; i < inputChars.length; i++) {
-      const pageChars = generateMaze([inputChars[i]], rows, cols, mode, miemieWordData);
+    const count = Math.min(inputChars.length, MAX_PAGES);
+    for (let i = 0; i < count; i++) {
+      const pageChars = generateMaze([inputChars[i]], rows, cols, mode, miemieWordData, shuffledFiller());
       newPages.push({ refChars: [inputChars[i]], chars: pageChars, rows, cols, mode });
     }
   } else if (mode === 'PHRASE') {
-    const totalPages = Math.ceil(inputChars.length / wordsPerPage);
+    const totalPages = Math.min(Math.ceil(inputChars.length / wordsPerPage), MAX_PAGES);
     for (let i = 0; i < totalPages; i++) {
       const startIndex = i * wordsPerPage;
       const endIndex = startIndex + wordsPerPage;
       const pageCharsSlice = inputChars.slice(startIndex, endIndex);
       if (pageCharsSlice.length > 0) {
-        const pageChars = generateMaze(pageCharsSlice, rows, cols, mode, miemieWordData);
+        const pageChars = generateMaze(pageCharsSlice, rows, cols, mode, miemieWordData, shuffledFiller());
         newPages.push({ refChars: pageCharsSlice, chars: pageChars, rows, cols, mode });
       }
     }
   } else if (mode === 'SENTENCE') {
-    for (let i = 0; i < inputChars.length; i++) {
+    const count = Math.min(inputChars.length, MAX_PAGES);
+    for (let i = 0; i < count; i++) {
       const sentence = inputChars[i];
       const chars = sentence.split('').filter((char) => char.trim() !== '');
       if (chars.length > 0) {
-        const pageChars = generateMaze(chars, rows, cols, mode, miemieWordData);
+        const pageChars = generateMaze(chars, rows, cols, mode, miemieWordData, shuffledFiller());
         newPages.push({ refChars: [sentence], chars: pageChars, rows, cols, mode });
       }
     }

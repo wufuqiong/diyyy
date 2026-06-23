@@ -19,13 +19,12 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 
+import { candyColors } from 'src/theme/tokens';
 import { WORD_THEMES } from 'src/features/word-search/data/word-themes';
 import { GridSizePreset, GRID_DIMENSIONS, WordSearchDifficulty } from 'src/features/word-search/types';
 
-import {
-  SettingsField,
-  SettingsSection,
-} from 'src/sections/_shared/SettingsPanel';
+import { SettingCard } from 'src/sections/_shared/SettingCard';
+import { SettingsField } from 'src/sections/_shared/SettingsPanel';
 
 const CAPACITY_HINTS: Record<GridSizePreset, number> = {
   [GridSizePreset.SMALL]: 6,
@@ -112,7 +111,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
 
   return (
     <>
-      <SettingsSection title={t('wordSearch.settings.words')}>
+      <SettingCard label={t('wordSearch.settings.sectionSource')} toolColor={candyColors.pink}>
         <SettingsField label={t('wordSearch.settings.themeLibrary')}>
           <FormControl fullWidth size="small">
             <InputLabel>{t('wordSearch.settings.themeLibrary')}</InputLabel>
@@ -131,7 +130,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
           </FormControl>
         </SettingsField>
         <SettingsField
-          label={t('wordSearch.settings.wordsInput')}
           caption={
             nonEnglishChars.length > 0
               ? <Typography variant="caption" color="error.main">{config.words.length} {t('wordSearch.settings.wordsParsed')} — {t('wordSearch.settings.nonEnglishWarning')}</Typography>
@@ -142,6 +140,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
             multiline
             rows={4}
             size="small"
+            label={t('wordSearch.settings.wordsInput')}
             value={text}
             onChange={(e) => handleInputChange(e.target.value)}
             placeholder={t('wordSearch.settings.wordsPlaceholder')}
@@ -155,9 +154,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
             ))}
           </Box>
         )}
-      </SettingsSection>
+      </SettingCard>
 
-      <SettingsSection title={t('wordSearch.settings.gridSettings')}>
+      <SettingCard label={t('wordSearch.settings.gridSettings')} toolColor={candyColors.pink}>
         <SettingsField
           label={t('wordSearch.settings.gridSize')}
           toolId="word-search"
@@ -204,20 +203,22 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
             </ToggleButton>
           </ToggleButtonGroup>
         </SettingsField>
-      </SettingsSection>
+      </SettingCard>
 
-      <SettingsSection title={t('wordSearch.settings.display')}>
-        <SettingsField label={t('wordSearch.settings.titleLabel')}>
+      <SettingCard label={t('wordSearch.settings.sectionDisplay')} toolColor={candyColors.pink}>
+        <SettingsField>
           <TextField
+            label={t('wordSearch.settings.titleLabel')}
             size="small"
             value={config.title}
             onChange={(e) => onChange({ ...config, title: e.target.value })}
             fullWidth
           />
         </SettingsField>
-        <SettingsField label={t('wordSearch.settings.listColumns')}>
+        <SettingsField>
           <FormControl fullWidth size="small">
-            <Select value={config.listColumns} onChange={handleListColumnsChange}>
+            <InputLabel>{t('wordSearch.settings.listColumns')}</InputLabel>
+            <Select value={config.listColumns} onChange={handleListColumnsChange} label={t('wordSearch.settings.listColumns')}>
               <MenuItem value={1}>1</MenuItem>
               <MenuItem value={2}>2</MenuItem>
               <MenuItem value={3}>3</MenuItem>
@@ -247,7 +248,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
             label={t('wordSearch.settings.showAnswerKey')}
           />
         </SettingsField>
-      </SettingsSection>
+      </SettingCard>
     </>
   );
 };

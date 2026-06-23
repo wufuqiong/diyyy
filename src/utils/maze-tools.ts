@@ -5,13 +5,43 @@ interface WordPosition {
   positions: [number, number][];
 };
 
+// Upper bound on DFS steps before we give up and use the fast fallback.
+// Normal grids solve in a few thousand steps; pathological orderings can
+// otherwise backtrack through millions of states and hang the browser.
+const WORD_MAZE_MAX_OPS = 100000;
+
+// Guaranteed-terminating self-avoiding path from (0,0) to (rows-1,cols-1).
+// Random monotone lattice walk (only right/down moves) — always succeeds.
+const generateWordMazePathFallback = (rows: number, cols: number): number[][] => {
+  const path: number[][] = [[0, 0]];
+  let x = 0;
+  let y = 0;
+  while (x !== rows - 1 || y !== cols - 1) {
+    const canDown = x < rows - 1;
+    const canRight = y < cols - 1;
+    const goDown = canDown && canRight ? Math.random() < 0.5 : canDown;
+    if (goDown) {
+      x += 1;
+    } else {
+      y += 1;
+    }
+    path.push([x, y]);
+  }
+  return path;
+};
+
 export const generateWordMazePath = (rows: number, cols: number): number[][] => {
   const visited: number[][] = Array.from({ length: rows }, () => 
     Array.from({ length: cols }, () => 0)
   );
   const path: number[][] = [];
+  let ops = 0;
 
   const dfs = (x: number, y: number): boolean => {
+    if (++ops > WORD_MAZE_MAX_OPS) {
+      return false;
+    }
+
     if (x === rows - 1 && y === cols - 1) {
       path.push([x, y]);
       return true;
@@ -46,7 +76,7 @@ export const generateWordMazePath = (rows: number, cols: number): number[][] => 
     return false;
   };
 
-  return dfs(0, 0) ? path : [];
+  return dfs(0, 0) ? path : generateWordMazePathFallback(rows, cols);
 };
 
 export const generateSentenceMazePath = (sentence: string, rows: number, cols: number): number[][] => {
@@ -227,53 +257,24 @@ const generateSimplePath = (sentence: string, rows: number, cols: number): numbe
 export const generatePhraseMazePath = (chars: string[], rows: number, cols: number): WordPosition[] => {
   const maze: string[][] = Array(rows).fill(null).map(() => Array(cols).fill(''));
   const wordPositions: WordPosition[] = [];
-  const unplaced: string[] = [];
-  
-  // Sort by longest to shortest for better placement
+
   const sortedChars = [...chars].sort((a, b) => b.length - a.length);
-  
+
   for (const word of sortedChars) {
     let placed = false;
-    let attempts = 0;
-    const maxAttempts = rows * cols * 2; // Limit attempts to prevent infinite loop
-    
-    // Try random positions
-    while (!placed && attempts < maxAttempts) {
-      attempts++;
-      
-      // Generate random starting position
-      const startRow = Math.floor(Math.random() * rows);
-      const startCol = Math.floor(Math.random() * cols);
-      
-      // Random direction
-      const direction = Math.random() > 0.5 ? 'horizontal' : 'vertical';
-      
-      // Randomly decide to try both directions
-      const tryBoth = Math.random() > 0.5;
-      
-      if (tryDirection(maze, word, startRow, startCol, direction, rows, cols)) {
-        const positions = placeWord(maze, word, startRow, startCol, direction);
-        wordPositions.push({ word, positions });
-        placed = true;
-      } else if (tryBoth) {
-        // Try the opposite direction
-        const oppositeDirection = direction === 'horizontal' ? 'vertical' : 'horizontal';
-        if (tryDirection(maze, word, startRow, startCol, oppositeDirection, rows, cols)) {
-          const positions = placeWord(maze, word, startRow, startCol, oppositeDirection);
-          wordPositions.push({ word, positions });
-          placed = true;
-        }
-      }
-    }
-    
-    if (!placed) {
-      console.warn(`Could not place word: "${word}" after ${maxAttempts} attempts`);
-      unplaced.push(word);
-    }
-  }
 
-  if (unplaced.length > 0) {
-    throw new Error(`以下词语无法放入迷宫（网格太小或词语太长）：${unplaced.join('、')}。请增大迷宫尺寸。`);
+    // 1: random placement (fast, covers most cases)
+    placed = tryRandomPlacement(maze, word, rows, cols, wordPositions);
+
+    // 2: systematic fallback if random fails
+    if (!placed) {
+      placed = trySystematicPlacement(maze, word, rows, cols, wordPositions);
+    }
+
+    if (!placed) {
+      // Skip words that truly can't fit — don't crash
+      console.warn(`[charmaze] Could not place word: "${word}"`);
+    }
   }
 
   return wordPositions;

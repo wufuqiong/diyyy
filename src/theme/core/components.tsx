@@ -4,6 +4,8 @@ import { varAlpha } from 'minimal-shared/utils';
 
 import SvgIcon from '@mui/material/SvgIcon';
 
+import { formControl } from '../tokens';
+
 // ----------------------------------------------------------------------
 
 const MuiBackdrop: Components<Theme>['MuiBackdrop'] = {
@@ -13,6 +15,15 @@ const MuiBackdrop: Components<Theme>['MuiBackdrop'] = {
     }),
     invisible: {
       background: 'transparent',
+    },
+  },
+};
+
+const MuiChip: Components<Theme>['MuiChip'] = {
+  styleOverrides: {
+    outlined: {
+      borderColor: 'var(--tool-color, #4D9DE0)',
+      color: 'var(--tool-color, #4D9DE0)',
     },
   },
 };
@@ -30,6 +41,21 @@ const MuiButton: Components<Theme>['MuiButton'] = {
         backgroundColor: theme.vars.palette.grey[800],
       },
     }),
+    outlined: {
+      borderColor: 'var(--tool-color, #4D9DE0)',
+      color: 'var(--tool-color, #4D9DE0)',
+      '&:hover': {
+        backgroundColor: 'var(--tool-color-alpha, rgba(77,157,224,0.08))',
+        borderColor: 'var(--tool-color, #4D9DE0)',
+      },
+    },
+    outlinedSecondary: {
+      borderColor: 'var(--tool-color, #4D9DE0) !important',
+      color: 'var(--tool-color, #4D9DE0) !important',
+      '&:hover': {
+        backgroundColor: 'var(--tool-color-alpha, rgba(77,157,224,0.08)) !important',
+      },
+    },
     sizeLarge: {
       minHeight: 48,
     },
@@ -61,9 +87,27 @@ const MuiCardHeader: Components<Theme>['MuiCardHeader'] = {
 
 const MuiOutlinedInput: Components<Theme>['MuiOutlinedInput'] = {
   styleOverrides: {
-    notchedOutline: ({ theme }) => ({
-      borderColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.2),
-    }),
+    root: {
+      borderRadius: formControl.borderRadius,
+      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: 'var(--tool-color, #4D9DE0) !important',
+        borderWidth: formControl.borderWidth,
+      },
+    },
+    notchedOutline: {
+      borderWidth: formControl.borderWidth,
+      borderColor: formControl.borderColor,
+    },
+  },
+};
+
+const MuiInputLabel: Components<Theme>['MuiInputLabel'] = {
+  styleOverrides: {
+    root: {
+      '&.Mui-focused': {
+        color: 'var(--tool-color, #4D9DE0) !important',
+      },
+    },
   },
 };
 
@@ -108,7 +152,72 @@ const MuiFormControlLabel: Components<Theme>['MuiFormControlLabel'] = {
   },
 };
 
+const MuiToggleButtonGroup: Components<Theme>['MuiToggleButtonGroup'] = {
+  styleOverrides: {
+    root: {
+      borderRadius: '999px',
+      gap: 2,
+    },
+  },
+};
+
+const MuiToggleButton: Components<Theme>['MuiToggleButton'] = {
+  styleOverrides: {
+    root: ({ theme }) => ({
+      borderRadius: '999px !important',
+      border: `${formControl.borderWidth} solid ${formControl.borderColor}`,
+      textTransform: 'none',
+      fontWeight: theme.typography.fontWeightMedium,
+      px: 2,
+      '&.Mui-selected': {
+        backgroundColor: 'var(--tool-color, ' + theme.vars.palette.primary.main + ')',
+        color: theme.vars.palette.primary.contrastText,
+        borderColor: 'var(--tool-color, ' + theme.vars.palette.primary.main + ')',
+        '&:hover': {
+          filter: 'brightness(0.9)',
+        },
+      },
+    }),
+  },
+};
+
+const MuiSlider: Components<Theme>['MuiSlider'] = {
+  styleOverrides: {
+    root: {
+      color: 'var(--tool-color, #4D9DE0)',
+      height: 8,
+      '& .MuiSlider-track': { height: 8, borderRadius: 4 },
+      '& .MuiSlider-rail': { height: 8, borderRadius: 4, opacity: 0.2 },
+      '& .MuiSlider-thumb': {
+        width: 24,
+        height: 24,
+        boxShadow: '0 2px 0 0 rgba(0,0,0,0.12), 0 0 0 4px var(--tool-color-alpha, rgba(77,157,224,0.16))',
+      },
+    },
+  },
+};
+
+const MuiSwitch: Components<Theme>['MuiSwitch'] = {
+  styleOverrides: {
+    root: {
+      '& .MuiSwitch-switchBase.Mui-checked': {
+        color: 'var(--tool-color, #4D9DE0)',
+      },
+      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+        backgroundColor: 'var(--tool-color, #4D9DE0)',
+      },
+    },
+  },
+};
+
 const MuiCheckbox: Components<Theme>['MuiCheckbox'] = {
+  styleOverrides: {
+    root: {
+      '&.Mui-checked, &.MuiCheckbox-indeterminate': {
+        color: 'var(--tool-color, #4D9DE0) !important',
+      },
+    },
+  },
   defaultProps: {
     size: 'small',
     icon: (
@@ -160,12 +269,18 @@ export const components = {
   MuiLink,
   MuiPaper,
   MuiRadio,
+  MuiSlider,
+  MuiSwitch,
   MuiButton,
+  MuiChip,
   MuiBackdrop,
   MuiMenuItem,
   MuiCheckbox,
   MuiTableCell,
   MuiCardHeader,
+  MuiInputLabel,
   MuiOutlinedInput,
+  MuiToggleButton,
+  MuiToggleButtonGroup,
   MuiFormControlLabel,
 };

@@ -1,12 +1,12 @@
-import type { MathProblem} from 'src/types';
+import type { MathProblem } from 'src/types';
 
 // src/sections/math-genie/components/WorksheetPreview.tsx
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo } from 'react';
 
-import { Box, Paper, Typography, Pagination } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { DisplayMode } from 'src/types';
-import { usePreviewScale } from 'src/shared/worksheet/usePreviewScale';
+import { WorksheetPaper } from 'src/shared/worksheet';
 import { derivePageLayout } from 'src/features/math-genie/shared/layout';
 
 import ProblemVisualizer from './ProblemVisualizer';
@@ -22,128 +22,46 @@ interface Props {
   pdfContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, showAnswers, displayMode, textColumns = 2, problemsPerPage: ppp = 16, pdfContainerRef }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const layout = derivePageLayout({ columns: textColumns, problemsPerPage: ppp });
-  const { containerRef, scale } = usePreviewScale();
-  const PROBLEMS_PER_PAGE = ppp;
-  
-  // Memoize calculations to prevent re-calculation on every render
-  const paginationData = useMemo(() => {
-    const totalPages = Math.ceil(problems.length / PROBLEMS_PER_PAGE);
-    const startIndex = (currentPage - 1) * PROBLEMS_PER_PAGE;
-    const endIndex = Math.min(startIndex + PROBLEMS_PER_PAGE, problems.length);
-    const currentProblems = problems.slice(startIndex, endIndex);
-    return { totalPages, startIndex, endIndex, currentProblems };
-  }, [problems, currentPage, PROBLEMS_PER_PAGE]);
+const WorksheetPreview: React.FC<Props> = React.memo(
+  ({ problems, title, theme, showAnswers, displayMode, textColumns = 2, problemsPerPage = 16, pdfContainerRef }) => {
+    const layout = derivePageLayout({ columns: textColumns, problemsPerPage });
 
-  const { totalPages, startIndex, endIndex, currentProblems } = paginationData;
-
-  // Memoize page change handler
-  const handlePageChange = useCallback((event: React.ChangeEvent<unknown>, page: number) => {
-    setCurrentPage(page);
-  }, []);
-
-  // Reset to page 1 when problems change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [problems]);
-
-  if (problems.length === 0) {
-    return (
-      <Box
-        sx={{
-          width: '100%',
-          height: '100%',
-          bgcolor: 'grey.100',
-          p: 8,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'grey.400',
-        }}
-      >
-        <Typography variant="h6" color="inherit">
-          Generating preview...
-        </Typography>
-      </Box>
+    const totalPages = useMemo(
+      () => Math.max(1, Math.ceil(problems.length / problemsPerPage)),
+      [problems.length, problemsPerPage],
     );
-  }
 
-  return (
-    <Box
-      sx={{
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'grey.50',
-        overflow: 'hidden',
-        padding: 2,
-        '@media print': {
-          backgroundColor: 'white',
-          padding: 0,
-          overflow: 'visible',
-        },
-      }}
-      className="worksheet-preview"
-    >
-      {/* Screen view with pagination - hidden when printing */}
-      <Box
-        ref={containerRef}
-        sx={{
-          height: '100%',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          '@media print': {
-            display: 'none !important'
-          }
-        }}
-      >
-        <Paper
-          elevation={0}
-          sx={{
-            width: '210mm',
-            minHeight: '297mm',
-            overflow: 'hidden',
-            margin: '0 auto',
-            marginBottom: 4,
-            padding: '20mm',
-            paddingBottom: '15mm',
-            backgroundColor: 'white',
-            boxShadow: 'none',
-            transform: scale < 1 ? `scale(${scale})` : undefined,
-            transformOrigin: 'top center',
-            '&:last-child': {
-              marginBottom: 0,
-            },
-          }}
-        >
+    const gridTemplateColumns =
+      displayMode === DisplayMode.WORD_PROBLEM
+        ? '1fr'
+        : displayMode === DisplayMode.TEXT
+          ? `repeat(${textColumns}, 1fr)`
+          : 'repeat(2, 1fr)';
+
+    const gridAutoRows =
+      displayMode === DisplayMode.WORD_PROBLEM ? 'minmax(48mm, auto)' : `minmax(${layout.rowHeight}mm, auto)`;
+
+    const renderPage = (pageIndex: number) => {
+      const startIndex = pageIndex * problemsPerPage;
+      const pageProblems = problems.slice(startIndex, startIndex + problemsPerPage);
+
+      return (
+        <>
           {/* Header */}
           <Box sx={{ mb: 3, borderBottom: '2px solid', borderColor: 'grey.300', pb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography
-                  variant="h4"
-                  sx={{
-                    fontWeight: 'bold',
-                    color: 'grey.800',
-                    mb: 0.5,
-                    fontSize: { xs: '1.5rem', md: '1.875rem' },
-                  }}
-                >
-                  {title || `${theme} Math Worksheet`}
-                </Typography>
-              </Box>
-              
+              <Typography
+                variant="h4"
+                sx={{ fontWeight: 'bold', color: 'grey.800', mb: 0.5, fontSize: { xs: '1.5rem', md: '1.875rem' } }}
+              >
+                {title || `${theme} Math Worksheet`}
+              </Typography>
               {totalPages > 1 && (
                 <Typography
                   variant="body2"
-                  sx={{
-                    textAlign: 'right',
-                    color: 'grey.500',
-                    fontSize: { xs: '0.75rem', md: '0.875rem' },
-                  }}
+                  sx={{ textAlign: 'right', color: 'grey.500', fontSize: { xs: '0.75rem', md: '0.875rem' } }}
                 >
-                  Page {currentPage} of {totalPages}
+                  Page {pageIndex + 1} of {totalPages}
                 </Typography>
               )}
             </Box>
@@ -152,26 +70,21 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: displayMode === DisplayMode.WORD_PROBLEM ? '1fr' : displayMode === DisplayMode.TEXT ? `repeat(${textColumns}, 1fr)` : 'repeat(2, 1fr)',
+              gridTemplateColumns,
               columnGap: `${layout.columnGap}mm`,
               rowGap: `${layout.rowGap}mm`,
-              gridAutoRows: displayMode === DisplayMode.WORD_PROBLEM ? 'minmax(48mm, auto)' : `minmax(${layout.rowHeight}mm, auto)`,
+              gridAutoRows,
               justifyItems: 'center',
               alignItems: 'center',
             }}
           >
-            {currentProblems.map((problem, index) => (
+            {pageProblems.map((problem, index) => (
               <Box
                 key={problem.id}
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  pageBreakInside: 'avoid',
-                  breakInside: 'avoid',
-                }}
+                sx={{ width: '100%', height: '100%', pageBreakInside: 'avoid', breakInside: 'avoid' }}
               >
-                <ProblemVisualizer 
-                  problem={problem} 
+                <ProblemVisualizer
+                  problem={problem}
                   index={startIndex + index}
                   showAnswers={showAnswers}
                   displayMode={displayMode}
@@ -179,136 +92,24 @@ const WorksheetPreview: React.FC<Props> = React.memo(({ problems, title, theme, 
               </Box>
             ))}
           </Box>
-        </Paper>
+        </>
+      );
+    };
 
-        {totalPages > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-            <Pagination
-              count={totalPages}
-              page={currentPage}
-              onChange={handlePageChange}
-              color="primary"
-              size="large"
-            />
-          </Box>
-        )}
-      </Box>
-
-      {/* Print view - all pages - off-screen on screen, visible when printing */}
-      <Box
-        ref={pdfContainerRef}
-        sx={{
-          position: 'absolute',
-          left: '-9999px',
-          top: 0,
-          width: '210mm',
-          opacity: 0,
-          pointerEvents: 'none',
-          '@media print': {
-            position: 'static',
-            left: 'auto',
-            width: 'auto',
-            opacity: 1,
-            pointerEvents: 'auto',
-            '& .page-container': {
-              pageBreakAfter: 'always',
-              '&:last-child': {
-                pageBreakAfter: 'auto',
-              }
-            }
-          }
-        }}
-      >
-        {Array.from({ length: totalPages }).map((_, pageIndex) => {
-          const printStartIndex = pageIndex * PROBLEMS_PER_PAGE;
-          const printEndIndex = Math.min(printStartIndex + PROBLEMS_PER_PAGE, problems.length);
-          const printProblems = problems.slice(printStartIndex, printEndIndex);
-
-          return (
-            <Paper
-              key={`print-page-${pageIndex}`}
-              className="page-container"
-              elevation={0}
-              sx={{
-                width: '210mm',
-                minHeight: '297mm',
-                overflow: 'hidden',
-                margin: '0 auto',
-                padding: '20mm',
-                paddingBottom: '15mm',
-                backgroundColor: 'white',
-                boxShadow: 'none',
-                pageBreakAfter: pageIndex < totalPages - 1 ? 'always' : 'auto',
-              }}
-            >
-              <Box sx={{ mb: 3, borderBottom: '2px solid', borderColor: 'grey.300', pb: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography
-                      variant="h4"
-                      sx={{
-                        fontWeight: 'bold',
-                        color: 'grey.800',
-                        mb: 0.5,
-                        fontSize: '1.5rem',
-                      }}
-                    >
-                      {title || `${theme} Math Worksheet`}
-                    </Typography>
-                  </Box>
-                  
-                  {totalPages > 1 && (
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        textAlign: 'right',
-                        color: 'grey.500',
-                        fontSize: '0.75rem',
-                      }}
-                    >
-                      Page {pageIndex + 1} of {totalPages}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: displayMode === DisplayMode.WORD_PROBLEM ? '1fr' : displayMode === DisplayMode.TEXT ? `repeat(${textColumns}, 1fr)` : 'repeat(2, 1fr)',
-                  columnGap: `${layout.columnGap}mm`,
-                  rowGap: `${layout.rowGap}mm`,
-                  gridAutoRows: displayMode === DisplayMode.WORD_PROBLEM ? 'minmax(48mm, auto)' : `minmax(${layout.rowHeight}mm, auto)`,
-                  justifyItems: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                {printProblems.map((problem, index) => (
-                  <Box
-                    key={problem.id}
-                    sx={{
-                      width: '100%',
-                      height: '100%',
-                      pageBreakInside: 'avoid',
-                      breakInside: 'avoid',
-                    }}
-                  >
-                    <ProblemVisualizer 
-                      problem={problem} 
-                      index={printStartIndex + index}
-                      showAnswers={showAnswers}
-                      displayMode={displayMode}
-                    />
-                  </Box>
-                ))}
-              </Box>
-            </Paper>
-          );
-        })}
-      </Box>
-    </Box>
-  );
-});
+    return (
+      <WorksheetPaper
+        pageCount={problems.length === 0 ? 0 : totalPages}
+        pdfContainerRef={pdfContainerRef}
+        renderPage={renderPage}
+        emptyState={
+          <Typography variant="h6" color="inherit">
+            Generating preview...
+          </Typography>
+        }
+      />
+    );
+  },
+);
 
 WorksheetPreview.displayName = 'WorksheetPreview';
 

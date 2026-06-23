@@ -82,13 +82,14 @@ export const ResponsiveWorkbench: React.FC<ResponsiveWorkbenchProps> = ({
         component="main"
         sx={{
           flex: 1,
-          height: { xs: 'auto', md: '100%' },
-          minHeight: { xs: '100vh', md: 'auto' },
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
           position: 'relative',
-          overflow: { xs: 'auto', md: 'hidden' },
           '@media print': {
             height: 'auto',
             overflow: 'visible',
+            display: 'block',
           },
         }}
       >

@@ -1,15 +1,21 @@
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 
-import { Box, Alert, Snackbar, LinearProgress } from '@mui/material';
+import { Box, Alert, Snackbar, Typography, LinearProgress } from '@mui/material';
+
+import { toolColors, candyColors } from 'src/theme/tokens';
 
 import { isSafari } from './is-safari';
 import { HelpDrawer } from './HelpDrawer';
+import { PreviewStage } from './PreviewStage';
 import { WorksheetToolbar } from './WorksheetToolbar';
+import { ToolColorProvider } from './ToolColorContext';
 import { usePersistedConfig } from './use-persisted-config';
+import { TITLE_SLOT_ID, TOOLBAR_SLOT_ID } from './ToolbarSlot';
+import { SettingsPanel } from '../../sections/_shared/SettingsPanel';
 import { ResponsiveWorkbench } from '../../sections/_shared/ResponsiveWorkbench';
 import { SafariPrintWarning, shouldShowSafariWarning } from './SafariPrintWarning';
-import { SettingsPanel, SettingsHeader } from '../../sections/_shared/SettingsPanel';
 
 import type { WorksheetTool } from './types';
 
@@ -50,6 +56,8 @@ export function Workbench<Config = any, Problem = any>({
   const isAuto = typeof autoGenerate === 'function' ? autoGenerate(config) : autoGenerate;
 
   const navKey = tool.id === 'math-genie' ? 'mathGenie' : tool.id === 'hundred-chart' ? 'hundredChart' : tool.id === 'word-search' ? 'wordSearch' : tool.id;
+
+  const toolColor = toolColors[tool.id] || candyColors.blue;
 
   const generate = useCallback(async () => {
     setIsGenerating(true);
@@ -137,23 +145,50 @@ export function Workbench<Config = any, Problem = any>({
     setConfig(tool.defaultConfig);
   }, [tool.defaultConfig, setConfig]);
 
+  const toolbarPortal = (
+    <WorksheetToolbar
+      onPrint={handlePrint}
+      onSavePdf={handleSavePdf}
+      onReset={handleReset}
+      onHelp={() => setHelpDrawerOpen(true)}
+      isSaving={isSavingPdf}
+    />
+  );
+
+  const titlePortal = (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Box
+        sx={{
+          width: 36,
+          height: 36,
+          borderRadius: '12px',
+          bgcolor: `${toolColor}18`,
+          color: toolColor,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 18,
+          '& .MuiSvgIcon-root': { fontSize: 20 },
+        }}
+      >
+        {tool.meta.icon}
+      </Box>
+      <Typography
+        sx={{
+          fontFamily: '"Baloo 2", "Noto Sans SC", sans-serif',
+          fontWeight: 700,
+          fontSize: '1.1rem',
+          color: toolColor,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {t(`nav.${navKey}`)}
+      </Typography>
+    </Box>
+  );
+
   const sidebar = (
-    <SettingsPanel
-      header={
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <SettingsHeader title={t(`nav.${navKey}`)} />
-          <Box sx={{ pr: 2 }}>
-            <WorksheetToolbar
-              onPrint={handlePrint}
-              onSavePdf={handleSavePdf}
-              onReset={handleReset}
-              onHelp={() => setHelpDrawerOpen(true)}
-              isSaving={isSavingPdf}
-            />
-          </Box>
-        </Box>
-      }
-    >
+    <SettingsPanel header={null}>
       <tool.Settings
         config={config}
         onChange={setConfig}
@@ -163,55 +198,62 @@ export function Workbench<Config = any, Problem = any>({
     </SettingsPanel>
   );
 
+  const [portalTargets, setPortalTargets] = useState<{ toolbar: HTMLElement | null; title: HTMLElement | null }>({ toolbar: null, title: null });
+
+  useEffect(() => {
+    const find = () => {
+      const tb = document.getElementById(TOOLBAR_SLOT_ID);
+      const tt = document.getElementById(TITLE_SLOT_ID);
+      if (tb && tt) {
+        setPortalTargets({ toolbar: tb, title: tt });
+        return true;
+      }
+      return false;
+    };
+    if (find()) return undefined;
+    const timer = setInterval(() => { if (find()) clearInterval(timer); }, 50);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <>
+    <ToolColorProvider value={toolColor}>
+      {portalTargets.title && createPortal(titlePortal, portalTargets.title)}
+      {portalTargets.toolbar && createPortal(toolbarPortal, portalTargets.toolbar)}
       <title>{tool.meta.title}</title>
       <meta name="description" content={`${tool.meta.title} - DIYYY 练习单生成工具`} />
 
-      <ResponsiveWorkbench sidebar={sidebar}>
-        <Box
-          sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'auto',
-            '@media print': {
-              overflow: 'visible',
-            },
-          }}
-        >
-          {isGenerating && (
-            <LinearProgress
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                zIndex: 1,
-                '@media print': {
-                  display: 'none',
-                },
-              }}
-            />
-          )}
+      <Box sx={{ '--tool-color': toolColor, '--tool-color-alpha': `${toolColor}28`, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <ResponsiveWorkbench sidebar={sidebar}>
+        {isGenerating && (
+          <LinearProgress
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 1,
+              '@media print': { display: 'none' },
+            }}
+          />
+        )}
 
-          {error && (
-            <Alert
-              severity="error"
-              sx={{
-                m: 2,
-                '@media print': {
-                  display: 'none',
-                },
-              }}
-            >
-              {error}
-            </Alert>
-          )}
+        {error && (
+          <Alert
+            severity="error"
+            sx={{
+              m: 2,
+              '@media print': { display: 'none' },
+            }}
+          >
+            {error}
+          </Alert>
+        )}
 
+        <PreviewStage>
           <tool.Preview config={config} problems={problems} pdfContainerRef={pdfContainerRef} onConfigChange={setConfig} />
-        </Box>
+        </PreviewStage>
       </ResponsiveWorkbench>
+      </Box>
 
       <Snackbar
         open={showRestoredSnackbar}
@@ -236,6 +278,6 @@ export function Workbench<Config = any, Problem = any>({
         open={helpDrawerOpen}
         onClose={() => setHelpDrawerOpen(false)}
       />
-    </>
+    </ToolColorProvider>
   );
 }

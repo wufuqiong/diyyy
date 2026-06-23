@@ -23,7 +23,7 @@ export const baseTheme: ExtendedThemeOptions = {
   },
   components,
   typography,
-  shape: { borderRadius: 8 },
+  shape: { borderRadius: 16 },
   cssVariables: themeConfig.cssVariables,
 };
 

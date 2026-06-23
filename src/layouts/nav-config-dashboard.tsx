@@ -16,6 +16,8 @@ export type NavItem = {
   path: string;
   icon: React.ReactNode;
   info?: React.ReactNode;
+  /** Tool ID for per-tool candy color — absent for non-tool items (dashboard) */
+  toolId?: string;
 };
 
 export function useNavData(): NavItem[] {
@@ -31,31 +33,37 @@ export function useNavData(): NavItem[] {
       title: t('nav.charcolor'),
       path: '/charcolor',
       icon: <ColorLensIcon />,
+      toolId: 'charcolor',
     },
     {
       title: t('nav.charmaze'),
       path: '/charmaze',
       icon: <ExtensionIcon />,
+      toolId: 'charmaze',
     },
     {
       title: t('nav.chartrace'),
       path: '/chartrace',
       icon: <DrawIcon />,
+      toolId: 'chartrace',
     },
     {
       title: t('nav.mathGenie'),
       path: '/math-genie',
       icon: <CalculateIcon />,
+      toolId: 'math-genie',
     },
     {
       title: t('nav.hundredChart'),
       path: '/hundred-chart',
       icon: <GridOnIcon />,
+      toolId: 'hundred-chart',
     },
     {
       title: t('nav.wordSearch'),
       path: '/word-search',
       icon: <SearchIcon />,
+      toolId: 'word-search',
     },
   ];
 }

@@ -8,6 +8,9 @@ import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 
+import { candyColors } from 'src/theme/tokens';
+import { TitleSlotMount, ToolbarSlotMount } from 'src/shared/worksheet/ToolbarSlot';
+
 import { LanguageSwitcher } from 'src/components/language-switcher/LanguageSwitcher';
 
 import { NavMobile, NavDesktop } from './nav';
@@ -48,17 +51,26 @@ export function DashboardLayout({
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
   const renderSidebarTopArea = () => (
-    <Box sx={{ px: 2.5, py: 3, display: 'inline-flex', alignItems: 'center' }}>
+    <Box sx={{ px: 2.5, py: 3, display: 'inline-flex', alignItems: 'center', gap: 1.5 }}>
       <Box
         component="img"
         src={`${import.meta.env.BASE_URL}assets/images/diyyy.png`}
         sx={{
-          width: 40,
-          height: 40,
-          mr: 1.5,
+          width: 44,
+          height: 44,
+          borderRadius: '16px',
+          bgcolor: candyColors.orange,
+          p: 0.5,
         }}
       />
-      <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+      <Typography
+        sx={{
+          fontFamily: '"Baloo 2", "Noto Sans SC", sans-serif',
+          fontWeight: 700,
+          fontSize: '1.4rem',
+          color: candyColors.orange,
+        }}
+      >
         DIYYY
       </Typography>
     </Box>
@@ -90,19 +102,32 @@ export function DashboardLayout({
             onClose={onClose}
             slots={{ topArea: renderSidebarTopArea() }}
           />
+          <TitleSlotMount />
         </>
       ),
-      rightArea: <LanguageSwitcher />,
+      rightArea: (
+        <>
+          <ToolbarSlotMount />
+          <LanguageSwitcher />
+        </>
+      ),
     };
 
     return (
       <HeaderSection
         disableElevation
+        disableOffset
         layoutQuery={layoutQuery}
         {...slotProps?.header}
         slots={{ ...headerSlots, ...slotProps?.header?.slots }}
         slotProps={merge(headerSlotProps, slotProps?.header?.slotProps ?? {})}
-        sx={slotProps?.header?.sx}
+        sx={[
+          {
+            backgroundColor: '#fff',
+            borderBottom: '1px solid rgba(58,53,80,0.06)',
+          },
+          ...(Array.isArray(slotProps?.header?.sx) ? slotProps.header.sx : slotProps?.header?.sx ? [slotProps.header.sx] : []),
+        ]}
       />
     );
   };
@@ -126,7 +151,6 @@ export function DashboardLayout({
           layoutQuery={layoutQuery}
           slots={{
             topArea: renderSidebarTopArea(),
-            bottomArea: <LanguageSwitcher />,
           }}
         />
       }

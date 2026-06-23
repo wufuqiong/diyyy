@@ -21,13 +21,12 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 
+import { candyColors } from 'src/theme/tokens';
 import { GridType, TraceContentMode } from 'src/types';
 import miemieDetailsJson from 'src/data/miemie-details.json';
 
-import {
-  SettingsField,
-  SettingsSection,
-} from 'src/sections/_shared/SettingsPanel';
+import { SettingCard } from 'src/sections/_shared/SettingCard';
+import { SettingsField } from 'src/sections/_shared/SettingsPanel';
 
 const miemieDetails: Record<string, MiemieLesson[]> = miemieDetailsJson;
 
@@ -264,8 +263,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
   return (
     <>
       {/* ============= CONTENT ============= */}
-      <SettingsSection title={t('charTrace.settings.content')}>
-        <SettingsField label={t('charTrace.settings.preset')}>
+      <SettingCard label={t('charTrace.settings.sectionMaterial')} toolColor={candyColors.green}>
+        <SettingsField>
           <Stack spacing={1.5}>
             <FormControl fullWidth size="small">
               <InputLabel>{t('charTrace.settings.level')}</InputLabel>
@@ -366,7 +365,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
           </Stack>
         </SettingsField>
 
-        <SettingsField label={t('charTrace.settings.quickPresets')}>
+        <SettingsField>
           <Stack direction="row" spacing={1}>
             <Button
               variant="outlined"
@@ -407,16 +406,18 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
           </Stack>
         </SettingsField>
 
-        <SettingsField label={t('charTrace.settings.manualInput')} caption={
-          (() => {
-            const countStr = t('charTrace.settings.manualInputCaption', { length: config.text.length });
-            const text = config.text;
-            if (text.includes('\n')) return `${countStr}  ·  ${t('charTrace.settings.parsingHintSentences')}`;
-            if (text.includes(',') || text.includes('，')) return `${countStr}  ·  ${t('charTrace.settings.parsingHintPhrases')}`;
-            if (config.gridType === 'english') return `${countStr}  ·  ${t('charTrace.settings.parsingHintEnglish')}`;
-            return `${countStr}  ·  ${t('charTrace.settings.parsingHintChars')}`;
-          })()
-        }>
+        <SettingsField
+          caption={
+            (() => {
+              const countStr = t('charTrace.settings.manualInputCaption', { length: config.text.length });
+              const text = config.text;
+              if (text.includes('\n')) return `${countStr}  ·  ${t('charTrace.settings.parsingHintSentences')}`;
+              if (text.includes(',') || text.includes('，')) return `${countStr}  ·  ${t('charTrace.settings.parsingHintPhrases')}`;
+              if (config.gridType === 'english') return `${countStr}  ·  ${t('charTrace.settings.parsingHintEnglish')}`;
+              return `${countStr}  ·  ${t('charTrace.settings.parsingHintChars')}`;
+            })()
+          }
+        >
           <Stack spacing={1}>
             <TextField
               multiline
@@ -457,18 +458,18 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
             </Box>
           </Stack>
         </SettingsField>
-      </SettingsSection>
+      </SettingCard>
 
       {/* ============= GRID & LAYOUT ============= */}
-      <SettingsSection title={t('charTrace.settings.gridAndLayout')}>
-        <SettingsField label={t('charTrace.settings.gridTypeLabel')}>
+      <SettingCard label={t('charTrace.settings.gridAndLayout')} toolColor={candyColors.green}>
+        <SettingsField>
           <ToggleButtonGroup
             value={config.gridType}
             exclusive
             fullWidth
             size="small"
             onChange={(_, v) => v && handleChange('gridType', v)}
-            sx={{ flexWrap: 'wrap', '& .MuiToggleButton-root': { flex: '1 1 33%' } }}
+            sx={{ '& .MuiToggleButton-root': { flex: 1 } }}
           >
             <ToggleButton value={GridType.TIAN}>田</ToggleButton>
             <ToggleButton value={GridType.MI}>米</ToggleButton>
@@ -476,73 +477,85 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
             <ToggleButton value={GridType.ENGLISH_LINES} disabled={hasChineseInText}>
               四线
             </ToggleButton>
-            <ToggleButton value={GridType.NONE}>{t('charTrace.settings.none')}</ToggleButton>
           </ToggleButtonGroup>
         </SettingsField>
 
         {!isEnglishLines && (
-          <Stack direction="row" spacing={2}>
-            <SettingsField label={t('charTrace.settings.gridColorLabel2')}>
-              <TextField
-                type="color"
-                fullWidth
-                size="small"
-                value={config.gridColor}
-                onChange={(e) => handleChange('gridColor', e.target.value)}
-              />
-            </SettingsField>
-            <SettingsField label={t('charTrace.settings.opacity')}>
-              <TextField
-                type="number"
-                fullWidth
-                size="small"
-                inputProps={{ min: 0, max: 1, step: 0.1 }}
-                value={config.gridOpacity}
-                onChange={(e) => handleChange('gridOpacity', parseFloat(e.target.value))}
-              />
-            </SettingsField>
-          </Stack>
+          <>
+            <Stack direction="row" spacing={2}>
+              <Box sx={{ flex: 1 }}>
+                <SettingsField>
+                  <TextField
+                    type="color"
+                    label={t('charTrace.settings.gridColorLabel2')}
+                    fullWidth
+                    size="small"
+                    value={config.gridColor}
+                    onChange={(e) => handleChange('gridColor', e.target.value)}
+                  />
+                </SettingsField>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <SettingsField>
+                  <TextField
+                    type="number"
+                    label={t('charTrace.settings.opacity')}
+                    fullWidth
+                    size="small"
+                    inputProps={{ min: 0, max: 1, step: 0.1 }}
+                    value={config.gridOpacity}
+                    onChange={(e) => handleChange('gridOpacity', parseFloat(e.target.value))}
+                  />
+                </SettingsField>
+              </Box>
+            </Stack>
+            <Stack direction="row" spacing={2}>
+              <Box sx={{ flex: 1 }}>
+                <SettingsField>
+                  <TextField
+                    type="number"
+                    label={t('charTrace.settings.rowsPerPageLabel')}
+                    fullWidth
+                    size="small"
+                    inputProps={{ min: 1, max: 15 }}
+                    value={config.rowsPerPage}
+                    onChange={(e) => handleChange('rowsPerPage', parseInt(e.target.value, 10))}
+                  />
+                </SettingsField>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <SettingsField>
+                  <TextField
+                    type="number"
+                    label={t('charTrace.settings.colsPerRowLabel')}
+                    fullWidth
+                    size="small"
+                    inputProps={{ min: 1, max: 12 }}
+                    value={config.colsPerRow}
+                    onChange={(e) => handleChange('colsPerRow', parseInt(e.target.value, 10))}
+                  />
+                </SettingsField>
+              </Box>
+            </Stack>
+          </>
         )}
 
-        <Stack direction="row" spacing={2}>
-          {!isEnglishLines ? (
-            <SettingsField label={t('charTrace.settings.rowsPerPageLabel')}>
-              <TextField
-                type="number"
-                fullWidth
-                size="small"
-                inputProps={{ min: 1, max: 15 }}
-                value={config.rowsPerPage}
-                onChange={(e) => handleChange('rowsPerPage', parseInt(e.target.value, 10))}
-              />
-            </SettingsField>
-          ) : (
-            <SettingsField label={t('charTrace.settings.sizeMm')}>
-              <FormControl fullWidth size="small">
-                <Select
-                  value={config.gridSize || 14}
-                  onChange={(e) => handleChange('gridSize', Number(e.target.value))}
-                >
-                  <MenuItem value={14}>14mm</MenuItem>
-                  <MenuItem value={17}>17mm</MenuItem>
-                  <MenuItem value={20}>20mm</MenuItem>
-                </Select>
-              </FormControl>
-            </SettingsField>
-          )}
-          {!isEnglishLines && (
-            <SettingsField label={t('charTrace.settings.colsPerRowLabel')}>
-              <TextField
-                type="number"
-                fullWidth
-                size="small"
-                inputProps={{ min: 1, max: 12 }}
-                value={config.colsPerRow}
-                onChange={(e) => handleChange('colsPerRow', parseInt(e.target.value, 10))}
-              />
-            </SettingsField>
-          )}
-        </Stack>
+        {isEnglishLines && (
+          <SettingsField>
+            <FormControl fullWidth size="small">
+              <InputLabel>{t('charTrace.settings.sizeMm')}</InputLabel>
+              <Select
+                value={config.gridSize || 14}
+                label={t('charTrace.settings.sizeMm')}
+                onChange={(e) => handleChange('gridSize', Number(e.target.value))}
+              >
+                <MenuItem value={14}>14mm</MenuItem>
+                <MenuItem value={17}>17mm</MenuItem>
+                <MenuItem value={20}>20mm</MenuItem>
+              </Select>
+            </FormControl>
+          </SettingsField>
+        )}
 
         <SettingsField
           label={
@@ -564,14 +577,16 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
             disabled={isSentenceMode}
           />
         </SettingsField>
-      </SettingsSection>
+      </SettingCard>
 
       {/* ============= TEXT STYLE ============= */}
-      <SettingsSection title={t('charTrace.settings.textStyle')}>
-        <SettingsField label={t('charTrace.settings.fontFamily')}>
+      <SettingCard label={t('charTrace.settings.textStyle')} toolColor={candyColors.green}>
+        <SettingsField>
           <FormControl fullWidth size="small">
+            <InputLabel>{t('charTrace.settings.fontFamily')}</InputLabel>
             <Select
               value={config.fontFamily}
+              label={t('charTrace.settings.fontFamily')}
               onChange={(e) => handleChange('fontFamily', e.target.value)}
             >
               {!isEnglishLines && [
@@ -618,24 +633,30 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
         </SettingsField>
 
         <Stack direction="row" spacing={2}>
-          <SettingsField label={t('charTrace.settings.mainColor')}>
-            <TextField
-              type="color"
-              fullWidth
-              size="small"
-              value={config.mainTextColor}
-              onChange={(e) => handleChange('mainTextColor', e.target.value)}
-            />
-          </SettingsField>
-          <SettingsField label={t('charTrace.settings.traceColor')}>
-            <TextField
-              type="color"
-              fullWidth
-              size="small"
-              value={config.traceTextColor}
-              onChange={(e) => handleChange('traceTextColor', e.target.value)}
-            />
-          </SettingsField>
+          <Box sx={{ flex: 1 }}>
+            <SettingsField>
+              <TextField
+                type="color"
+                label={t('charTrace.settings.mainColor')}
+                fullWidth
+                size="small"
+                value={config.mainTextColor}
+                onChange={(e) => handleChange('mainTextColor', e.target.value)}
+              />
+            </SettingsField>
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <SettingsField>
+              <TextField
+                type="color"
+                label={t('charTrace.settings.traceColor')}
+                fullWidth
+                size="small"
+                value={config.traceTextColor}
+                onChange={(e) => handleChange('traceTextColor', e.target.value)}
+              />
+            </SettingsField>
+          </Box>
         </Stack>
 
         <SettingsField label={t('charTrace.settings.traceOpacity', { value: config.traceOpacity })}>
@@ -647,20 +668,22 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
             onChange={(_, val) => handleChange('traceOpacity', val as number)}
           />
         </SettingsField>
-      </SettingsSection>
+      </SettingCard>
 
       {/* ============= PAGE SETUP ============= */}
-      <SettingsSection title={t('charTrace.settings.pageSetup')}>
-        <SettingsField label={t('charTrace.settings.pageTitle')}>
+      <SettingCard label={t('charTrace.settings.pageSetup')} toolColor={candyColors.green}>
+        <SettingsField>
           <TextField
+            label={t('charTrace.settings.pageTitle')}
             fullWidth
             size="small"
             value={config.headerTitle}
             onChange={(e) => handleChange('headerTitle', e.target.value)}
           />
         </SettingsField>
-        <SettingsField label={t('charTrace.settings.rightInfo')}>
+        <SettingsField>
           <TextField
+            label={t('charTrace.settings.rightInfo')}
             fullWidth
             size="small"
             value={config.headerContent}
@@ -669,36 +692,22 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
         </SettingsField>
 
         {!isEnglishLines && (
-          <SettingsField label={t('charTrace.settings.displayOptions')}>
-            <Stack direction="row" spacing={2}>
-              <FormControlLabel
-                sx={{ ml: 0 }}
-                control={
-                  <Checkbox
-                    checked={config.showPinyin}
-                    onChange={(e) => handleChange('showPinyin', e.target.checked)}
-                    color="primary"
-                    size="small"
-                  />
-                }
-                label={<Typography variant="body2">{t('charTrace.settings.pinyin')}</Typography>}
-              />
-              <FormControlLabel
-                sx={{ ml: 0 }}
-                control={
-                  <Checkbox
-                    checked={config.showStrokeCount}
-                    onChange={(e) => handleChange('showStrokeCount', e.target.checked)}
-                    color="primary"
-                    size="small"
-                  />
-                }
-                label={<Typography variant="body2">{t('charTrace.settings.strokeCount')}</Typography>}
-              />
-            </Stack>
+          <SettingsField>
+            <FormControlLabel
+              sx={{ ml: 0 }}
+              control={
+                <Checkbox
+                  checked={config.showPinyin}
+                  onChange={(e) => handleChange('showPinyin', e.target.checked)}
+                  color="primary"
+                  size="small"
+                />
+              }
+              label={<Typography variant="body2">{t('charTrace.settings.pinyin')}</Typography>}
+            />
           </SettingsField>
         )}
-      </SettingsSection>
+      </SettingCard>
     </>
   );
 };

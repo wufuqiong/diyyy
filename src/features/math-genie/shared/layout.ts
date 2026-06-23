@@ -19,11 +19,9 @@ export interface PageLayout {
 }
 
 const PAGE_HEIGHT_MM = 297;
-// Reserves vertical space consumed by paper padding (top 20mm + bottom 15mm = 35mm)
-// plus the header block (title h4 + mb:3 + border + pb:2 ≈ 20mm) plus a small safety
-// margin so the grid never overflows a single A4 page when printed.
-const HEADER_MM = 60;
-const AVAILABLE_HEIGHT_MM = PAGE_HEIGHT_MM - HEADER_MM; // 237
+// WorksheetPaper padding + title + safety margin for print.
+const HEADER_MM = 85;
+const AVAILABLE_HEIGHT_MM = PAGE_HEIGHT_MM - HEADER_MM; // 222
 const PAGE_WIDTH_MM = 210;
 const MARGIN_MM = 20 * 2; // left + right margins
 

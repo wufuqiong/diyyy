@@ -28,6 +28,7 @@ import {
 
 import { shuffleArray } from 'src/utils/array-tools';
 
+import { candyColors } from 'src/theme/tokens';
 import miemieDetails from 'src/data/miemie-details.json';
 import { loadMiemieLessons } from 'src/shared/data/lessons';
 import {
@@ -37,10 +38,8 @@ import {
   SELECTER_TITLE_PRESETS,
 } from 'src/features/charmaze/types';
 
-import {
-  SettingsField,
-  SettingsSection,
-} from 'src/sections/_shared/SettingsPanel';
+import { SettingCard } from 'src/sections/_shared/SettingCard';
+import { SettingsField } from 'src/sections/_shared/SettingsPanel';
 
 const miemieDetailsTyped = miemieDetails as MiemieDetails;
 
@@ -225,10 +224,11 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
   return (
     <>
-      <SettingsSection title={t('charMaze.settings.load')}>
-        <SettingsField label={t('charMaze.settings.modeSelect')}>
+      <SettingCard label={t('charMaze.settings.sectionMaterial')} toolColor={candyColors.orange}>
+        <SettingsField>
           <FormControl fullWidth size="small">
-            <Select value={selectedMode} onChange={handleModeChange}>
+            <InputLabel>{t('charMaze.settings.modeSelect')}</InputLabel>
+            <Select value={selectedMode} onChange={handleModeChange} label={t('charMaze.settings.modeSelect')}>
               {Object.keys(MODE_PRESETS).map((preset, index) => (
                 <MenuItem key={index} value={index}>
                   {t(`charMaze.settings.${modeLabelKeys[preset as 'WORD' | 'PHRASE' | 'SENTENCE']}`)}
@@ -237,8 +237,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             </Select>
           </FormControl>
         </SettingsField>
-
-        <SettingsField label={SELECTER_TITLE_PRESETS[mode]}>
+        <SettingsField>
           <FormControl fullWidth size="small">
             <InputLabel>{SELECTER_TITLE_PRESETS[mode]}</InputLabel>
             <Select value={fullSelectedValue} onChange={handleLevelChange} label={SELECTER_TITLE_PRESETS[mode]}>
@@ -246,27 +245,23 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               {Object.keys(currentMiemieData).map((language) =>
                 Object.keys(currentMiemieData[language] || {}).map((level) => (
                   <MenuItem key={`${language}-${level}`} value={`${language}|${level}`}>
-                    {language} - {level}
+                    {level}
                   </MenuItem>
                 ))
               )}
             </Select>
           </FormControl>
         </SettingsField>
-
-        <SettingsField label={t('charMaze.settings.presetBook')}>
+        <SettingsField>
           <FormControl fullWidth size="small" disabled={!selectedLevel}>
-            <Select value={selectedBook} onChange={handleSelectBookChange} displayEmpty>
+            <InputLabel shrink>{t('charMaze.settings.presetBook')}</InputLabel>
+            <Select value={selectedBook} onChange={handleSelectBookChange} label={t('charMaze.settings.presetBook')} displayEmpty>
               <MenuItem value="">{t('charMaze.settings.all')}</MenuItem>
               {renderBookOptions()}
             </Select>
           </FormControl>
         </SettingsField>
-      </SettingsSection>
-
-      <SettingsSection title={t('charMaze.settings.content')}>
         <SettingsField
-          label={t('charMaze.settings.manualInput')}
           caption={
             (() => {
               const count = `${userInput.length}/${MAX_INPUT_LENGTH}`;
@@ -327,13 +322,15 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             </Box>
           </Stack>
         </SettingsField>
-      </SettingsSection>
+      </SettingCard>
 
-      <SettingsSection title={t('charMaze.settings.options')}>
-        <SettingsField label={t('charMaze.settings.mazeSize')}>
+      <SettingCard label={t('charMaze.settings.sectionMaze')} toolColor={candyColors.orange}>
+        <SettingsField>
           <FormControl fullWidth size="small">
+            <InputLabel>{t('charMaze.settings.mazeSize')}</InputLabel>
             <Select
               value={selectedTableSize}
+              label={t('charMaze.settings.mazeSize')}
               onChange={(e) => onChange({ ...config, selectedTableSize: e.target.value as number })}
             >
               {TABLE_SIZE_PRESETS.map((preset, index) => (
@@ -346,12 +343,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         </SettingsField>
 
         <SettingsField
-          label={t('charMaze.settings.wordsPerPage')}
           caption={mode !== 'PHRASE' ? t('charMaze.settings.wordsPerPageHint') : undefined}
         >
           <FormControl fullWidth size="small" disabled={mode !== 'PHRASE'}>
+            <InputLabel>{t('charMaze.settings.wordsPerPage')}</InputLabel>
             <Select
               value={wordsPerPage}
+              label={t('charMaze.settings.wordsPerPage')}
               onChange={(e) => onChange({ ...config, wordsPerPage: e.target.value as number })}
             >
               {[3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
@@ -362,7 +360,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             </Select>
           </FormControl>
         </SettingsField>
-      </SettingsSection>
+      </SettingCard>
 
       <Dialog
         open={pendingMode !== null}

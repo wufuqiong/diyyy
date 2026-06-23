@@ -24,14 +24,13 @@ import {
 
 import { shuffleArray } from 'src/utils/array-tools';
 
+import { candyColors } from 'src/theme/tokens';
 import miemieDetails from 'src/data/miemie-details.json';
 import { loadMiemieLessons } from 'src/shared/data/lessons';
 import { COLOR_PRESETS, userInputToChars, hasNonChineseChars } from 'src/features/charcolor/utils';
 
-import {
-  SettingsField,
-  SettingsSection,
-} from 'src/sections/_shared/SettingsPanel';
+import { SettingCard } from 'src/sections/_shared/SettingCard';
+import { SettingsField } from 'src/sections/_shared/SettingsPanel';
 
 const miemieDetailsTyped = miemieDetails as MiemieDetails;
 const miemie = loadMiemieLessons(miemieDetailsTyped, 'word');
@@ -126,8 +125,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
   return (
     <>
-      <SettingsSection title={t('charColor.settings.load')}>
-        <SettingsField label={t('charColor.settings.presetWordLib')} toolId="charcolor" helpAnchor="field-preset-word-lib">
+      <SettingCard label={t('charColor.settings.sectionMaterial')} toolColor={candyColors.red}>
+        <SettingsField toolId="charcolor" helpAnchor="field-preset-word-lib">
           <FormControl fullWidth size="small">
             <InputLabel>{t('charColor.settings.presetWordLib')}</InputLabel>
             <Select value={fullSelectedValue} onChange={handleLevelChange} label={t('charColor.settings.presetWordLib')}>
@@ -135,14 +134,14 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               {Object.keys(miemie).map((language) =>
                 Object.keys(miemie[language] || {}).map((level) => (
                   <MenuItem key={`${language}-${level}`} value={`${language}|${level}`}>
-                    {language} - {level}
+                    {level}
                   </MenuItem>
                 ))
               )}
             </Select>
           </FormControl>
         </SettingsField>
-        <SettingsField label={t('charColor.settings.presetBook')}>
+        <SettingsField>
           <FormControl fullWidth size="small">
             <InputLabel>{t('charColor.settings.presetBook')}</InputLabel>
             <Select value={selectedBook} onChange={handleSelectBookChange} label={t('charColor.settings.presetBook')}>
@@ -151,51 +150,65 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             </Select>
           </FormControl>
         </SettingsField>
-      </SettingsSection>
+      </SettingCard>
 
-      <SettingsSection title={t('charColor.settings.content')}>
+      <SettingCard label={t('charColor.settings.sectionDisplay')} toolColor={candyColors.red}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <SettingsField>
+              <FormControl fullWidth size="small">
+                <Select value={wordsPerPage} onChange={(e) => onChange({ ...config, wordsPerPage: e.target.value as number })}>
+                  <MenuItem value={2}>2 字/页</MenuItem>
+                  <MenuItem value={3}>3 字/页</MenuItem>
+                  <MenuItem value={4}>4 字/页</MenuItem>
+                  <MenuItem value={5}>5 字/页</MenuItem>
+                </Select>
+              </FormControl>
+            </SettingsField>
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <SettingsField>
+              <FormControl fullWidth size="small">
+                <Select value={selectedPreset} onChange={(e) => onChange({ ...config, selectedPreset: e.target.value as number })}>
+                  {COLOR_PRESETS.map((preset, index) => (
+                    <MenuItem key={index} value={index}>{preset.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </SettingsField>
+          </Box>
+        </Box>
+        <SettingsField label={t('charColor.settings.colorPreview')}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {COLOR_PRESETS[selectedPreset].colors.map((color, index) => (
+              <Box key={index} sx={{ width: 32, height: 32, backgroundColor: color, borderRadius: 1, border: '1px solid', borderColor: 'grey.300' }} title={color} />
+            ))}
+          </Box>
+        </SettingsField>
+      </SettingCard>
+
+      <SettingCard label={t('charColor.settings.sectionManualInput')} toolColor={candyColors.red}>
         <SettingsField
-          label={t('charColor.settings.manualInput')}
           caption={
             (() => {
               const count = `${userInput.length}/${MAX_INPUT_LENGTH}`;
               if (hasNonChineseChars(userInput)) {
-                return <Typography variant="caption" color="error.main">{count}  ·  {t('charColor.settings.nonChineseWarning')}</Typography>;
+                return <Typography variant="caption" color="error.main">{count} · {t('charColor.settings.nonChineseWarning')}</Typography>;
               }
-              return `${count}  ·  ${t('charColor.settings.parsingHint')}`;
+              return `${count} · ${t('charColor.settings.parsingHint')}`;
             })()
           }
         >
           <Stack spacing={1}>
-            <TextField
-              multiline
-              rows={4}
-              size="small"
-              value={userInput}
+            <TextField multiline rows={4} size="small" value={userInput}
               onChange={(e) => onChange({ ...config, userInput: e.target.value })}
               placeholder={t('charColor.settings.manualInput')}
-              inputProps={{ maxLength: MAX_INPUT_LENGTH }}
-              fullWidth
-            />
+              inputProps={{ maxLength: MAX_INPUT_LENGTH }} fullWidth />
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<ClearIcon />}
-                onClick={handleClearInput}
-                disabled={!userInput}
-                sx={{ textTransform: 'none' }}
-              >
+              <Button variant="outlined" size="small" startIcon={<ClearIcon />} onClick={handleClearInput} disabled={!userInput} sx={{ textTransform: 'none' }}>
                 {t('common.clear')}
               </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<ShuffleIcon />}
-                onClick={handleShuffleInput}
-                disabled={userInputToChars(userInput).length < 2}
-                sx={{ textTransform: 'none' }}
-              >
+              <Button variant="outlined" size="small" startIcon={<ShuffleIcon />} onClick={handleShuffleInput} disabled={userInputToChars(userInput).length < 2} sx={{ textTransform: 'none' }}>
                 {t('common.shuffle')}
               </Button>
             </Box>
@@ -207,66 +220,14 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                   <Typography variant="caption" color="text.secondary">
                     {t('charColor.settings.charPreview', { count: chars.length })}:
                   </Typography>
-                  {chars.slice(0, 30).map((c, i) => (
-                    <Chip key={i} label={c} size="small" variant="outlined" sx={{ fontFamily: 'monospace' }} />
-                  ))}
-                  {chars.length > 30 && (
-                    <Typography variant="caption" color="text.secondary">+{chars.length - 30} more</Typography>
-                  )}
+                  {chars.slice(0, 30).map((c, i) => (<Chip key={i} label={c} size="small" variant="outlined" sx={{ fontFamily: 'monospace' }} />))}
+                  {chars.length > 30 && <Typography variant="caption" color="text.secondary">+{chars.length - 30} more</Typography>}
                 </Box>
               );
             })()}
           </Stack>
         </SettingsField>
-      </SettingsSection>
-
-      <SettingsSection title={t('charColor.settings.options')}>
-        <SettingsField label={t('charColor.settings.wordsPerPage')}>
-          <FormControl fullWidth size="small">
-            <Select
-              value={wordsPerPage}
-              onChange={(e) => onChange({ ...config, wordsPerPage: e.target.value as number })}
-            >
-              <MenuItem value={2}>2 字/页</MenuItem>
-              <MenuItem value={3}>3 字/页</MenuItem>
-              <MenuItem value={4}>4 字/页</MenuItem>
-              <MenuItem value={5}>5 字/页</MenuItem>
-            </Select>
-          </FormControl>
-        </SettingsField>
-        <SettingsField label={t('charColor.settings.colorScheme')}>
-          <FormControl fullWidth size="small">
-            <Select
-              value={selectedPreset}
-              onChange={(e) => onChange({ ...config, selectedPreset: e.target.value as number })}
-            >
-              {COLOR_PRESETS.map((preset, index) => (
-                <MenuItem key={index} value={index}>
-                  {preset.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </SettingsField>
-        <SettingsField label={t('charColor.settings.colorPreview')}>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            {COLOR_PRESETS[selectedPreset].colors.map((color, index) => (
-              <Box
-                key={index}
-                sx={{
-                  width: 32,
-                  height: 32,
-                  backgroundColor: color,
-                  borderRadius: 1,
-                  border: '1px solid',
-                  borderColor: 'grey.300',
-                }}
-                title={color}
-              />
-            ))}
-          </Box>
-        </SettingsField>
-      </SettingsSection>
+      </SettingCard>
     </>
   );
 };

@@ -1,25 +1,11 @@
 import React from 'react';
 
-import { NavigateNext, NavigateBefore } from '@mui/icons-material';
-import {
-  Box,
-  Typography,
-  IconButton
-} from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { colors } from 'src/theme/tokens';
-import { usePreviewScale } from 'src/shared/worksheet/usePreviewScale';
+import { useToolColor, WorksheetPaper } from 'src/shared/worksheet';
 
 import { useRandomIcon } from 'src/components/iconify/random-icon';
-
-interface PreviewSheetState {
-  currentPage: number;
-}
-
-interface PreviewSheetProps {
-  pages: PreviewPage[];
-  pdfContainerRef?: React.RefObject<HTMLDivElement | null>;
-}
 
 interface PreviewPage {
   refChars: string[];
@@ -31,432 +17,149 @@ interface PreviewPage {
   totalPages: number;
 }
 
+interface PreviewSheetProps {
+  pages: PreviewPage[];
+  pdfContainerRef?: React.RefObject<HTMLDivElement | null>;
+}
+
 type Mode = 'WORD' | 'PHRASE' | 'SENTENCE';
 
 const TITLE_PRESETS: Record<Mode, string> = {
-  'WORD': '单字迷宫',
-  'PHRASE': '请找到以下词语',
-  'SENTENCE': '请找到以下句子',
+  WORD: '单字迷宫',
+  PHRASE: '请找到以下词语',
+  SENTENCE: '请找到以下句子',
 };
 
-// Instead of functions, create React components
 const StartIcon = ({ char }: { char: string }) => {
   const iconStart = useRandomIcon(`maze-page-start-icon-${char}`);
-  return (
-    <img
-      src={iconStart}
-      alt="start icon"
-      style={{ 
-        width: '2em', 
-        height: '2em', 
-        verticalAlign: 'middle',
-      }} 
-    />
-  );
+  return <img src={iconStart} alt="start icon" style={{ width: '2em', height: '2em', verticalAlign: 'middle' }} />;
 };
 
 const EndIcon = ({ char }: { char: string }) => {
   const iconEnd = useRandomIcon(`maze-page-end-icon-${char}`);
+  return <img src={iconEnd} alt="end icon" style={{ width: '2em', height: '2em', verticalAlign: 'middle' }} />;
+};
+
+const Chip: React.FC<{ color: string; children: React.ReactNode }> = ({ color, children }) => (
+  <Box
+    component="span"
+    sx={{
+      display: 'inline-block',
+      mx: 1,
+      px: 2,
+      py: 0.5,
+      backgroundColor: color,
+      color: 'white',
+      borderRadius: 1,
+      fontWeight: 'bold',
+      fontSize: '1.2em',
+    }}
+  >
+    {children}
+  </Box>
+);
+
+const Instruction: React.FC<{ mode: string; refChars: string[]; color: string }> = ({ mode, refChars, color }) => {
+  let body: React.ReactNode = null;
+
+  if (mode === 'WORD') {
+    body = (
+      <>
+        请从
+        <StartIcon char={refChars[0]} />
+        出发，沿着
+        <Chip color={color}>{refChars[0]}</Chip>
+        字走，走到
+        <EndIcon char={refChars[0]} />
+        处。
+      </>
+    );
+  } else if (mode === 'PHRASE' || mode === 'SENTENCE') {
+    body = refChars.map((c, i) => (
+      <Chip key={i} color={color}>
+        {c}
+      </Chip>
+    ));
+  }
+
   return (
-    <img
-      src={iconEnd}
-      alt="end icon"
-      style={{ 
-        width: '2em', 
-        height: '2em', 
-        verticalAlign: 'middle',
-      }} 
-    />
+    <Box sx={{ textAlign: 'center', mb: 3, p: 2 }}>
+      <Typography variant="h4" sx={{ fontWeight: 'bold', color }}>
+        {body}
+      </Typography>
+    </Box>
   );
 };
 
-export class PreviewSheet extends React.Component<PreviewSheetProps, PreviewSheetState> {
-  constructor(props: PreviewSheetProps) {
-    super(props);
-    this.state = {
-      currentPage: 0,
-    };
-  }
+const MazePageContent: React.FC<{ page: PreviewPage; color: string }> = ({ page, color }) => {
+  const { refChars, characters, rows, cols, mode } = page;
+  const totalCircles = rows * cols;
 
-  goToPreviousPage = (): void => {
-    this.setState(prevState => ({
-      currentPage: Math.max(0, prevState.currentPage - 1)
-    }));
-  };
-
-  goToNextPage = (): void => {
-    const { pages } = this.props;
-    this.setState(prevState => ({
-      currentPage: Math.min(pages.length - 1, prevState.currentPage + 1)
-    }));
-  };
-
-  goToPage = (pageIndex: number): void => {
-    this.setState({
-      currentPage: pageIndex
-    });
-  };
-
-  generatePageIndicators = (): (number | 'ellipsis')[] => {
-    const { pages } = this.props;
-    const { currentPage } = this.state;
-    const totalPages = pages.length;
-    
-    if (totalPages <= 7) {
-      return Array.from({ length: totalPages }, (_, i) => i);
-    }
-    
-    const indicators: (number | 'ellipsis')[] = [];
-    indicators.push(0);
-    
-    if (currentPage <= 3) {
-      for (let i = 1; i <= 4; i++) {
-        indicators.push(i);
-      }
-      indicators.push('ellipsis');
-      indicators.push(totalPages - 2);
-      indicators.push(totalPages - 1);
-    } else if (currentPage >= totalPages - 4) {
-      indicators.push('ellipsis');
-      for (let i = totalPages - 5; i < totalPages; i++) {
-        if (i > 0) indicators.push(i);
-      }
-    } else {
-      indicators.push('ellipsis');
-      for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-        indicators.push(i);
-      }
-      indicators.push('ellipsis');
-      indicators.push(totalPages - 1);
-    }
-    
-    return indicators;
-  };
-
-  getWordModeInstruction = (char: string, start: React.ReactElement, end: React.ReactElement): React.ReactElement => 
-  (
-    <Box 
-      sx={{ 
-        textAlign: 'center',
-        mb: 3,
-        p: 2,
-      }}
-    >
-      <Typography 
-        variant="h4" 
-        sx={{ 
-          fontWeight: 'bold',
-          color: 'primary.main',
-        }}
-      >
-        请从{start}出发，
-        沿着
-        <Box 
-          component="span" 
-          sx={{ 
-            display: 'inline-block',
-            mx: 1,
-            px: 2,
-            py: 0.5,
-            backgroundColor: 'primary.main',
-            color: 'white',
-            borderRadius: 1,
-            fontWeight: 'bold',
-            fontSize: '1.2em',
-          }}
-        >
-          {char}
-        </Box>
-        字走，走到
-        {end}处。
-      </Typography>
-    </Box>
-  );
-
-  getPhraseModeInstruction = (chars: string[]): React.ReactElement => 
-  (
-    <Box 
-      sx={{ 
-        textAlign: 'center',
-        mb: 3,
-        p: 2,
-      }}
-    >
-      <Typography 
-        variant="h4" 
-        sx={{ 
-          fontWeight: 'bold',
-          color: 'primary.main',
-        }}
-      >
-        {chars.map((index) => (
-        <Box 
-          component="span" 
-          sx={{ 
-            display: 'inline-block',
-            mx: 1,
-            px: 2,
-            py: 0.5,
-            backgroundColor: 'primary.main',
-            color: 'white',
-            borderRadius: 1,
-            fontWeight: 'bold',
-            fontSize: '1.2em',
-          }}
-        >
-          {index}
-        </Box>
-        ))}
-      </Typography>
-    </Box>
-  );
-
-  getSentenceModeInstruction = (chars: string[]): React.ReactElement => 
-  (
-    <Box 
-      sx={{ 
-        textAlign: 'center',
-        mb: 3,
-        p: 2,
-      }}
-    >
-      <Typography 
-        variant="h4" 
-        sx={{ 
-          fontWeight: 'bold',
-          color: 'primary.main',
-        }}
-      >
-        {chars.map((index) => (
-        <Box 
-          component="span" 
-          sx={{ 
-            display: 'inline-block',
-            mx: 1,
-            px: 2,
-            py: 0.5,
-            backgroundColor: 'primary.main',
-            color: 'white',
-            borderRadius: 1,
-            fontWeight: 'bold',
-            fontSize: '1.2em',
-          }}
-        >
-          {index}
-        </Box>
-        ))}
-      </Typography>
-    </Box>
-  );
-
-  getInstruction = (mode: string, refChars: string[]): React.ReactElement => {
-    switch(mode) {
-      case 'WORD':
-        return this.getWordModeInstruction(refChars[0],
-            <StartIcon char={refChars[0]} />,
-            <EndIcon char={refChars[0]} />);
-      case 'PHRASE':
-        return this.getPhraseModeInstruction(refChars);
-      case 'SENTENCE':
-        return this.getSentenceModeInstruction(refChars);
-      default:
-        return <></>;
-    }
-  } 
-
-  renderPage = (pageData: PreviewPage): React.ReactElement => {
-    const { refChars, characters, rows, cols, mode } = pageData;
-    const totalCircles = rows * cols;   
-
-    return (
-      <Box sx={{ p: 2 }}>
-        <Typography 
-          variant="h2" 
-          align="center" 
-          gutterBottom 
-          sx={{ 
-            fontWeight: 'bold',
-            my: 4,
-          }}
-        >
-          {TITLE_PRESETS[mode as Mode]}
-        </Typography>
-        {this.getInstruction(mode, refChars)}
-        <Box sx={{ 
-          display: 'grid', 
-          gridTemplateColumns: `repeat(${cols}, 0fr)`, // Use actual cols
-          margin: '0 auto',
-          justifyContent: 'center', // Add this
-          maxWidth: 'fit-content',
-        }}>
-          {Array.from({ length: totalCircles }).map((_, i) => {
-            const row = Math.floor(i / cols);  // Divide by actual columns
-            const col = i % cols;              // Modulo by actual columns
-            const char = characters[row]?.[col] || '';
-            // Check if this is the start position (0,0)
-            const isStart = row === 0 && col === 0 && mode === 'WORD';
-            // Check if this is the end position (rows-1, cols-1)
-            const isEnd = row === rows - 1 && col === cols - 1 && mode === 'WORD';
-            const width = 20 * 8 / rows;
-            const height = 20 * 8 / cols;
-            return (
-              <Box
-                key={i}
-                sx={{
-                  width: `${width}mm`,
-                  height: `${height}mm`,
-                  aspectRatio: '1',
-                  border: `1pt solid ${colors.inkSecondary}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: 'white',
-                  position: 'relative',
-                }}
-              >
-                {!isStart && !isEnd && <Typography variant="h3">{char}</Typography>}
-                {isStart && <StartIcon char={refChars[0]} />}
-                {isEnd && <EndIcon char={refChars[0]} />}
-              </Box>
-            );
-          })}
-        </Box>
-      </Box>
-    );
-  };
-
-  render() {
-    const { pages } = this.props;
-    const { currentPage } = this.state;
-    
-    if (!pages || pages.length === 0) {
-      return (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h6" color="textSecondary">
-            请输入文字来生成迷宫
-          </Typography>
-        </Box>
-      );
-    }
-
-    return (
-      <Box>
-        {/* Screen preview - hidden when printing */}
-        <Box sx={{ 
-          '@media print': {
-            display: 'none'
-          } 
-        }}>
-          <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-              <IconButton
-                onClick={this.goToPreviousPage}
-                disabled={currentPage === 0}
-                aria-label="Previous page"
-              >
-                <NavigateBefore />
-              </IconButton>
-              
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {this.generatePageIndicators().map((pageIndex, index) => {
-                  if (pageIndex === 'ellipsis') {
-                    return (
-                      <Typography key={`ellipsis-${index}`} sx={{ px: 1 }}>
-                        ...
-                      </Typography>
-                    );
-                  }
-                  
-                  return (
-                    <IconButton
-                      key={pageIndex}
-                      onClick={() => this.goToPage(pageIndex)}
-                      color={pageIndex === currentPage ? 'primary' : 'default'}
-                      size="small"
-                      aria-label={`Go to page ${pageIndex + 1}`}
-                    >
-                      {pageIndex + 1}
-                    </IconButton>
-                  );
-                })}
-              </Box>
-              
-              <IconButton
-                onClick={this.goToNextPage}
-                disabled={currentPage === pages.length - 1}
-                aria-label="Next page"
-              >
-                <NavigateNext />
-              </IconButton>
-            </Box>
-          </Box>
-          
-          <Box sx={{ mb: 3 }}>
-            {this.renderPage(pages[currentPage])}
-          </Box>
-          
-        </Box>
-        
-        {/* Print view - off-screen on screen, visible when printing */}
-        <Box
-          ref={this.props.pdfContainerRef}
-          sx={{
-            position: 'absolute',
-            left: '-9999px',
-            top: 0,
-            opacity: 0,
-            pointerEvents: 'none',
-            '@media print': {
-              position: 'static',
-              left: 'auto',
-              opacity: 1,
-              pointerEvents: 'auto',
-            }
-          }}
-        >
-          {pages.map((page, index) => (
-            <Box 
-              key={index} 
-              sx={{ 
-                breakAfter: 'page',
-                pageBreakAfter: 'always',
-                '&:last-child': {
-                  breakAfter: 'auto',
-                  pageBreakAfter: 'auto'
-                }
-              }}
-            >
-              {this.renderPage(page)}
-            </Box>
-          ))}
-        </Box>
-      </Box>
-    );
-  }
-}
-
-/** Functional wrapper that scales the preview to fit the viewport on screen. */
-export const ScaledPreviewSheet: React.FC<PreviewSheetProps> = (props) => {
-  const { containerRef, scale } = usePreviewScale();
   return (
-    <Box
-      ref={containerRef}
-      sx={{
-        width: '100%',
-        height: '100%',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        '@media print': { overflow: 'visible' },
-      }}
-    >
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h2" align="center" gutterBottom sx={{ fontWeight: 'bold', my: 4 }}>
+        {TITLE_PRESETS[mode as Mode]}
+      </Typography>
+
+      <Instruction mode={mode} refChars={refChars} color={color} />
+
       <Box
         sx={{
-          transform: scale < 1 ? `scale(${scale})` : undefined,
-          transformOrigin: 'top center',
+          display: 'grid',
+          gridTemplateColumns: `repeat(${cols}, 0fr)`,
+          margin: '0 auto',
+          justifyContent: 'center',
+          maxWidth: 'fit-content',
         }}
       >
-        <PreviewSheet {...props} />
+        {Array.from({ length: totalCircles }).map((_, i) => {
+          const row = Math.floor(i / cols);
+          const col = i % cols;
+          const char = characters[row]?.[col] || '';
+          const isStart = row === 0 && col === 0 && mode === 'WORD';
+          const isEnd = row === rows - 1 && col === cols - 1 && mode === 'WORD';
+          const width = (20 * 8) / rows;
+          const height = (20 * 8) / cols;
+          return (
+            <Box
+              key={i}
+              sx={{
+                width: `${width}mm`,
+                height: `${height}mm`,
+                aspectRatio: '1',
+                border: `1pt solid ${colors.inkSecondary}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'white',
+                position: 'relative',
+              }}
+            >
+              {!isStart && !isEnd && <Typography variant="h3">{char}</Typography>}
+              {isStart && <StartIcon char={refChars[0]} />}
+              {isEnd && <EndIcon char={refChars[0]} />}
+            </Box>
+          );
+        })}
       </Box>
     </Box>
+  );
+};
+
+/** Maze preview rendered inside the shared unified preview area. */
+export const ScaledPreviewSheet: React.FC<PreviewSheetProps> = ({ pages, pdfContainerRef }) => {
+  const toolColor = useToolColor();
+
+  return (
+    <WorksheetPaper
+      pageCount={pages?.length ?? 0}
+      pdfContainerRef={pdfContainerRef}
+      renderPage={(idx) => <MazePageContent page={pages[idx]} color={toolColor} />}
+      emptyState={
+        <Typography variant="h6" color="textSecondary">
+          请输入文字来生成迷宫
+        </Typography>
+      }
+    />
   );
 };

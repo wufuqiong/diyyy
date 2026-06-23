@@ -2,6 +2,7 @@ import type { PaletteColor, ColorSystemOptions, PaletteColorChannel } from '@mui
 
 import { varAlpha, createPaletteChannel } from 'minimal-shared/utils';
 
+import { surface } from '../tokens';
 import { themeConfig } from '../theme-config';
 
 import type { ThemeColorScheme } from '../types';
@@ -100,7 +101,7 @@ export const text = {
 export const background = {
   light: createPaletteChannel({
     paper: '#FFFFFF',
-    default: grey[100],
+    default: surface.sky,
     neutral: grey[200],
   }),
 };

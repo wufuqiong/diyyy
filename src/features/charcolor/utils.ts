@@ -5,10 +5,10 @@ import { shuffleArray } from 'src/utils/array-tools';
 import type { PageData, ColorPreset, CharColorConfig } from './types';
 
 export const COLOR_PRESETS: ColorPreset[] = [
-  { name: '经典组合', colors: ['#FF6B6B', '#f5b63aff', '#45B7D1', '#51db8dff', '#F7DC6F'] },
-  { name: '柔和组合', colors: ['#FF9999', '#66CCCC', '#9999FF', '#FFCC99', '#CC99FF'] },
-  { name: '鲜艳组合', colors: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'] },
-  { name: '自然组合', colors: ['#8B4513', '#228B22', '#1E90FF', '#FFD700', '#FF6347'] },
+  { name: '经典', colors: ['#FF6B6B', '#f5b63aff', '#45B7D1', '#51db8dff', '#F7DC6F'] },
+  { name: '柔和', colors: ['#FF9999', '#66CCCC', '#9999FF', '#FFCC99', '#CC99FF'] },
+  { name: '鲜艳', colors: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'] },
+  { name: '自然', colors: ['#8B4513', '#228B22', '#1E90FF', '#FFD700', '#FF6347'] },
 ];
 
 /**

@@ -4,8 +4,8 @@ import React from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { WorksheetPaper } from 'src/shared/worksheet';
 import { GridType, TraceContentMode } from 'src/types';
-import { usePreviewScale } from 'src/shared/worksheet/usePreviewScale';
 import { colors, sansStack, kaitiStack, pinyinStack, englishHandStack, englishPrintStack } from 'src/theme/tokens';
 
 import { GridBox } from './GridBox';
@@ -62,7 +62,17 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
   const isSentenceMode = config.contentMode === TraceContentMode.SENTENCES;
   const isWordMode = config.contentMode === TraceContentMode.PHRASES;
   const isEnglishMode = config.gridType === GridType.ENGLISH_LINES;
-  const { containerRef, scale } = usePreviewScale();
+
+  // Routes any tool mode's pre-computed `pages` array through the shared
+  // unified preview area (nav bar + candy A4 sheet + print container).
+  const renderSheet = <T,>(sheetPages: T[], renderOne: (page: T, pageIndex: number) => React.ReactNode) => (
+    <WorksheetPaper
+      pageCount={sheetPages.length}
+      pdfContainerRef={pdfContainerRef}
+      paperPadding="15mm"
+      renderPage={(i) => renderOne(sheetPages[i], i)}
+    />
+  );
   
   // Calculate dynamic styles
   const borderColor = getBorderColor(config.gridColor, config.gridOpacity);
@@ -177,36 +187,6 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
     );
   };
 
-  // Shared styles for the outer scrolling container
-  const containerStyle = {
-    bgcolor: 'grey.200',
-    height: '100%',
-    overflow: 'auto',
-    overflowX: 'hidden',
-    display: 'flex',
-    flexDirection: 'column', // Stack pages vertically
-    alignItems: 'center',    // Center pages horizontally
-    gap: 4,                  // Gap between pages
-    p: 4,
-    '@media print': { p: 0, gap: 0, display: 'block', bgcolor: 'white', overflow: 'visible', height: 'auto' }
-  };
-
-  // Shared styles for the A4 page
-  const a4PageStyle = {
-    bgcolor: 'white',
-    boxShadow: 24,
-    position: 'relative',
-    display: 'flex',
-    flexDirection: 'column',
-    width: '210mm',
-    minHeight: '297mm',
-    height: '297mm',
-    padding: '15mm',
-    boxSizing: 'border-box',
-    ...(scale < 1 ? { transform: `scale(${scale})`, transformOrigin: 'top center' as const } : {}),
-    '@media print': { boxShadow: 'none', minHeight: 'auto', height: '297mm', transform: 'none' }
-  };
-
   // Constants for A4 layout calculations (approximate in mm)
   const A4_CONTENT_HEIGHT_MM = 245; // 297 - 30(padding) - ~22(header/footer/margins)
   const A4_CONTENT_WIDTH_MM = 180;  // 210 - 30(padding)
@@ -286,13 +266,8 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
     const y3 = rowHeightPx * 0.666;
     const y4 = rowHeightPx - 1;
 
-    return (
-        <Box ref={(node: HTMLDivElement | null) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node; if (pdfContainerRef) pdfContainerRef.current = node; }} sx={containerStyle}>
-            {pages.map((pageRows, pageIndex) => (
-            <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': { 
-                ...a4PageStyle['@media print'], 
-                breakAfter: pageIndex === pages.length - 1 ? 'auto' : 'page' 
-            } }}>
+    return renderSheet(pages, (pageRows, pageIndex) => (
+            <>
              <Box component="header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid', borderColor: 'success.main', pb: 1, mb: 3 }}>
                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'success.dark', fontFamily: 'serif' }}>
                     Name: <Box component="span" sx={{ textDecoration: 'underline', textDecorationStyle: 'dotted', color: 'grey.400', ml: 1 }}>__________</Box>
@@ -341,10 +316,8 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
                     );
                 })}
             </Box>
-            </Box>
-            ))}
-        </Box>
-    );
+            </>
+    ));
   }
 
   if (isSentenceMode) {
@@ -435,13 +408,8 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
       pages.push([]);
     }
 
-    return (
-      <Box ref={(node: HTMLDivElement | null) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node; if (pdfContainerRef) pdfContainerRef.current = node; }} sx={containerStyle}>
-        {pages.map((pageBlocks, pageIndex) => (
-          <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': {
-            ...a4PageStyle['@media print'],
-            breakAfter: pageIndex === pages.length - 1 ? 'auto' : 'page'
-          } }}>
+    return renderSheet(pages, (pageBlocks, pageIndex) => (
+            <>
             <Box component="header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid', borderColor: 'orange.200', pb: 1, mb: 3 }}>
               <Typography variant="h6" className="font-kaiti" sx={{ fontWeight: 'bold', color: 'text.primary' }}>{config.headerTitle}</Typography>
               <Typography variant="body2" className="font-kaiti" sx={{ color: 'text.secondary' }}>{config.headerContent}</Typography>
@@ -488,10 +456,8 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
             <Box component="footer" sx={{ mt: 'auto', borderTop: 1, borderColor: 'grey.100', pt: 1, textAlign: 'center', color: 'grey.400', fontSize: '0.75rem' }} className="font-kaiti">
               Page {pageIndex + 1}
             </Box>
-          </Box>
-        ))}
-      </Box>
-    );
+          </>
+    ));
   }
 
   if (isWordMode) {
@@ -574,13 +540,8 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
       pages.push([]);
     }
 
-    return (
-      <Box ref={(node: HTMLDivElement | null) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node; if (pdfContainerRef) pdfContainerRef.current = node; }} sx={containerStyle}>
-        {pages.map((pageBlocks, pageIndex) => (
-          <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': {
-            ...a4PageStyle['@media print'],
-            breakAfter: pageIndex === pages.length - 1 ? 'auto' : 'page'
-          } }}>
+    return renderSheet(pages, (pageBlocks, pageIndex) => (
+            <>
             <Box component="header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid', borderColor: 'orange.200', pb: 1, mb: 3 }}>
               <Typography variant="h6" className="font-kaiti" sx={{ fontWeight: 'bold', color: 'text.primary' }}>{config.headerTitle}</Typography>
               <Typography variant="body2" className="font-kaiti" sx={{ color: 'text.secondary' }}>{config.headerContent}</Typography>
@@ -633,10 +594,8 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
             <Box component="footer" sx={{ mt: 'auto', borderTop: 1, borderColor: 'grey.100', pt: 1, textAlign: 'center', color: 'grey.400', fontSize: '0.75rem' }} className="font-kaiti">
               Page {pageIndex + 1}
             </Box>
-          </Box>
-        ))}
-      </Box>
-    );
+          </>
+    ));
   }
 
   // --- Render Mode 3: Standard Chinese Character Practice ---
@@ -655,13 +614,8 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
   let pages = chunk(textChars, itemsPerPage);
   if (pages.length === 0) pages = [['字']];
 
-  return (
-    <Box ref={(node: HTMLDivElement | null) => { (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node; if (pdfContainerRef) pdfContainerRef.current = node; }} sx={containerStyle}>
-      {pages.map((pageChars, pageIndex) => (
-      <Box key={pageIndex} sx={{ ...a4PageStyle, '@media print': {
-          ...a4PageStyle['@media print'],
-          breakAfter: pageIndex === pages.length - 1 ? 'auto' : 'page'
-      } }}>
+  return renderSheet(pages, (pageChars, pageIndex) => (
+            <>
         <Box component="header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid', borderColor: 'orange.200', pb: 1, mb: 3 }}>
              <Typography variant="h6" className="font-kaiti" sx={{ fontWeight: 'bold', color: 'text.primary' }}>{config.headerTitle}</Typography>
              <Typography variant="body2" className="font-kaiti" sx={{ color: 'text.secondary' }}>{config.headerContent}</Typography>
@@ -744,8 +698,6 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
         <Box component="footer" sx={{ mt: 'auto', borderTop: 1, borderColor: 'grey.100', pt: 1, textAlign: 'center', color: 'grey.400', fontSize: '0.75rem' }} className="font-kaiti">
              Page {pageIndex + 1}
         </Box>
-      </Box>
-      ))}
-    </Box>
-  );
+      </>
+  ));
 };

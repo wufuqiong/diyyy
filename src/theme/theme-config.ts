@@ -30,19 +30,19 @@ export const themeConfig: ThemeConfig = {
    * Typography
    *************************************** */
   fontFamily: {
-    primary: 'DM Sans Variable',
-    secondary: 'Barlow',
+    primary: '"Quicksand", "Noto Sans SC", sans-serif',
+    secondary: '"Baloo 2", "Noto Sans SC", sans-serif',
   },
   /** **************************************
    * Palette
    *************************************** */
   palette: {
     primary: {
-      lighter: '#D0ECFE',
-      light: '#73BAFB',
-      main: '#1877F2',
-      dark: '#0C44AE',
-      darker: '#042174',
+      lighter: '#E6F2FB',
+      light: '#8EC8F2',
+      main: '#4D9DE0',
+      dark: '#2E7DC4',
+      darker: '#1A5A94',
       contrastText: '#FFFFFF',
     },
     secondary: {

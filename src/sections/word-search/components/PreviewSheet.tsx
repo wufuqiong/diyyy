@@ -1,43 +1,13 @@
 import type { GridSizePreset, WordSearchSheet, WordSearchConfig, WordSearchDifficulty } from 'src/features/word-search/types';
 
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import React, { useRef, useState, useLayoutEffect } from 'react';
 
-import { Box, Alert, useTheme, Typography } from '@mui/material';
+import { Box, Alert, Typography } from '@mui/material';
 
+import { candyColors } from 'src/theme/tokens';
+import { WorksheetPaper } from 'src/shared/worksheet';
 import { DIFFICULTY_DIRECTIONS } from 'src/features/word-search/types';
-
-// ---------------------------------------------------------------------------
-// Page scaling (same logic as usePreviewScale but applied to all pages at once)
-// ---------------------------------------------------------------------------
-
-const MM_TO_PX = 96 / 25.4;
-const PAPER_WIDTH_PX = 210 * MM_TO_PX; // ~794px
-const MIN_SCALE = 0.35;
-
-function useScale() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return undefined;
-    const measure = () => {
-      const s = Math.max(MIN_SCALE, Math.min(1, el.offsetWidth / PAPER_WIDTH_PX));
-      setScale((prev) => (Math.abs(prev - s) > 0.005 ? s : prev));
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    window.addEventListener('resize', measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-  }, []);
-
-  return { ref, scale };
-}
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -74,9 +44,8 @@ const buildDirectionHint = (difficulty: WordSearchDifficulty): string => {
   return `Words may be hidden ${joined}${hasReverse ? ' (including backwards)' : ''}.`;
 };
 
-const BubbleTitle: React.FC<{ title: string }> = ({ title }) => {
-  const theme = useTheme();
-  return (
+const BubbleTitle: React.FC<{ title: string }> = ({ title }) => (
+
     <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
       {Array.from(title).map((ch, i) =>
         ch.trim() === '' ? (
@@ -88,8 +57,8 @@ const BubbleTitle: React.FC<{ title: string }> = ({ title }) => {
               minWidth: 58, height: 58, px: 1.5,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               borderRadius: '999px',
-              border: `3px solid ${theme.palette.primary.main}`,
-              backgroundColor: '#fff', color: theme.palette.primary.main,
+              border: `3px solid ${candyColors.pink}`,
+              backgroundColor: '#fff', color: candyColors.pink,
               fontSize: 36, fontWeight: 800, lineHeight: 1, textTransform: 'uppercase',
             }}
           >
@@ -99,7 +68,6 @@ const BubbleTitle: React.FC<{ title: string }> = ({ title }) => {
       )}
     </Box>
   );
-};
 
 const Instruction: React.FC<{ difficulty: WordSearchDifficulty }> = ({ difficulty }) => (
   <Box sx={{ textAlign: 'center', maxWidth: 520 }}>
@@ -113,7 +81,6 @@ const Instruction: React.FC<{ difficulty: WordSearchDifficulty }> = ({ difficult
 );
 
 const WordGrid: React.FC<{ sheet: WordSearchSheet }> = ({ sheet }) => {
-  const theme = useTheme();
   const { grid, placedWords, isAnswerKey } = sheet;
   const cols = grid[0].length;
   const rows = grid.length;
@@ -137,7 +104,7 @@ const WordGrid: React.FC<{ sheet: WordSearchSheet }> = ({ sheet }) => {
       sx={{
         mx: 'auto', width: 'fit-content',
         p: `${CARD_PADDING}px`, borderRadius: '24px',
-        border: `3px solid ${theme.palette.primary.main}`, backgroundColor: '#fff',
+        border: `3px solid ${candyColors.pink}`, backgroundColor: '#fff',
       }}
     >
       <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, ${cellSize}px)`, gridTemplateRows: `repeat(${rows}, ${cellSize}px)` }}>
@@ -168,7 +135,6 @@ const WordGrid: React.FC<{ sheet: WordSearchSheet }> = ({ sheet }) => {
 const WordList: React.FC<{ words: string[]; columns: 1 | 2 | 3; gridSize: GridSizePreset }> = ({
   words, columns, gridSize,
 }) => {
-  const theme = useTheme();
   if (words.length === 0) return null;
 
   const fontSize = LIST_FONT_SIZE[gridSize];
@@ -181,8 +147,8 @@ const WordList: React.FC<{ words: string[]; columns: 1 | 2 | 3; gridSize: GridSi
       sx={{
         mx: 'auto', width: 'fit-content', minWidth: 360, maxWidth: PRINT_WIDTH + 80,
         px: 4, py: 2.5, borderRadius: '24px',
-        border: `3px solid ${theme.palette.primary.main}`,
-        backgroundColor: theme.palette.primary.lighter,
+        border: `3px solid ${candyColors.pink}`,
+        backgroundColor: '#FFE4F0',
       }}
     >
       <Box
@@ -204,54 +170,6 @@ const WordList: React.FC<{ words: string[]; columns: 1 | 2 | 3; gridSize: GridSi
     </Box>
   );
 };
-
-// ---------------------------------------------------------------------------
-// A4 page wrapper — no PrintFrame, direct mm sizing, vertically centered
-// ---------------------------------------------------------------------------
-
-const A4Page: React.FC<{
-  pageNumber?: number;
-  totalPages?: number;
-  children: React.ReactNode;
-}> = ({ pageNumber, totalPages, children }) => (
-  <Box
-    sx={{
-      width: '210mm',
-      height: '297mm',
-      mx: 'auto',
-      mb: { xs: 2, sm: 3 },
-      backgroundColor: 'white',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      boxShadow: { xs: 'none', sm: '0 2px 8px rgba(0,0,0,0.1)' },
-      position: 'relative',
-      overflow: 'hidden',
-      '@media print': {
-        width: '210mm',
-        height: '297mm',
-        margin: 0,
-        mb: 0,
-        boxShadow: 'none',
-        pageBreakAfter: 'always',
-        '&:last-child': { pageBreakAfter: 'auto' },
-      },
-    }}
-  >
-    {/* Centered content area */}
-    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: 0, py: 3 }}>
-      {children}
-    </Box>
-
-    {/* Page number at bottom center */}
-    {pageNumber !== undefined && totalPages !== undefined && (
-      <Typography sx={{ pb: 1.5, fontSize: 11, color: '#999' }}>
-        Page {pageNumber} / {totalPages}
-      </Typography>
-    )}
-  </Box>
-);
 
 // ---------------------------------------------------------------------------
 // Page content (without page wrapper)
@@ -288,34 +206,45 @@ const PageContent: React.FC<{ sheet: WordSearchSheet; config: WordSearchConfig }
 
 export const PreviewSheet: React.FC<PreviewSheetProps> = ({ config, sheets, pdfContainerRef }) => {
   const { t } = useTranslation();
-  const { ref: scaleRef, scale } = useScale();
 
-  if (sheets.length === 0) {
+  const renderPage = (idx: number) => {
+    const sheet = sheets[idx];
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: 0,
+            py: 3,
+          }}
+        >
+          <PageContent sheet={sheet} config={config} />
+        </Box>
+        {sheet.pageNumber !== undefined && sheet.totalPages !== undefined && (
+          <Typography sx={{ textAlign: 'center', fontSize: 11, color: '#999' }}>
+            Page {sheet.pageNumber} / {sheet.totalPages}
+          </Typography>
+        )}
+      </Box>
+    );
+  };
+
+  return (
+    <WorksheetPaper
+      pageCount={sheets?.length ?? 0}
+      pdfContainerRef={pdfContainerRef}
+      paperPadding="12mm"
+      renderPage={renderPage}
+      emptyState={
         <Typography variant="body2" color="text.secondary">
           {t('wordSearch.emptyState')}
         </Typography>
-      </Box>
-    );
-  }
-
-  return (
-    <Box ref={pdfContainerRef}>
-      <Box
-        ref={scaleRef}
-        sx={{
-          transform: scale < 1 ? `scale(${scale})` : 'none',
-          transformOrigin: 'top center',
-        }}
-      >
-        {sheets.map((sheet) => (
-          <A4Page key={sheet.id} pageNumber={sheet.pageNumber} totalPages={sheet.totalPages}>
-            <PageContent sheet={sheet} config={config} />
-          </A4Page>
-        ))}
-      </Box>
-    </Box>
+      }
+    />
   );
 };
 

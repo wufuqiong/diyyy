@@ -1,11 +1,11 @@
 import type { HundredChartSheet } from 'src/features/hundred-chart/types';
 
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import React, { useState, useEffect } from 'react';
 
-import { Box, Paper, Typography, Pagination } from '@mui/material';
+import { Typography } from '@mui/material';
 
-import { usePreviewScale } from 'src/shared/worksheet/usePreviewScale';
+import { WorksheetPaper } from 'src/shared/worksheet';
 
 interface Props {
   sheets: HundredChartSheet[];
@@ -13,60 +13,21 @@ interface Props {
   renderPage: (sheetData: HundredChartSheet, idx: number) => React.ReactElement;
 }
 
+/**
+ * Thin adapter that maps the hundred-chart `sheets` model onto the shared
+ * {@link WorksheetPaper} (unified preview area). Page chrome / navigation /
+ * print container all live in the shared component now.
+ */
 const ChartPageShell: React.FC<Props> = ({ sheets, pdfContainerRef, renderPage }) => {
   const { t } = useTranslation();
-  const [currentPage, setCurrentPage] = useState(1);
-  const { containerRef, scale } = usePreviewScale();
-
-  // Clamp currentPage when sheets shrink (e.g. user unchecks "include answer key")
-  useEffect(() => {
-    if (currentPage > sheets.length) {
-      setCurrentPage(Math.max(1, sheets.length));
-    }
-  }, [sheets.length, currentPage]);
-
-  if (!sheets || sheets.length === 0) {
-    return (
-      <Box sx={{ width: '100%', height: '100%', bgcolor: 'grey.100', p: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'grey.400' }}>
-        <Typography variant="h6" color="inherit">{t('hundredChart.generating')}</Typography>
-      </Box>
-    );
-  }
-
-  const totalPages = sheets.length;
-  const safePage = Math.min(currentPage, totalPages);
-  const sheet = sheets[safePage - 1];
-
-  const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => setCurrentPage(page);
 
   return (
-    <Box sx={{ width: '100%', height: '100%', backgroundColor: 'grey.50', overflow: 'hidden', padding: 2, '@media print': { backgroundColor: 'white', padding: 0, overflow: 'visible' } }} className="worksheet-preview">
-      {/* Screen view */}
-      <Box ref={containerRef} sx={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', '@media print': { display: 'none !important' } }}>
-        <Paper elevation={0} sx={{ width: '210mm', minHeight: '297mm', overflow: 'hidden', margin: '0 auto', marginBottom: totalPages > 1 ? 0 : 4, padding: '20mm', paddingBottom: '15mm', backgroundColor: 'white', boxShadow: 'none', transform: scale < 1 ? `scale(${scale})` : undefined, transformOrigin: 'top center', '&:last-child': { marginBottom: 0 } }}>
-          {renderPage(sheet, safePage - 1)}
-        </Paper>
-
-        {totalPages > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-            <Pagination count={totalPages} page={safePage} onChange={handlePageChange} color="primary" size="large" />
-          </Box>
-        )}
-      </Box>
-
-      {/* Print view */}
-      <Box ref={pdfContainerRef as React.RefObject<HTMLDivElement>}
-        sx={{ position: 'absolute', left: '-9999px', top: 0, opacity: 0, pointerEvents: 'none',
-          '@media print': { position: 'static', left: 'auto', opacity: 1, pointerEvents: 'auto' } }}>
-        {sheets.map((s, idx) => (
-          <Box key={s.id} sx={{ pageBreakAfter: idx < sheets.length - 1 ? 'always' : 'auto', '&:last-child': { pageBreakAfter: 'auto' } }}>
-            <Paper elevation={0} sx={{ width: '210mm', minHeight: '297mm', overflow: 'hidden', margin: '0 auto', padding: '20mm', paddingBottom: '15mm', backgroundColor: 'white', boxShadow: 'none' }}>
-              {renderPage(s, idx)}
-            </Paper>
-          </Box>
-        ))}
-      </Box>
-    </Box>
+    <WorksheetPaper
+      pageCount={sheets?.length ?? 0}
+      pdfContainerRef={pdfContainerRef}
+      renderPage={(idx) => renderPage(sheets[idx], idx)}
+      emptyState={<Typography variant="h6" color="inherit">{t('hundredChart.generating')}</Typography>}
+    />
   );
 };
 

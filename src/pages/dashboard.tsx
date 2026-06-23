@@ -2,13 +2,11 @@ import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import DrawIcon from '@mui/icons-material/Draw';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
-import CardContent from '@mui/material/CardContent';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import SearchIcon from '@mui/icons-material/Search';
 import CalculateIcon from '@mui/icons-material/Calculate';
@@ -16,139 +14,267 @@ import ColorLensIcon from '@mui/icons-material/ColorLens';
 import ExtensionIcon from '@mui/icons-material/Extension';
 
 import { CONFIG } from 'src/config-global';
+import { ink, shadow, radius, toolColors, candyColors } from 'src/theme/tokens';
 
 // ----------------------------------------------------------------------
+// Rainbow DIYYY logo text
+// ----------------------------------------------------------------------
 
-// Define types for FeatureCard props
-interface FeatureCardProps {
+const rainbow = Object.values(candyColors);
+
+function RainbowDiyyy() {
+  const letters = ['D', 'I', 'Y', 'Y', 'Y'];
+  return (
+    <Box component="span" sx={{ display: 'inline', whiteSpace: 'nowrap' }}>
+      {letters.map((letter, i) => (
+        <Box
+          component="span"
+          key={i}
+          sx={{ color: rainbow[i % rainbow.length] }}
+        >
+          {letter}
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+// ----------------------------------------------------------------------
+// Candy tool card
+// ----------------------------------------------------------------------
+
+interface ToolCardProps {
   title: string;
   description: string;
   icon: React.ReactNode;
   to: string;
-  color?: 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning';
+  toolId: string;
 }
 
-// Custom card component for the features
-function FeatureCard({ title, description, icon, to, color = 'primary' }: FeatureCardProps) {
+function ToolCard({ title, description, icon, to, toolId }: ToolCardProps) {
   const { t } = useTranslation();
+  const color = toolColors[toolId] || candyColors.blue;
+
   return (
-    <Card 
-      sx={{ 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column',
-        transition: 'all 0.3s ease-in-out',
+    <Box
+      sx={{
+        borderRadius: radius.card,
+        overflow: 'visible',
+        transition: 'transform 0.25s ease, box-shadow 0.25s ease',
         '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: 8,
-        }
+          transform: 'translateY(-6px) scale(1.02)',
+        },
       }}
     >
-      <CardContent sx={{ flexGrow: 1, textAlign: 'center', p: 3, pb: 1 }}>
+      {/* Top segment — solid candy color */}
+      <Box
+        sx={{
+          bgcolor: color,
+          borderTopLeftRadius: radius.card,
+          borderTopRightRadius: radius.card,
+          pt: 2.5,
+          pb: 6,
+          px: 2,
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Decorative blob */}
         <Box
           sx={{
-            width: 60,
-            height: 60,
+            position: 'absolute',
+            top: -14,
+            right: -10,
+            width: 70,
+            height: 70,
             borderRadius: '50%',
-            bgcolor: `${color}.light`,
+            bgcolor: 'rgba(255,255,255,0.18)',
+          }}
+        />
+
+        {/* Icon circle */}
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            bgcolor: 'rgba(255,255,255,0.92)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             mx: 'auto',
-            mb: 2,
+            mb: 1,
+            '& .MuiSvgIcon-root': { fontSize: 26, color },
           }}
         >
           {icon}
         </Box>
-        <Typography variant="h5" component="h2" gutterBottom>
+
+        <Typography
+          sx={{
+            fontFamily: '"Baloo 2", "Noto Sans SC", sans-serif',
+            fontWeight: 800,
+            fontSize: '1.1rem',
+            color: '#fff',
+            lineHeight: 1.3,
+          }}
+        >
           {title}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+      </Box>
+
+      {/* Bottom segment — white card that overlaps top */}
+      <Box
+        sx={{
+          bgcolor: '#fff',
+          borderBottomLeftRadius: radius.card,
+          borderBottomRightRadius: radius.card,
+          mt: '-24px',
+          mx: 1.5,
+          position: 'relative',
+          zIndex: 1,
+          px: 2.5,
+          pt: 2,
+          pb: 2.5,
+          textAlign: 'center',
+          boxShadow: shadow.cardRest,
+        }}
+      >
+        <Typography
+          sx={{
+            fontFamily: '"Quicksand", "Noto Sans SC", sans-serif',
+            fontWeight: 500,
+            fontSize: '0.8rem',
+            color: ink.soft,
+            mb: 2,
+            lineHeight: 1.5,
+          }}
+        >
           {description}
         </Typography>
-      </CardContent>
-      <Box sx={{ px: 3, pb: 3, mt: 'auto' }}>
+
         <Button
           component={RouterLink}
           to={to}
-          variant="contained"
-          color={color}
           fullWidth
+          sx={{
+            fontFamily: '"Baloo 2", "Noto Sans SC", sans-serif',
+            fontWeight: 700,
+            fontSize: '0.85rem',
+            textTransform: 'none',
+            bgcolor: color,
+            color: '#fff',
+            borderRadius: radius.button,
+            py: 1,
+            boxShadow: shadow.buttonRest,
+            transition: 'all 0.15s',
+            '&:hover': {
+              bgcolor: color,
+              filter: 'brightness(0.92)',
+              boxShadow: shadow.buttonRest,
+            },
+            '&:active': {
+              transform: 'translateY(3px)',
+              boxShadow: shadow.buttonPressed,
+            },
+          }}
         >
           {t('dashboard.explore')}
         </Button>
       </Box>
-    </Card>
+    </Box>
   );
 }
 
-// Main dashboard content component
+// ----------------------------------------------------------------------
+// Dashboard content
+// ----------------------------------------------------------------------
+
 function DashboardContent() {
   const { t } = useTranslation();
 
-  const features: FeatureCardProps[] = [
+  const tools: ToolCardProps[] = [
     {
       title: t('nav.charcolor'),
       description: t('dashboard.features.charColorDesc'),
-      icon: <ColorLensIcon sx={{ fontSize: 30, color: 'error.main' }} />,
+      icon: <ColorLensIcon />,
       to: '/charcolor',
-      color: 'error'
+      toolId: 'charcolor',
     },
     {
       title: t('nav.charmaze'),
       description: t('dashboard.features.charMazeDesc'),
-      icon: <ExtensionIcon sx={{ fontSize: 30, color: 'warning.main' }} />,
+      icon: <ExtensionIcon />,
       to: '/charmaze',
-      color: 'warning'
+      toolId: 'charmaze',
     },
     {
       title: t('nav.chartrace'),
       description: t('dashboard.features.charTraceDesc'),
-      icon: <DrawIcon sx={{ fontSize: 30, color: 'success.main' }} />,
+      icon: <DrawIcon />,
       to: '/chartrace',
-      color: 'success'
+      toolId: 'chartrace',
     },
     {
       title: t('nav.mathGenie'),
       description: t('dashboard.features.mathGenieDesc'),
-      icon: <CalculateIcon sx={{ fontSize: 30, color: 'info.main' }} />,
+      icon: <CalculateIcon />,
       to: '/math-genie',
-      color: 'info'
+      toolId: 'math-genie',
     },
     {
       title: t('nav.hundredChart'),
       description: t('dashboard.features.hundredChartDesc'),
-      icon: <GridOnIcon sx={{ fontSize: 30, color: 'primary.main' }} />,
+      icon: <GridOnIcon />,
       to: '/hundred-chart',
-      color: 'primary'
+      toolId: 'hundred-chart',
     },
     {
       title: t('nav.wordSearch'),
       description: t('dashboard.features.wordSearchDesc'),
-      icon: <SearchIcon sx={{ fontSize: 30, color: 'secondary.main' }} />,
+      icon: <SearchIcon />,
       to: '/word-search',
-      color: 'secondary'
-    }
+      toolId: 'word-search',
+    },
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Welcome Section */}
-      <Box sx={{ textAlign: 'center', mb: 6 }}>
-        <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-          {t('dashboard.welcome')}
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      {/* Welcome */}
+      <Box sx={{ textAlign: 'center', mb: 4 }}>
+        <Typography
+          component="h1"
+          sx={{
+            fontFamily: '"Baloo 2", "Noto Sans SC", sans-serif',
+            fontWeight: 800,
+            fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.5rem' },
+            color: ink.primary,
+            mb: 0.5,
+          }}
+        >
+          {t('dashboard.welcome')} <RainbowDiyyy />
+        </Typography>
+        <Typography
+          sx={{
+            fontFamily: '"Quicksand", "Noto Sans SC", sans-serif',
+            fontWeight: 500,
+            fontSize: '0.95rem',
+            color: ink.soft,
+          }}
+        >
+          {t('dashboard.welcomeSub')}
         </Typography>
       </Box>
 
-      {/* Features Grid */}
+      {/* Tool cards */}
       <Grid container spacing={3}>
-        {features.map((feature, index) => (
-          <Grid key={index} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-            <FeatureCard {...feature} />
+        {tools.map((tool) => (
+          <Grid key={tool.toolId} size={{ xs: 12, sm: 6, md: 4 }}>
+            <ToolCard {...tool} />
           </Grid>
         ))}
       </Grid>
-
     </Container>
   );
 }
@@ -157,11 +283,6 @@ export default function Page() {
   return (
     <>
       <title>{`Dashboard - ${CONFIG.appName}`}</title>
-      <meta
-        name="description"
-        content="The starting point for your next project with DIYYY Kit, built on the newest version of Material-UI ©, ready to be customized to your style"
-      />
-      <meta name="keywords" content="react,material,kit,application,dashboard,admin,template" />
 
       <DashboardContent />
     </>

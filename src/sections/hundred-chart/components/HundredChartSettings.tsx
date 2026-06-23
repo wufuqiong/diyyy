@@ -15,9 +15,11 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 
+import { candyColors } from 'src/theme/tokens';
 import { BlankMode } from 'src/features/hundred-chart/types';
 
-import { SettingsField, SettingsSection } from 'src/sections/_shared/SettingsPanel';
+import { SettingCard } from 'src/sections/_shared/SettingCard';
+import { SettingsField } from 'src/sections/_shared/SettingsPanel';
 
 import CrossPuzzleSettings from './CrossPuzzleSettings';
 
@@ -51,9 +53,9 @@ const HundredChartSettings: React.FC<Props> = ({ config, onChange }) => {
   if (config.mode === 'cross') {
     return (
       <>
-        <SettingsSection title={t('hundredChart.cross.chartType')}>
+        <SettingCard toolColor={candyColors.purple} label={t('hundredChart.cross.chartType')}>
           {modeToggle}
-        </SettingsSection>
+        </SettingCard>
         <CrossPuzzleSettings config={config} onChange={onChange} />
       </>
     );
@@ -76,20 +78,17 @@ const HundredChartSettings: React.FC<Props> = ({ config, onChange }) => {
 
   return (
     <>
-      <SettingsSection title={t('hundredChart.cross.chartType')}>
+      <SettingCard toolColor={candyColors.purple} label={t('hundredChart.cross.chartType')}>
         {modeToggle}
-      </SettingsSection>
+      </SettingCard>
 
-      <SettingsSection title={t('hundredChart.settings.pageSetup')}>
-        <SettingsField label={t('hundredChart.settings.pageTitle')}>
-          <TextField value={config.pageTitle} onChange={(e) => update({ pageTitle: e.target.value })} size="small" fullWidth />
+      <SettingCard toolColor={candyColors.purple} label={t('hundredChart.settings.pageSetup')}>
+        <SettingsField>
+          <TextField label={t('hundredChart.settings.pageTitle')} value={config.pageTitle} onChange={(e) => update({ pageTitle: e.target.value })} size="small" fullWidth />
         </SettingsField>
-      </SettingsSection>
-
-      <SettingsSection title={t('hundredChart.settings.numberRange')}>
-        <SettingsField label={t('hundredChart.settings.startNumber')}>
+        <SettingsField>
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-            <TextField type="number" value={config.startNumber}
+            <TextField type="number" label={t('hundredChart.settings.startNumber')} value={config.startNumber}
               onChange={(e) => update({ startNumber: Math.max(0, Math.min(990, Number(e.target.value) || 0)) })}
               size="small" sx={{ width: 120 }} slotProps={{ htmlInput: { min: 0, max: 990 } }} />
             <Box component="span" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
@@ -97,9 +96,18 @@ const HundredChartSettings: React.FC<Props> = ({ config, onChange }) => {
             </Box>
           </Box>
         </SettingsField>
-      </SettingsSection>
+        <SettingsField label={t('hundredChart.settings.versionCount')}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Slider value={config.versionCount} onChange={(_, v) => update({ versionCount: v as number })} min={1} max={10} step={1} marks valueLabelDisplay="auto" sx={{ flex: 1 }} />
+            <TextField value={config.versionCount} onChange={(e) => update({ versionCount: Math.max(1, Math.min(10, Number(e.target.value) || 1)) })} size="small" sx={{ width: 72 }} slotProps={{ htmlInput: { min: 1, max: 10 } }} />
+          </Stack>
+        </SettingsField>
+        <SettingsField>
+          <FormControlLabel control={<Switch checked={config.includeAnswerKey} onChange={(e) => update({ includeAnswerKey: e.target.checked })} size="small" />} label={t('hundredChart.settings.includeAnswerKey')} />
+        </SettingsField>
+      </SettingCard>
 
-      <SettingsSection title={t('hundredChart.settings.blankStrategy')}>
+      <SettingCard toolColor={candyColors.purple} label={t('hundredChart.settings.blankStrategy')}>
         <SettingsField>
           <ToggleButtonGroup value={config.blankMode} exclusive onChange={handleBlankModeChange} size="small" fullWidth>
             {blankModeOptions.map((opt) => (<ToggleButton key={opt.value} value={opt.value}>{opt.label}</ToggleButton>))}
@@ -152,19 +160,7 @@ const HundredChartSettings: React.FC<Props> = ({ config, onChange }) => {
         {config.blankMode === BlankMode.ANSWER_KEY && (
           <SettingsField caption={t('hundredChart.settings.answerKeyHint')}><Box /></SettingsField>
         )}
-      </SettingsSection>
-
-      <SettingsSection title={t('hundredChart.settings.multiVersion')}>
-        <SettingsField label={t('hundredChart.settings.versionCount')}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Slider value={config.versionCount} onChange={(_, v) => update({ versionCount: v as number })} min={1} max={10} step={1} marks valueLabelDisplay="auto" sx={{ flex: 1 }} />
-            <TextField value={config.versionCount} onChange={(e) => update({ versionCount: Math.max(1, Math.min(10, Number(e.target.value) || 1)) })} size="small" sx={{ width: 72 }} slotProps={{ htmlInput: { min: 1, max: 10 } }} />
-          </Stack>
-        </SettingsField>
-        <SettingsField>
-          <FormControlLabel control={<Switch checked={config.includeAnswerKey} onChange={(e) => update({ includeAnswerKey: e.target.checked })} size="small" />} label={t('hundredChart.settings.includeAnswerKey')} />
-        </SettingsField>
-      </SettingsSection>
+      </SettingCard>
     </>
   );
 };

@@ -18,11 +18,13 @@ import {
   Select,
   Slider,
   Switch,
+  Divider,
   Tooltip,
   MenuItem,
   Snackbar,
   TextField,
   Typography,
+  InputLabel,
   FormControl,
   Autocomplete,
   ToggleButton,
@@ -30,6 +32,7 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 
+import { candyColors } from 'src/theme/tokens';
 import { derivePageLayout, calculateOptimalProblemsPerPage } from 'src/features/math-genie/shared/layout';
 import {
   DisplayMode,
@@ -39,6 +42,9 @@ import {
   MultiOperationMode,
   SpecialPracticeType,
 } from 'src/types';
+
+import { SettingCard } from 'src/sections/_shared/SettingCard';
+import { SettingsField } from 'src/sections/_shared/SettingsPanel';
 
 interface Props {
   config: WorksheetConfig;
@@ -85,45 +91,6 @@ const THEME_PRESETS = [
 ];
 
 // ---------- Layout helpers ----------
-
-const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-  <Typography
-    variant="overline"
-    sx={{
-      display: 'block',
-      color: 'text.secondary',
-      fontWeight: 700,
-      letterSpacing: 0.6,
-      lineHeight: 1.4,
-    }}
-  >
-    {children}
-  </Typography>
-);
-
-const Field = ({
-  label,
-  caption,
-  children,
-}: {
-  label?: string;
-  caption?: React.ReactNode;
-  children: React.ReactNode;
-}) => (
-  <Box>
-    {label && (
-      <Typography variant="body2" fontWeight={600} sx={{ mb: 0.75 }}>
-        {label}
-      </Typography>
-    )}
-    {children}
-    {caption && (
-      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-        {caption}
-      </Typography>
-    )}
-  </Box>
-);
 
 const MaybeTooltip = ({
   title,
@@ -440,14 +407,8 @@ const WorksheetSettings: React.FC<Props> = ({
 
   return (
     <>
-      {/* Scrollable body */}
-      <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
-        <Stack spacing={3.5}>
-          {/* ============= OUTPUT ============= */}
-          <Box>
-            <SectionTitle>{t('mathGenie.output')}</SectionTitle>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <Field label={t('mathGenie.displayMode')}>
+          <SettingCard label={t('mathGenie.sectionOutput')} toolColor={candyColors.blue}>
+              <SettingsField>
                 <ToggleButtonGroup
                   value={displayMode}
                   exclusive
@@ -459,13 +420,10 @@ const WorksheetSettings: React.FC<Props> = ({
                   <ToggleButton value={DisplayMode.EMOJI}>🎨 {t('mathGenie.emojiMode')}</ToggleButton>
                   <ToggleButton value={DisplayMode.WORD_PROBLEM}>📖 {t('mathGenie.wordProblem')}</ToggleButton>
                 </ToggleButtonGroup>
-              </Field>
+              </SettingsField>
 
               {isEmoji && (
-                <Field
-                  label={t('mathGenie.theme')}
-                  caption={t('mathGenie.themeHint')}
-                >
+                <SettingsField caption={t('mathGenie.themeHint')}>
                   <Autocomplete
                     freeSolo
                     size="small"
@@ -476,13 +434,13 @@ const WorksheetSettings: React.FC<Props> = ({
                       onChange({ ...config, theme: v.split(' ')[0].toLowerCase() });
                     }}
                     renderInput={(params) => (
-                      <TextField {...params} placeholder="e.g. Pokemon, Cars, Fairies..." />
+                      <TextField {...params} label={t('mathGenie.theme')} placeholder="e.g. Pokemon, Cars, Fairies..." />
                     )}
                   />
-                </Field>
+                </SettingsField>
               )}
 
-              <Field
+              <SettingsField
                 label={t('mathGenie.pages')}
                 caption={
                   <>
@@ -524,11 +482,11 @@ const WorksheetSettings: React.FC<Props> = ({
                     }}
                   />
                 </Stack>
-              </Field>
+              </SettingsField>
 
               {displayMode === DisplayMode.TEXT && (
                 <>
-                <Field label={t('mathGenie.columns')}>
+                <SettingsField label={t('mathGenie.columns')}>
                   <ToggleButtonGroup
                     value={textColumns}
                     exclusive
@@ -542,9 +500,9 @@ const WorksheetSettings: React.FC<Props> = ({
                     <ToggleButton value={2}>2</ToggleButton>
                     <ToggleButton value={3}>3</ToggleButton>
                   </ToggleButtonGroup>
-                </Field>
+                </SettingsField>
 
-                <Field
+                <SettingsField
                   label={t('mathGenie.problemsPerPage')}
                   caption={`${layout.rows} ${t('mathGenie.rowsPerPage')}${layout.rowHeight < 14 ? ' — ' + t('mathGenie.rowTooSmall') : ''}`}
                 >
@@ -557,7 +515,7 @@ const WorksheetSettings: React.FC<Props> = ({
                     marks
                     valueLabelDisplay="auto"
                   />
-                </Field>
+                </SettingsField>
                 </>
               )}
 
@@ -584,14 +542,10 @@ const WorksheetSettings: React.FC<Props> = ({
                   </Box>
                 }
               />
-            </Stack>
-          </Box>
+          </SettingCard>
 
-          {/* ============= PROBLEM ============= */}
-          <Box>
-            <SectionTitle>{t('mathGenie.problem')}</SectionTitle>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <Field label={t('mathGenie.operation')}>
+          <SettingCard label={t('mathGenie.sectionProblem')} toolColor={candyColors.blue}>
+              <SettingsField>
                 <ToggleButtonGroup
                   value={operation}
                   exclusive
@@ -614,9 +568,9 @@ const WorksheetSettings: React.FC<Props> = ({
                     </ToggleButton>
                   </MaybeTooltip>
                 </ToggleButtonGroup>
-              </Field>
+              </SettingsField>
 
-              <Field
+              <SettingsField
                 label={t('mathGenie.problemType')}
                 caption={
                   fillBlankInEmojiOnlyWithSpecial
@@ -634,9 +588,9 @@ const WorksheetSettings: React.FC<Props> = ({
                   <ToggleButton value={ProblemType.STANDARD}>7 + 3 = 10</ToggleButton>
                   <ToggleButton value={ProblemType.FILL_BLANK}>7 + _ = 10</ToggleButton>
                 </ToggleButtonGroup>
-              </Field>
+              </SettingsField>
 
-              <Field label={t('mathGenie.specialPractice')}>
+              <SettingsField label={t('mathGenie.specialPractice')}>
                 <ToggleButtonGroup
                   value={specialPracticeType}
                   exclusive
@@ -678,7 +632,7 @@ const WorksheetSettings: React.FC<Props> = ({
                     </Tooltip>
                   </MaybeTooltip>
                 </ToggleButtonGroup>
-              </Field>
+              </SettingsField>
 
               {isMultiOp && multiOperationConfig && (
                 <Box
@@ -691,10 +645,12 @@ const WorksheetSettings: React.FC<Props> = ({
                   }}
                 >
                   <Stack spacing={2}>
-                    <Field label={t('mathGenie.mode')}>
+                    <SettingsField>
                       <FormControl fullWidth size="small">
+                        <InputLabel>{t('mathGenie.mode')}</InputLabel>
                         <Select
                           value={multiOperationConfig.mode}
+                          label={t('mathGenie.mode')}
                           onChange={(e) =>
                             onChange({
                               ...config,
@@ -716,8 +672,8 @@ const WorksheetSettings: React.FC<Props> = ({
                           </MenuItem>
                         </Select>
                       </FormControl>
-                    </Field>
-                    <Field
+                    </SettingsField>
+                    <SettingsField
                       label={`${t('mathGenie.operands')}: ${multiOperationConfig.numberCount}`}
                       caption={t('mathGenie.moreOperands')}
                     >
@@ -738,16 +694,11 @@ const WorksheetSettings: React.FC<Props> = ({
                         marks
                         valueLabelDisplay="auto"
                       />
-                    </Field>
+                    </SettingsField>
                   </Stack>
                 </Box>
               )}
-            </Stack>
-          </Box>
-
-          {/* ============= DIFFICULTY ============= */}
-          <Box>
-            <SectionTitle>{t('mathGenie.difficulty')}</SectionTitle>
+          <Divider sx={{ my: 2, borderColor: 'rgba(58,53,80,0.1)', borderStyle: 'dashed' }} />
             <Tabs
               value={useMixMode ? 'mix' : 'single'}
               onChange={handleMixModeTab}
@@ -775,8 +726,7 @@ const WorksheetSettings: React.FC<Props> = ({
               )}
 
               {!useMixMode && difficulty === DifficultyLevel.CUSTOM && (
-                <Field
-                  label={t('mathGenie.customRange')}
+                <SettingsField
                   caption={t('mathGenie.customRangeHint', { min: customDifficulty?.min ?? 1, max: customDifficulty?.max ?? 20 })}
                 >
                   <Slider
@@ -788,7 +738,7 @@ const WorksheetSettings: React.FC<Props> = ({
                     valueLabelDisplay="auto"
                     disableSwap
                   />
-                </Field>
+                </SettingsField>
               )}
 
               {useMixMode && difficultyRatios && (
@@ -842,7 +792,7 @@ const WorksheetSettings: React.FC<Props> = ({
                     </Button>
                   </Stack>
                   {difficultyRatios.custom > 0 && customDifficulty && (
-                    <Field
+                    <SettingsField
                       label={t('mathGenie.customRange')}
                       caption={t('mathGenie.customRangeHint', { min: customDifficulty.min, max: customDifficulty.max })}
                     >
@@ -855,17 +805,15 @@ const WorksheetSettings: React.FC<Props> = ({
                         valueLabelDisplay="auto"
                         disableSwap
                       />
-                    </Field>
+                    </SettingsField>
                   )}
                 </Box>
               )}
             </Stack>
-          </Box>
+          </SettingCard>
 
-          {/* ============= RULES ============= */}
-          <Box>
-            <SectionTitle>{t('mathGenie.rules')}</SectionTitle>
-            <Stack spacing={1} sx={{ mt: 1 }}>
+          <SettingCard label={t('mathGenie.sectionRules')} toolColor={candyColors.blue}>
+            <Stack spacing={1}>
               <FormControlLabel
                 sx={{ ml: 0 }}
                 control={
@@ -897,36 +845,7 @@ const WorksheetSettings: React.FC<Props> = ({
                 />
               )}
             </Stack>
-          </Box>
-
-          <Box>
-            <SectionTitle>{t('mathGenie.preview')}</SectionTitle>
-            <Stack spacing={1} sx={{ mt: 1 }}>
-              <FormControlLabel
-                sx={{ ml: 0, mr: 0 }}
-                control={
-                  <Switch
-                    checked={autoPreview}
-                    onChange={(e) => onChange({ ...config, autoPreview: e.target.checked })}
-                    color="primary"
-                    size="small"
-                  />
-                }
-                label={
-                  <Box>
-                    <Typography variant="body2" fontWeight={600}>
-                      {t('mathGenie.autoPreview')}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {autoPreview ? t('mathGenie.autoPreviewOn') : t('mathGenie.autoPreviewOff')}
-                    </Typography>
-                  </Box>
-                }
-              />
-            </Stack>
-          </Box>
-        </Stack>
-      </Box>
+          </SettingCard>
 
       <Snackbar
         open={snack.open}

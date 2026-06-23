@@ -6,9 +6,9 @@
 
 import React from 'react';
 
-import { Box, Paper, Stack, Divider, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 
-import { colors } from 'src/theme/tokens';
+import { ink, settingCardTypography } from 'src/theme/tokens';
 import { HelpTooltip } from 'src/shared/worksheet/HelpTooltip';
 
 // ---------- SettingsPanel ----------
@@ -26,47 +26,42 @@ interface SettingsPanelProps {
  * `SettingsHeader` / `SettingsSection` / `SettingsField` for consistent style.
  */
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
-  width = 300,
+  width = 340,
   header,
   footer,
   children,
 }) => (
-  <Paper
-    elevation={0}
+  <Box
+    className="diyyy-settings-panel"
     sx={{
       width: { xs: '100%', md: 260, lg: width },
       flexShrink: 0,
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      backgroundColor: 'white',
-      borderRight: '1px solid',
-      borderColor: 'grey.200',
-      borderRadius: 0,
-      zIndex: 20,
       overflow: 'hidden',
       '@media print': { display: 'none' },
     }}
   >
-    {header}
-    <Divider />
-    <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
-      <Stack spacing={3.5}>{children}</Stack>
+    {header && (
+      <Box sx={{ px: 2.5, pt: 2 }}>{header}</Box>
+    )}
+    <Box
+      className="diyyy-settings-scroll"
+      sx={{
+        flex: 1,
+        overflowY: 'auto',
+        p: '20px',
+      }}
+    >
+      {children}
     </Box>
     {footer && (
-      <Box
-        sx={{
-          px: 3,
-          py: 2,
-          borderTop: '1px solid',
-          borderColor: 'grey.200',
-          bgcolor: 'grey.50',
-        }}
-      >
+      <Box sx={{ px: 2.5, py: 2, borderTop: '2px dashed', borderColor: 'rgba(58,53,80,0.1)' }}>
         {footer}
       </Box>
     )}
-  </Paper>
+  </Box>
 );
 
 // ---------- SettingsHeader ----------
@@ -82,19 +77,18 @@ interface SettingsHeaderProps {
 export const SettingsHeader: React.FC<SettingsHeaderProps> = ({ title, subtitle }) => (
   <Box sx={{ px: 3, pt: 3, pb: 2 }}>
     <Typography
-      variant="h5"
       sx={{
-        fontWeight: 'bold',
-        background: `linear-gradient(135deg, ${colors.primaryGradientStart}, ${colors.primaryGradientEnd})`,
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
+        fontFamily: '"Baloo 2", "Noto Sans SC", sans-serif',
+        fontWeight: 700,
+        fontSize: '1.3rem',
+        color: 'primary.main',
         mb: 0.5,
       }}
     >
       {title}
     </Typography>
     {subtitle && (
-      <Typography variant="caption" color="text.secondary">
+      <Typography sx={{ fontFamily: '"Quicksand", "Noto Sans SC", sans-serif', fontSize: 13, color: ink.soft }}>
         {subtitle}
       </Typography>
     )}
@@ -114,12 +108,12 @@ interface SettingsSectionProps {
 export const SettingsSection: React.FC<SettingsSectionProps> = ({ title, children }) => (
   <Box>
     <Typography
-      variant="overline"
       sx={{
         display: 'block',
-        color: 'text.secondary',
+        fontFamily: '"Baloo 2", "Noto Sans SC", sans-serif',
         fontWeight: 700,
-        letterSpacing: 0.6,
+        fontSize: '0.85rem',
+        color: 'primary.main',
         lineHeight: 1.4,
       }}
     >
@@ -149,7 +143,17 @@ interface SettingsFieldProps {
 export const SettingsField: React.FC<SettingsFieldProps> = ({ label, caption, children, toolId, helpAnchor }) => (
   <Box>
     {label && (
-      <Typography variant="body2" fontWeight={600} sx={{ mb: 0.75, display: 'flex', alignItems: 'center' }}>
+      <Typography
+        sx={{
+          fontFamily: "'Quicksand', 'Noto Sans SC', sans-serif",
+          fontSize: settingCardTypography.fieldLabel.fontSize,
+          fontWeight: settingCardTypography.fieldLabel.fontWeight,
+          mb: 0.75,
+          display: 'flex',
+          alignItems: 'center',
+          color: ink.primary,
+        }}
+      >
         {label}
         {toolId && helpAnchor && <HelpTooltip toolId={toolId} anchor={helpAnchor} />}
       </Typography>

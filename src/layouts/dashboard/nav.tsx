@@ -1,7 +1,6 @@
 import type { Theme, SxProps, Breakpoint } from '@mui/material/styles';
 
 import { useEffect } from 'react';
-import { varAlpha } from 'minimal-shared/utils';
 
 import Box from '@mui/material/Box';
 import ListItem from '@mui/material/ListItem';
@@ -11,6 +10,8 @@ import Drawer, { drawerClasses } from '@mui/material/Drawer';
 
 import { usePathname } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
+
+import { toolColors, toolColorSoft } from 'src/theme/tokens';
 
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -48,7 +49,7 @@ export function NavDesktop({
         flexDirection: 'column',
         zIndex: 'var(--layout-nav-zIndex)',
         width: 'var(--layout-nav-vertical-width)',
-        borderRight: `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
+        borderRight: '4px solid rgba(77,157,224,0.12)',
         [theme.breakpoints.up(layoutQuery)]: {
           display: 'flex',
         },
@@ -128,6 +129,8 @@ export function NavContent({ data, slots, sx }: NavContentProps) {
           >
             {data.map((item) => {
               const isActived = item.path === pathname;
+              const color = item.toolId ? toolColors[item.toolId] : undefined;
+              const softBg = item.toolId ? toolColorSoft[item.toolId] : undefined;
 
               return (
                 <ListItem disableGutters disablePadding key={item.title}>
@@ -135,27 +138,30 @@ export function NavContent({ data, slots, sx }: NavContentProps) {
                     disableGutters
                     component={RouterLink}
                     href={item.path}
-                    sx={[
-                      (theme) => ({
-                        pl: 2,
-                        py: 1,
-                        gap: 2,
-                        pr: 1.5,
-                        borderRadius: 0.75,
-                        typography: 'body2',
-                        fontWeight: 'fontWeightMedium',
-                        color: theme.vars.palette.text.secondary,
-                        minHeight: 44,
-                        ...(isActived && {
-                          fontWeight: 'fontWeightSemiBold',
-                          color: theme.vars.palette.primary.main,
-                          bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
-                          '&:hover': {
-                            bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.16),
-                          },
-                        }),
+                    sx={{
+                      pl: 2,
+                      py: 1,
+                      gap: 2,
+                      pr: 1.5,
+                      borderRadius: '16px',
+                      typography: 'body2',
+                      fontWeight: 'fontWeightMedium',
+                      color: 'text.secondary',
+                      minHeight: 44,
+                      border: '2px solid transparent',
+                      transition: 'all 0.2s',
+                      ...(isActived && color && {
+                        fontWeight: 'fontWeightSemiBold',
+                        color,
+                        bgcolor: softBg,
+                        borderColor: color,
+                        '&:hover': { bgcolor: softBg },
                       }),
-                    ]}
+                      ...(isActived && !color && {
+                        fontWeight: 'fontWeightSemiBold',
+                        color: 'primary.main',
+                      }),
+                    }}
                   >
                     <Box component="span" sx={{ width: 24, height: 24 }}>
                       {item.icon}
