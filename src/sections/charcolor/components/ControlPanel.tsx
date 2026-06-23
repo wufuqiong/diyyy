@@ -2,7 +2,7 @@ import type { MiemieDetails } from 'src/types';
 import type { SelectChangeEvent } from '@mui/material';
 import type { CharColorConfig } from 'src/features/charcolor/types';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -15,6 +15,7 @@ import {
   Stack,
   Button,
   Select,
+  Checkbox,
   MenuItem,
   TextField,
   Typography,
@@ -50,14 +51,21 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onGenerate,
   onPrint,
 }) => {
-  const { userInput, wordsPerPage, selectedPreset, selectedLevel, fullSelectedValue, selectedBook } = config;
+  const { userInput, wordsPerPage, selectedPreset, selectedLevel, fullSelectedValue } = config;
   const { t } = useTranslation();
+
+  const [selectedBookIndexes, setSelectedBookIndexes] = useState<string[]>([]);
+
+  const currentLessons = selectedLevel
+    ? (miemieDetailsTyped[selectedLevel as keyof MiemieDetails] || [])
+    : [];
 
   const handleLevelChange = (e: SelectChangeEvent<string>) => {
     const value = e.target.value;
     if (value.includes('|')) {
       const [language, level] = value.split('|');
       const characters = miemie[language]?.[level] || [];
+      setSelectedBookIndexes([]);
       onChange({
         ...config,
         fullSelectedValue: value,
@@ -66,6 +74,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         userInput: characters.join(''),
       });
     } else {
+      setSelectedBookIndexes([]);
       onChange({
         ...config,
         fullSelectedValue: '',
@@ -76,19 +85,26 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     }
   };
 
-  const handleSelectBookChange = (e: SelectChangeEvent<string>) => {
-    const selectedBookTitle = e.target.value;
-    const levelKey = selectedLevel as keyof MiemieDetails;
-    const lessons = miemieDetailsTyped[levelKey];
-    const selectedLesson = lessons?.find((lesson) => lesson.title === selectedBookTitle);
-    onChange({
-      ...config,
-      selectedBook: selectedBookTitle,
-      userInput: selectedLesson ? selectedLesson.word.join('') : '',
-    });
+  const handleBookChange = (values: string[]) => {
+    if (values.includes('__all__')) {
+      setSelectedBookIndexes([]);
+      // Load all words from all lessons in current level
+      const allWords = currentLessons.flatMap((l) => l.word || []).join('');
+      onChange({ ...config, userInput: allWords, selectedBook: '' });
+      return;
+    }
+
+    setSelectedBookIndexes(values);
+    const words = values
+      .map((idx) => currentLessons[Number(idx)])
+      .filter(Boolean)
+      .flatMap((l) => l.word || [])
+      .join('');
+    onChange({ ...config, userInput: words, selectedBook: '' });
   };
 
   const handleClearInput = () => {
+    setSelectedBookIndexes([]);
     onChange({
       ...config,
       userInput: '',
@@ -102,25 +118,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     let inputChars = userInputToChars(userInput);
     inputChars = shuffleArray(inputChars);
     onChange({ ...config, userInput: inputChars.join('') });
-  };
-
-  const renderBookOptions = () => {
-    if (!selectedLevel) {
-      return <MenuItem value="">{t('charColor.settings.pleaseSelectLevel')}</MenuItem>;
-    }
-
-    const levelKey = selectedLevel as keyof MiemieDetails;
-    const lessons = miemieDetailsTyped[levelKey];
-
-    if (!lessons || lessons.length === 0) {
-      return <MenuItem value="">{t('charColor.settings.noBooks')}</MenuItem>;
-    }
-
-    return lessons.map((lesson, index) => (
-      <MenuItem key={index} value={lesson.title}>
-        {lesson.title}
-      </MenuItem>
-    ));
   };
 
   return (
@@ -142,52 +139,40 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           </FormControl>
         </SettingsField>
         <SettingsField>
-          <FormControl fullWidth size="small">
+          <FormControl fullWidth size="small" disabled={!currentLessons || currentLessons.length === 0}>
             <InputLabel>{t('charColor.settings.presetBook')}</InputLabel>
-            <Select value={selectedBook} onChange={handleSelectBookChange} label={t('charColor.settings.presetBook')}>
-              <MenuItem value="">{t('charColor.settings.pleaseSelectBook')}</MenuItem>
-              {renderBookOptions()}
+            <Select
+              multiple
+              value={selectedBookIndexes}
+              label={t('charColor.settings.presetBook')}
+              renderValue={(selected) => {
+                const values = selected as string[];
+                if (values.length === 0) return t('charColor.settings.all');
+                return values
+                  .map((index) => currentLessons[Number(index)]?.title)
+                  .filter(Boolean)
+                  .join(', ');
+              }}
+              onChange={(e) =>
+                handleBookChange(
+                  typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                )
+              }
+            >
+              <MenuItem value="__all__">
+                <Checkbox size="small" checked={selectedBookIndexes.length === 0} />
+                {t('charColor.settings.all')}
+              </MenuItem>
+              {currentLessons?.map((lesson, index) => (
+                <MenuItem key={index} value={String(index)}>
+                  <Checkbox size="small" checked={selectedBookIndexes.includes(String(index))} />
+                  {lesson.title}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
         </SettingsField>
-      </SettingCard>
 
-      <SettingCard label={t('charColor.settings.sectionDisplay')} toolColor={candyColors.red}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Box sx={{ flex: 1 }}>
-            <SettingsField>
-              <FormControl fullWidth size="small">
-                <Select value={wordsPerPage} onChange={(e) => onChange({ ...config, wordsPerPage: e.target.value as number })}>
-                  <MenuItem value={2}>2 字/页</MenuItem>
-                  <MenuItem value={3}>3 字/页</MenuItem>
-                  <MenuItem value={4}>4 字/页</MenuItem>
-                  <MenuItem value={5}>5 字/页</MenuItem>
-                </Select>
-              </FormControl>
-            </SettingsField>
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            <SettingsField>
-              <FormControl fullWidth size="small">
-                <Select value={selectedPreset} onChange={(e) => onChange({ ...config, selectedPreset: e.target.value as number })}>
-                  {COLOR_PRESETS.map((preset, index) => (
-                    <MenuItem key={index} value={index}>{preset.name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </SettingsField>
-          </Box>
-        </Box>
-        <SettingsField label={t('charColor.settings.colorPreview')}>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            {COLOR_PRESETS[selectedPreset].colors.map((color, index) => (
-              <Box key={index} sx={{ width: 32, height: 32, backgroundColor: color, borderRadius: 1, border: '1px solid', borderColor: 'grey.300' }} title={color} />
-            ))}
-          </Box>
-        </SettingsField>
-      </SettingCard>
-
-      <SettingCard label={t('charColor.settings.sectionManualInput')} toolColor={candyColors.red}>
         <SettingsField
           caption={
             (() => {
@@ -228,6 +213,40 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           </Stack>
         </SettingsField>
       </SettingCard>
-    </>
+
+      <SettingCard label={t('charColor.settings.sectionDisplay')} toolColor={candyColors.red}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <SettingsField>
+              <FormControl fullWidth size="small">
+                <Select value={wordsPerPage} onChange={(e) => onChange({ ...config, wordsPerPage: e.target.value as number })}>
+                  <MenuItem value={2}>2 字/页</MenuItem>
+                  <MenuItem value={3}>3 字/页</MenuItem>
+                  <MenuItem value={4}>4 字/页</MenuItem>
+                  <MenuItem value={5}>5 字/页</MenuItem>
+                </Select>
+              </FormControl>
+            </SettingsField>
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <SettingsField>
+              <FormControl fullWidth size="small">
+                <Select value={selectedPreset} onChange={(e) => onChange({ ...config, selectedPreset: e.target.value as number })}>
+                  {COLOR_PRESETS.map((preset, index) => (
+                    <MenuItem key={index} value={index}>{preset.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </SettingsField>
+          </Box>
+        </Box>
+        <SettingsField label={t('charColor.settings.colorPreview')}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {COLOR_PRESETS[selectedPreset].colors.map((color, index) => (
+              <Box key={index} sx={{ width: 32, height: 32, backgroundColor: color, borderRadius: 1, border: '1px solid', borderColor: 'grey.300' }} title={color} />
+            ))}
+          </Box>
+        </SettingsField>
+      </SettingCard>    </>
   );
 };

@@ -146,6 +146,7 @@ const WorksheetSettings: React.FC<Props> = ({
   const useMixMode = !!difficultyRatios;
 
   const [snack, setSnack] = useState<{ open: boolean; msg: string }>({ open: false, msg: '' });
+  const [showMultiOpPanel, setShowMultiOpPanel] = useState(false);
   const notify = (msg: string) => setSnack({ open: true, msg });
 
   // ---------- Derived ----------
@@ -284,6 +285,7 @@ const WorksheetSettings: React.FC<Props> = ({
     if (!next || next === operation) return;
     const updates: Partial<WorksheetConfig> = { operation: next };
     if (next === OperationType.MULTI_OPERATIONS) {
+      setShowMultiOpPanel(true);
       const fixes: string[] = [];
       if (isEmoji) {
         updates.displayMode = DisplayMode.TEXT;
@@ -298,6 +300,8 @@ const WorksheetSettings: React.FC<Props> = ({
         fixes.push('Special = None');
       }
       if (fixes.length) notify(t('mathGenie.multiOpEnabled', { fixes: fixes.join(', ') }));
+    } else {
+      setShowMultiOpPanel(false);
     }
     onChange({ ...config, ...updates });
   };
@@ -307,6 +311,7 @@ const WorksheetSettings: React.FC<Props> = ({
     const updates: Partial<WorksheetConfig> = { problemType: next };
     if (next === ProblemType.FILL_BLANK && isMultiOp) {
       updates.operation = OperationType.ADDITION;
+      setShowMultiOpPanel(true); // keep panel visible during FILL_BLANK
       notify(t('mathGenie.fillBlankNotCompatible'));
     }
     onChange({ ...config, ...updates });
@@ -634,7 +639,7 @@ const WorksheetSettings: React.FC<Props> = ({
                 </ToggleButtonGroup>
               </SettingsField>
 
-              {isMultiOp && multiOperationConfig && (
+              {showMultiOpPanel && multiOperationConfig && (
                 <Box
                   sx={{
                     p: 1.5,
@@ -646,7 +651,7 @@ const WorksheetSettings: React.FC<Props> = ({
                 >
                   <Stack spacing={2}>
                     <SettingsField>
-                      <FormControl fullWidth size="small">
+                      <FormControl fullWidth size="small" disabled={!isMultiOp}>
                         <InputLabel>{t('mathGenie.mode')}</InputLabel>
                         <Select
                           value={multiOperationConfig.mode}
@@ -693,6 +698,7 @@ const WorksheetSettings: React.FC<Props> = ({
                         step={1}
                         marks
                         valueLabelDisplay="auto"
+                        disabled={!isMultiOp}
                       />
                     </SettingsField>
                   </Stack>

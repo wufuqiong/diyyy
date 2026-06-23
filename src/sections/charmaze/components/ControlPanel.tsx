@@ -1,5 +1,4 @@
-import type { SelectChangeEvent } from '@mui/material';
-import type { MiemieLesson, MiemieDetails } from 'src/types';
+import type { MiemieLesson } from 'src/types';
 import type { CharMazeConfig } from 'src/features/charmaze/types';
 
 import React, { useState } from 'react';
@@ -14,46 +13,26 @@ import {
   Stack,
   Button,
   Select,
-  Dialog,
+  Checkbox,
   MenuItem,
   TextField,
   InputLabel,
   Typography,
   FormControl,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  DialogContentText,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 
 import { shuffleArray } from 'src/utils/array-tools';
 
 import { candyColors } from 'src/theme/tokens';
-import miemieDetails from 'src/data/miemie-details.json';
-import { loadMiemieLessons } from 'src/shared/data/lessons';
-import {
-  MODE_PRESETS,
-  parseSelectedMode,
-  TABLE_SIZE_PRESETS,
-  SELECTER_TITLE_PRESETS,
-} from 'src/features/charmaze/types';
+import miemieDetailsJson from 'src/data/miemie-details.json';
+import { parseSelectedMode, TABLE_SIZE_PRESETS } from 'src/features/charmaze/types';
 
 import { SettingCard } from 'src/sections/_shared/SettingCard';
 import { SettingsField } from 'src/sections/_shared/SettingsPanel';
 
-const miemieDetailsTyped = miemieDetails as MiemieDetails;
-
-const miemieWordData = loadMiemieLessons(miemieDetailsTyped, 'word');
-const miemiePhraseData = loadMiemieLessons(miemieDetailsTyped, 'phrase');
-const miemieSentenceData = loadMiemieLessons(miemieDetailsTyped, 'sentence');
-
-const MIEMIE_PRESETS = {
-  WORD: miemieWordData,
-  PHRASE: miemiePhraseData,
-  SENTENCE: miemieSentenceData,
-};
-
-const MAX_INPUT_LENGTH = 300;
+const miemieDetails: Record<string, MiemieLesson[]> = miemieDetailsJson;
 
 interface ControlPanelProps {
   config: CharMazeConfig;
@@ -68,120 +47,77 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onGenerate,
   onPrint,
 }) => {
-  const { userInput, selectedMode, wordsPerPage, selectedTableSize, selectedLevel, fullSelectedValue, selectedBook } = config;
+  const { userInput, selectedMode, wordsPerPage, selectedTableSize } = config;
   const mode = parseSelectedMode(selectedMode);
   const { t } = useTranslation();
 
-  const modeLabelKeys = { WORD: 'wordPractice', PHRASE: 'phrasePractice', SENTENCE: 'sentencePractice' } as const;
+  const [selectedLevel, setSelectedLevel] = useState<string>('');
+  const [selectedLessonIndexes, setSelectedLessonIndexes] = useState<string[]>([]);
 
-  const [pendingMode, setPendingMode] = useState<number | null>(null);
+  const currentLessons = selectedLevel ? miemieDetails[selectedLevel] || [] : [];
+  const selectedLessons =
+    selectedLessonIndexes.length > 0
+      ? selectedLessonIndexes.map((index) => currentLessons[Number(index)]).filter(Boolean)
+      : currentLessons;
 
-  const handleModeChange = (e: SelectChangeEvent<number>) => {
-    const newMode = e.target.value as number;
-    if (userInput) {
-      // Show confirmation before clearing user content
-      setPendingMode(newMode);
+  const hasWords = selectedLessons.some((lesson) => Array.isArray(lesson.word) && lesson.word.length > 0);
+  const hasPhrases = selectedLessons.some((lesson) => Array.isArray(lesson.phrase) && lesson.phrase.length > 0);
+  const hasSentences = selectedLessons.some((lesson) => Array.isArray(lesson.sentence) && lesson.sentence.length > 0);
+
+  const modeIndex = { word: 0, phrase: 1, sentence: 2 };
+  const modeFromIndex = ['word', 'phrase', 'sentence'] as const;
+
+  const handleLoadContent = (type: 'word' | 'phrase' | 'sentence') => {
+    const targetLessons = selectedLessons;
+    if (targetLessons.length === 0) return;
+
+    let content = '';
+    if (type === 'word') {
+      content = targetLessons.map((l) => (l.word || []).join('')).join('');
+    } else if (type === 'phrase') {
+      content = targetLessons.flatMap((l) => l.phrase || []).filter(Boolean).join(',');
+    } else if (type === 'sentence') {
+      content = targetLessons.flatMap((l) => l.sentence || []).filter(Boolean).join('\n');
+    }
+
+    onChange({ ...config, userInput: content, selectedMode: modeIndex[type], selectedLevel, selectedBook: '' });
+  };
+
+  const handleModeChange = (_: React.MouseEvent<HTMLElement>, newMode: number | null) => {
+    if (newMode === null) return;
+    const type = modeFromIndex[newMode];
+    // Load content if lessons selected and content type available, otherwise just switch mode
+    const hasContent = type === 'word' ? hasWords : type === 'phrase' ? hasPhrases : hasSentences;
+    if (selectedLevel && hasContent) {
+      handleLoadContent(type);
+    } else {
+      onChange({ ...config, selectedMode: newMode });
+    }
+  };
+
+  const handleLessonChange = (values: string[]) => {
+    if (values.includes('__all__')) {
+      setSelectedLessonIndexes([]);
       return;
     }
-    applyModeChange(newMode);
-  };
 
-  const applyModeChange = (newMode: number) => {
-    onChange({
-      ...config,
-      selectedMode: newMode,
-      selectedLevel: '',
-      fullSelectedValue: '',
-      selectedBook: '',
-      userInput: '',
-    });
-  };
+    setSelectedLessonIndexes(values);
 
-  const getDataInMiemieDetails = (selectedLesson: MiemieLesson): string[] => {
-    switch (mode) {
-      case 'WORD':
-        return selectedLesson.word || [];
-      case 'PHRASE':
-        return selectedLesson.phrase || [];
-      case 'SENTENCE':
-        return selectedLesson.sentence || [];
-      default:
-        return [];
-    }
-  };
+    if (values.length !== 1) return;
 
-  const resolveLessonCharacters = (level: string, book: string, fullValue: string): string[] | null => {
-    if (!level && !fullValue) return null;
+    const lesson = currentLessons[Number(values[0])];
+    if (lesson) {
+      const w = Array.isArray(lesson.word) && lesson.word.length > 0;
+      const p = Array.isArray(lesson.phrase) && lesson.phrase.length > 0;
+      const s = Array.isArray(lesson.sentence) && lesson.sentence.length > 0;
 
-    try {
-      if (level) {
-        const levelKey = level as keyof MiemieDetails;
-        const lessons = miemieDetailsTyped[levelKey];
-
-        if (lessons && lessons.length > 0) {
-          if (book) {
-            const selectedLesson = lessons.find((lesson) => lesson.title === book);
-            if (!selectedLesson) return null;
-            return getDataInMiemieDetails(selectedLesson);
-          }
-          const chars: string[] = [];
-          lessons.forEach((lesson) => {
-            chars.push(...getDataInMiemieDetails(lesson));
-          });
-          return chars;
-        }
-      } else if (fullValue) {
-        const [language, lvl] = fullValue.split('|');
-        const presetsForMode = MIEMIE_PRESETS[mode] || {};
-        return presetsForMode[language]?.[lvl] || [];
+      const availableCounts = [w, p, s].filter(Boolean).length;
+      if (availableCounts === 1) {
+        if (w) handleLoadContent('word');
+        else if (p) handleLoadContent('phrase');
+        else if (s) handleLoadContent('sentence');
       }
-    } catch (error) {
-      console.error('Error resolving lesson characters:', error);
     }
-    return null;
-  };
-
-  const handleLevelChange = (e: SelectChangeEvent<string>) => {
-    const value = e.target.value;
-    if (value.includes('|')) {
-      const [, level] = value.split('|');
-      const characters = resolveLessonCharacters(level, '', value);
-      onChange({
-        ...config,
-        fullSelectedValue: value,
-        selectedLevel: level,
-        selectedBook: '',
-        userInput: characters ? characters.join(mode === 'SENTENCE' ? '\n' : ',') : config.userInput,
-      });
-    } else {
-      onChange({
-        ...config,
-        fullSelectedValue: '',
-        selectedLevel: '',
-        selectedBook: '',
-        userInput: '',
-      });
-    }
-  };
-
-  const handleSelectBookChange = (e: SelectChangeEvent<string>) => {
-    const selectedBookTitle = e.target.value;
-    const characters = resolveLessonCharacters(selectedLevel, selectedBookTitle, fullSelectedValue);
-    onChange({
-      ...config,
-      selectedBook: selectedBookTitle,
-      userInput: characters ? characters.join(mode === 'SENTENCE' ? '\n' : ',') : config.userInput,
-    });
-  };
-
-  const handleClearInput = () => {
-    onChange({
-      ...config,
-      userInput: '',
-      fullSelectedValue: '',
-      selectedLevel: '',
-      selectedBook: '',
-    });
   };
 
   const getShuffleInputItems = () => {
@@ -199,91 +135,126 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     onChange({ ...config, userInput: shuffleArray(items).join(joiner) });
   };
 
-  const shuffleInputItems = getShuffleInputItems();
-
-  const renderBookOptions = () => {
-    if (!selectedLevel) {
-      return <MenuItem value="">{t('charMaze.settings.pleaseSelectLevel')}</MenuItem>;
-    }
-
-    const levelKey = selectedLevel as keyof MiemieDetails;
-    const lessons = miemieDetailsTyped[levelKey];
-
-    if (!lessons || lessons.length === 0) {
-      return <MenuItem value="">{t('charMaze.settings.noBooks')}</MenuItem>;
-    }
-
-    return lessons.map((lesson, index) => (
-      <MenuItem key={index} value={lesson.title}>
-        {lesson.title}
-      </MenuItem>
-    ));
+  const handleClearInput = () => {
+    setSelectedLevel('');
+    setSelectedLessonIndexes([]);
+    onChange({
+      ...config,
+      userInput: '',
+      fullSelectedValue: '',
+      selectedLevel: '',
+      selectedBook: '',
+    });
   };
 
-  const currentMiemieData = MIEMIE_PRESETS[mode] || {};
+  const shuffleInputItems = getShuffleInputItems();
 
   return (
     <>
       <SettingCard label={t('charMaze.settings.sectionMaterial')} toolColor={candyColors.orange}>
         <SettingsField>
-          <FormControl fullWidth size="small">
-            <InputLabel>{t('charMaze.settings.modeSelect')}</InputLabel>
-            <Select value={selectedMode} onChange={handleModeChange} label={t('charMaze.settings.modeSelect')}>
-              {Object.keys(MODE_PRESETS).map((preset, index) => (
-                <MenuItem key={index} value={index}>
-                  {t(`charMaze.settings.${modeLabelKeys[preset as 'WORD' | 'PHRASE' | 'SENTENCE']}`)}
+          <Stack spacing={1.5}>
+            <FormControl fullWidth size="small">
+              <InputLabel>{t('charMaze.settings.level')}</InputLabel>
+              <Select
+                value={selectedLevel}
+                label={t('charMaze.settings.level')}
+                onChange={(e) => {
+                  setSelectedLevel(e.target.value);
+                  setSelectedLessonIndexes([]);
+                }}
+              >
+                {Object.keys(miemieDetails).map((level) => {
+                  const lessons = miemieDetails[level];
+                  const isDisabled = !Array.isArray(lessons) || lessons.length === 0;
+                  return (
+                    <MenuItem key={level} value={level} disabled={isDisabled}>
+                      {level}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+            <FormControl
+              fullWidth
+              size="small"
+              disabled={!currentLessons || currentLessons.length === 0}
+            >
+              <InputLabel>{t('charMaze.settings.lesson')}</InputLabel>
+              <Select
+                multiple
+                value={selectedLessonIndexes}
+                label={t('charMaze.settings.lesson')}
+                renderValue={(selected) => {
+                  const values = selected as string[];
+                  if (values.length === 0) return t('charMaze.settings.allLessons');
+                  return values
+                    .map((index) => currentLessons[Number(index)]?.title)
+                    .filter(Boolean)
+                    .join(', ');
+                }}
+                onChange={(e) =>
+                  handleLessonChange(
+                    typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                  )
+                }
+              >
+                <MenuItem value="__all__">
+                  <Checkbox size="small" checked={selectedLessonIndexes.length === 0} />
+                  {t('charMaze.settings.allLessons')}
                 </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </SettingsField>
-        <SettingsField>
-          <FormControl fullWidth size="small">
-            <InputLabel>{SELECTER_TITLE_PRESETS[mode]}</InputLabel>
-            <Select value={fullSelectedValue} onChange={handleLevelChange} label={SELECTER_TITLE_PRESETS[mode]}>
-              <MenuItem value="">{t('charMaze.settings.pleaseSelect')}</MenuItem>
-              {Object.keys(currentMiemieData).map((language) =>
-                Object.keys(currentMiemieData[language] || {}).map((level) => (
-                  <MenuItem key={`${language}-${level}`} value={`${language}|${level}`}>
-                    {level}
+                {currentLessons?.map((lesson, index) => (
+                  <MenuItem key={index} value={String(index)}>
+                    <Checkbox size="small" checked={selectedLessonIndexes.includes(String(index))} />
+                    {lesson.title}
                   </MenuItem>
-                ))
-              )}
-            </Select>
-          </FormControl>
+                ))}
+              </Select>
+            </FormControl>
+            <ToggleButtonGroup
+              value={selectedMode}
+              exclusive
+              fullWidth
+              size="small"
+              onChange={handleModeChange}
+            >
+              <ToggleButton value={0} disabled={!!selectedLevel && !hasWords}>
+                {t('charMaze.settings.words')}
+              </ToggleButton>
+              <ToggleButton value={1} disabled={!!selectedLevel && !hasPhrases}>
+                {t('charMaze.settings.phrases')}
+              </ToggleButton>
+              <ToggleButton value={2} disabled={!!selectedLevel && !hasSentences}>
+                {t('charMaze.settings.sentences')}
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Stack>
         </SettingsField>
-        <SettingsField>
-          <FormControl fullWidth size="small" disabled={!selectedLevel}>
-            <InputLabel shrink>{t('charMaze.settings.presetBook')}</InputLabel>
-            <Select value={selectedBook} onChange={handleSelectBookChange} label={t('charMaze.settings.presetBook')} displayEmpty>
-              <MenuItem value="">{t('charMaze.settings.all')}</MenuItem>
-              {renderBookOptions()}
-            </Select>
-          </FormControl>
-        </SettingsField>
+
         <SettingsField
           caption={
             (() => {
-              const count = `${userInput.length}/${MAX_INPUT_LENGTH}`;
+              const countStr = t('charMaze.settings.manualInputCaption', { length: userInput.length });
 
-              // Check for non-Chinese characters
               const nonChinese = [...userInput].filter((c) => {
                 const trimmed = c.trim();
                 if (!trimmed) return false;
-                return !/[\u4e00-\u9fff]/.test(trimmed) && !/[\s,;，；、]/.test(c);
+                return !/[\u4e00-\u9fff]/.test(trimmed) && !/[\s,;，；、\n]/.test(c);
               });
               if (nonChinese.length > 0) {
-                return <Typography variant="caption" color="error.main">{count} — {t('charMaze.settings.nonChineseWarning')}</Typography>;
+                return <Typography variant="caption" color="error.main">{countStr} · {t('charMaze.settings.nonChineseWarning')}</Typography>;
               }
 
               if (mode === 'WORD') {
                 const tokens = userInput.split(/[\s,;，；、]+/).filter((c: string) => c.trim() !== '');
                 const multiChar = tokens.filter((token: string) => token.length > 1);
                 if (multiChar.length > 0) {
-                  return <Typography variant="caption" color="warning.main">{count} — {t('charMaze.settings.wordModeMultiCharWarning', { examples: multiChar.slice(0, 3).join(', ') })}</Typography>;
+                  return <Typography variant="caption" color="warning.main">{countStr} · {t('charMaze.settings.wordModeMultiCharWarning', { examples: multiChar.slice(0, 3).join(', ') })}</Typography>;
                 }
               }
-              return `${count} characters`;
+
+              const hintKey = mode === 'WORD' ? 'parsingHintWord' : mode === 'PHRASE' ? 'parsingHintPhrase' : 'parsingHintSentence';
+              return `${countStr} · ${t('charMaze.settings.' + hintKey)}`;
             })()
           }
         >
@@ -294,8 +265,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               size="small"
               value={userInput}
               onChange={(e) => onChange({ ...config, userInput: e.target.value })}
-              placeholder={t('charMaze.settings.manualInput')}
-              inputProps={{ maxLength: MAX_INPUT_LENGTH }}
+              placeholder={t('charMaze.settings.manualInputPlaceholder')}
+              inputProps={{
+                style: {
+                  fontFamily: 'KaiTi, STKaiti, "Kaiti SC", "SimKai", serif',
+                  fontSize: '1.1rem',
+                },
+              }}
               fullWidth
             />
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
@@ -362,35 +338,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         </SettingsField>
       </SettingCard>
 
-      <Dialog
-        open={pendingMode !== null}
-        onClose={() => setPendingMode(null)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>{t('common.confirm')}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {t('charMaze.settings.modeChangeWarning')}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPendingMode(null)}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => {
-              if (pendingMode !== null) {
-                applyModeChange(pendingMode);
-                setPendingMode(null);
-              }
-            }}
-          >
-            {t('common.confirm')}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 };

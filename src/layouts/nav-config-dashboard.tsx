@@ -1,11 +1,11 @@
 import { useTranslation } from 'react-i18next';
 
-import DrawIcon from '@mui/icons-material/Draw';
+import MapIcon from '@mui/icons-material/Map';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import SearchIcon from '@mui/icons-material/Search';
+import PaletteIcon from '@mui/icons-material/Palette';
+import EditNoteIcon from '@mui/icons-material/EditNote';
 import CalculateIcon from '@mui/icons-material/Calculate';
-import ColorLensIcon from '@mui/icons-material/ColorLens';
-import ExtensionIcon from '@mui/icons-material/Extension';
 
 import { SvgColor } from 'src/components/svg-color';
 
@@ -32,19 +32,19 @@ export function useNavData(): NavItem[] {
     {
       title: t('nav.charcolor'),
       path: '/charcolor',
-      icon: <ColorLensIcon />,
+      icon: <PaletteIcon />,
       toolId: 'charcolor',
     },
     {
       title: t('nav.charmaze'),
       path: '/charmaze',
-      icon: <ExtensionIcon />,
+      icon: <MapIcon />,
       toolId: 'charmaze',
     },
     {
       title: t('nav.chartrace'),
       path: '/chartrace',
-      icon: <DrawIcon />,
+      icon: <EditNoteIcon />,
       toolId: 'chartrace',
     },
     {

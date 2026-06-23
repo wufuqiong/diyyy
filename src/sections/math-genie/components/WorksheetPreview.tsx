@@ -41,9 +41,29 @@ const WorksheetPreview: React.FC<Props> = React.memo(
     const gridAutoRows =
       displayMode === DisplayMode.WORD_PROBLEM ? 'minmax(48mm, auto)' : `minmax(${layout.rowHeight}mm, auto)`;
 
+    // Compute uniform font size for multi-op problems on this page (avoid per-problem size variance)
+    const getPageFontSize = (pageProblems: MathProblem[]) => {
+      let maxChars = 0;
+      for (const p of pageProblems) {
+        if (p.isMultiOperation && p.numbers) {
+          const dc = Math.max(...p.numbers.map((n) => String(n).length));
+          const tc = dc * p.numbers.length + (p.numbers.length - 1) + 2;
+          if (tc > maxChars) maxChars = tc;
+        }
+      }
+      if (maxChars <= 6) return '1.5rem';
+      if (maxChars <= 9) return '1.3rem';
+      if (maxChars <= 12) return '1.1rem';
+      if (maxChars <= 15) return '0.95rem';
+      if (maxChars <= 18) return '0.8rem';
+      if (maxChars <= 22) return '0.68rem';
+      return '0.58rem';
+    };
+
     const renderPage = (pageIndex: number) => {
       const startIndex = pageIndex * problemsPerPage;
       const pageProblems = problems.slice(startIndex, startIndex + problemsPerPage);
+      const pageFontSize = getPageFontSize(pageProblems);
 
       return (
         <>
@@ -88,6 +108,7 @@ const WorksheetPreview: React.FC<Props> = React.memo(
                   index={startIndex + index}
                   showAnswers={showAnswers}
                   displayMode={displayMode}
+                  pageFontSize={pageFontSize}
                 />
               </Box>
             ))}

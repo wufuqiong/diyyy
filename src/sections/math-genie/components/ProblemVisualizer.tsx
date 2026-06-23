@@ -12,10 +12,41 @@ interface Props {
   index: number;
   showAnswers: boolean;
   displayMode: DisplayMode;
+  pageFontSize?: string;
 }
 
-const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAnswers, displayMode }) => {
+const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAnswers, displayMode, pageFontSize }) => {
   const { operation, num1, num2, emoji1, emoji2, answer, problemType, blankPosition, isMultiOperation, numbers, operators, emojis, isNumberBond, numberBondWhole, numberBondParts, numberBondBlankIndex, isWordProblem, wordProblemText, wordProblemOperation, wordProblemMeasure } = problem;
+
+  // Compute max digit length across all relevant numbers
+  const maxDigits = (vals: number[]) => Math.max(...vals.map((v) => String(v).length));
+  const digitCount = numbers && numbers.length > 0 ? maxDigits(numbers.concat(showAnswers ? answer : [])) : maxDigits([num1, num2, showAnswers ? answer : 0]);
+
+  // Font size — for multi-op, use uniform page-level size; for others, compute per problem
+  const getFontSize = (): string => {
+    if (isMultiOperation && pageFontSize) return pageFontSize;
+    if (isMultiOperation && numbers) {
+      const totalChars = digitCount * numbers.length + (numbers.length - 1) + 2;
+      if (totalChars <= 6) return '1.5rem';
+      if (totalChars <= 9) return '1.3rem';
+      if (totalChars <= 12) return '1.1rem';
+      if (totalChars <= 15) return '0.95rem';
+      if (totalChars <= 18) return '0.8rem';
+      if (totalChars <= 22) return '0.68rem';
+      return '0.58rem';
+    }
+    const digitFactor = digitCount <= 1 ? 1 : digitCount === 2 ? 0.85 : 0.72;
+    return `${(1.5 * digitFactor).toFixed(2)}rem`;
+  };
+
+  const fontSize = getFontSize();
+  const fontSizeNum = parseFloat(fontSize);
+  const blankSize = Math.max(28, Math.round(fontSizeNum * 24));
+  const numMinW = Math.round(fontSizeNum * 24);
+  const opMinW = Math.round(fontSizeNum * 14);
+
+  const answerH = Math.round(fontSizeNum * 20);
+  const moNumW = Math.round(fontSizeNum * 17);
 
   if (isNumberBond && numberBondWhole !== undefined && numberBondParts) {
     return <NumberBondNode whole={numberBondWhole} parts={numberBondParts} blankIndex={numberBondBlankIndex} showAnswers={showAnswers} />;
@@ -38,8 +69,8 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
   }
 
   const blankSquareSx = {
-    width: 34,
-    height: 34,
+    width: blankSize,
+    height: blankSize,
     border: `2px solid ${colors.inkSecondary}`,
     borderRadius: 0.5,
     boxSizing: 'border-box' as const,
@@ -48,7 +79,7 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
 
   const zeroSlotSx = {
     minWidth: 28,
-    minHeight: 34,
+    minHeight: blankSize,
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -56,27 +87,13 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
   };
 
   const unknownGroupSx = {
-    minWidth: 72,
-    minHeight: 56,
+    minWidth: Math.round(blankSize * 2.1),
+    minHeight: Math.round(blankSize * 1.6),
     px: 1,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-  };
-
-  const calculateFontSize = (operandCount: number) => {
-    if (operandCount <= 3) return '1.5rem';
-    if (operandCount === 4) return '1.3rem';
-    if (operandCount === 5) return '1.1rem';
-    return '0.9rem';
-  };
-
-  const getFontSize = () => {
-    if (isMultiOperation && numbers) {
-      return calculateFontSize(numbers.length);
-    }
-    return '1.5rem';
   };
 
   const renderZeroSlot = (emoji: string) => (
@@ -281,21 +298,21 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
                     {renderAdditionGroup(Math.min(num, 8), emojis[idx])}
                   </Box>
                   {idx < operators.length && (
-                    <Typography sx={{ fontSize: getFontSize(), fontWeight: 'bold', minWidth: 20, textAlign: 'center', flexShrink: 0 }}>
+                    <Typography sx={{ fontSize: getFontSize(), fontWeight: 'bold', minWidth: 0, textAlign: 'center' }}>
                       {operators[idx]}
                     </Typography>
                   )}
                 </React.Fragment>
               ))}
-              <Typography sx={{ fontSize: getFontSize(), fontWeight: 'bold', minWidth: 25, textAlign: 'center', flexShrink: 0 }}>
+              <Typography sx={{ fontSize: getFontSize(), fontWeight: 'bold', minWidth: 0, textAlign: 'center' }}>
                 =
               </Typography>
               {showAnswers ? (
-                <Typography sx={{ fontSize: getFontSize(), fontWeight: 'bold', minWidth: 30, textAlign: 'center', flexShrink: 0 }}>
+                <Typography sx={{ fontSize: getFontSize(), fontWeight: 'bold', minWidth: 0, textAlign: 'center' }}>
                   {answer}
                 </Typography>
               ) : (
-                <Box sx={{ minWidth: 30, height: 20, borderBottom: `2px solid ${colors.inkSecondary}`, flexShrink: 0 }} />
+                <Box sx={{ minWidth: 20, height: 16, borderBottom: `2px solid ${colors.inkSecondary}` }} />
               )}
             </>
           ) : problemType === ProblemType.FILL_BLANK ? (
@@ -344,7 +361,28 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
     );
   }
 
-  // TEXT mode display
+  // Multi-op: ultra-compact bare rendering — no Paper, no padding, no wrapping
+  if (isMultiOperation && numbers && operators) {
+    const equationText = numbers.map((n, i) => i < operators.length ? `${n} ${operators[i]} ` : `${n}`).join('') + ' = ' + (showAnswers ? answer : '___');
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          py: 1,
+          px: 0.5,
+          textAlign: 'center',
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <Box component="span" sx={{ fontWeight: 'bold', color: 'grey.800', fontSize, lineHeight: 1 }}>
+          {equationText}
+        </Box>
+      </Box>
+    );
+  }
+
+  // TEXT mode display (standard + fill-in-the-blank)
   return (
     <Paper
       key={problem.id}
@@ -363,33 +401,33 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
       }}
     >
       {problemType === ProblemType.FILL_BLANK ? (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: digitCount > 1 ? 1 : 2, justifyContent: 'center', flexWrap: 'nowrap' }}>
           {blankPosition === 'first' ? (
             <>
               {showAnswers ? (
-                <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
+                <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: numMinW, textAlign: 'center', fontSize }}>
                   {num1}
                 </Typography>
               ) : (
                 <Box sx={blankSquareSx} />
               )}
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 20, textAlign: 'center', fontSize: '1.5rem' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: opMinW, textAlign: 'center', fontSize }}>
                 {operation}
               </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: numMinW, textAlign: 'center', fontSize }}>
                 {num2}
               </Typography>
             </>
           ) : blankPosition === 'second' ? (
             <>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: numMinW, textAlign: 'center', fontSize }}>
                 {num1}
               </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 20, textAlign: 'center', fontSize: '1.5rem' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: opMinW, textAlign: 'center', fontSize }}>
                 {operation}
               </Typography>
               {showAnswers ? (
-                <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
+                <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: numMinW, textAlign: 'center', fontSize }}>
                   {num2}
                 </Typography>
               ) : (
@@ -398,77 +436,48 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
             </>
           ) : (
             <>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: numMinW, textAlign: 'center', fontSize }}>
                 {num1}
               </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 20, textAlign: 'center', fontSize: '1.5rem' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: opMinW, textAlign: 'center', fontSize }}>
                 {operation}
               </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: numMinW, textAlign: 'center', fontSize }}>
                 {num2}
               </Typography>
             </>
           )}
-          <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', fontFamily: '"Comic Neue", cursive', fontSize: '1.5rem' }}>
+          <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', fontFamily: '"Comic Neue", cursive', fontSize }}>
             =
           </Typography>
           {blankPosition === 'result' && !showAnswers ? (
             <Box sx={blankSquareSx} />
           ) : (
-            <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
+            <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: numMinW, textAlign: 'center', fontSize }}>
               {answer}
             </Typography>
           )}
         </Box>
       ) : (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center', flexWrap: 'nowrap' }}>
-          {isMultiOperation && numbers && operators ? (
-            <>
-              {numbers.map((num, idx) => (
-                <React.Fragment key={idx}>
-                  <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 25, textAlign: 'center', fontSize: getFontSize(), flexShrink: 0 }}>
-                    {num}
-                  </Typography>
-                  {idx < operators.length && (
-                    <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 15, textAlign: 'center', fontSize: getFontSize(), flexShrink: 0 }}>
-                      {operators[idx]}
-                    </Typography>
-                  )}
-                </React.Fragment>
-              ))}
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', fontFamily: '"Comic Neue", cursive', fontSize: getFontSize(), minWidth: 20, textAlign: 'center', flexShrink: 0 }}>
-                =
-              </Typography>
-              {showAnswers ? (
-                <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 25, textAlign: 'center', fontSize: getFontSize(), flexShrink: 0 }}>
-                  {answer}
-                </Typography>
-              ) : (
-                <Box sx={{ minWidth: 25, height: 20, borderBottom: `2px solid ${colors.inkSecondary}`, flexShrink: 0 }} />
-              )}
-            </>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+          <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: numMinW, textAlign: 'center', fontSize }}>
+            {num1}
+          </Typography>
+          <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: opMinW, textAlign: 'center', fontSize }}>
+            {operation}
+          </Typography>
+          <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: numMinW, textAlign: 'center', fontSize }}>
+            {num2}
+          </Typography>
+          <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', fontFamily: '"Comic Neue", cursive', fontSize }}>
+            =
+          </Typography>
+          {showAnswers ? (
+            <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: numMinW, textAlign: 'center', fontSize }}>
+              {answer}
+            </Typography>
           ) : (
-            <>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
-                {num1}
-              </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 20, textAlign: 'center', fontSize: '1.5rem' }}>
-                {operation}
-              </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
-                {num2}
-              </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', fontFamily: '"Comic Neue", cursive', fontSize: '1.5rem' }}>
-                =
-              </Typography>
-              {showAnswers ? (
-                <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'grey.800', minWidth: 35, textAlign: 'center', fontSize: '1.5rem' }}>
-                  {answer}
-                </Typography>
-              ) : (
-                <Box sx={{ minWidth: 35, height: 30, borderBottom: `2px solid ${colors.inkSecondary}` }} />
-              )}
-            </>
+            <Box sx={{ minWidth: numMinW, height: answerH, borderBottom: `2px solid ${colors.inkSecondary}` }} />
           )}
         </Box>
       )}
