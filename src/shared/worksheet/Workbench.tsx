@@ -260,6 +260,7 @@ export function Workbench<Config = any, Problem = any>({
         autoHideDuration={3000}
         onClose={() => setShowRestoredSnackbar(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ '@media print': { display: 'none' } }}
       >
         <Alert severity="info" onClose={() => setShowRestoredSnackbar(false)} sx={{ width: '100%' }}>
           {t('common.configRestored')}

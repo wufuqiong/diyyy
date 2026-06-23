@@ -20,11 +20,11 @@ Vitest uses `jsdom` environment with `globals: true` (no imports needed for `des
 
 ## Architecture
 
-**DIYYY** is a client-side worksheet generator for kids with four tools: Math Genie (arithmetic), Char Trace (Chinese character tracing), Char Maze (character mazes), and Char Color (character coloring). Built on React 19, MUI v7, TypeScript, Vite 6, React Router 7, and i18next. No server — all generation runs in the browser.
+**DIYYY** is a client-side worksheet generator for kids with six tools: Math Genie (arithmetic), Char Trace (Chinese character tracing), Char Maze (character mazes), Char Color (character coloring), Hundred Chart (number puzzles), and Word Search (English word search). Built on React 19, MUI v7, TypeScript, Vite 6, React Router 7, and i18next. No server — all generation runs in the browser.
 
 Entry: `src/main.tsx` → `createBrowserRouter` → lazy-loaded pages wrapped in `DashboardLayout`.
 
-Routes (from `src/routes/sections.tsx`): `/` (dashboard), `/charcolor`, `/charmaze`, `/chartrace`, `/math-genie`.
+Routes (from `src/routes/sections.tsx`): `/` (dashboard), `/charcolor`, `/charmaze`, `/chartrace`, `/math-genie`, `/hundred-chart`, `/word-search`.
 
 ### Features vs. Sections split
 

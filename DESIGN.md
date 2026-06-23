@@ -163,7 +163,7 @@ Generates arithmetic worksheets with configurable operations, difficulty, displa
 | `MathGenieView` | `sections/math-genie/view/` | Mounts Workbench |
 | `WorksheetSettings` | `sections/math-genie/components/` | Full settings panel (output, problem, difficulty, rules tabs) |
 | `WorksheetPreview` | `sections/math-genie/components/` | A4 page grid with pagination |
-| `ProblemVisualizer` | `sections/math-genie/components/` | Renders individual problems in text/emoji/word-problem/number-bond modes |
+| `ProblemVisualizer` | `sections/math-genie/components/` | Renders individual problems with adaptive font sizing based on digit count and operand count |
 
 ### Per-Page Calculation
 
@@ -207,7 +207,7 @@ Defined in `utils.ts` as `COLOR_PRESETS`.
 | Component | Purpose |
 |-----------|---------|
 | `CharColorView` | Mounts Workbench with 300ms debounce |
-| `ControlPanel` | Input field, lesson preset loader, words/page, color scheme selector |
+| `ControlPanel` | Multi-select lesson book loader, manual input, words/page, color scheme selector — uses `SettingCard` |
 | `PreviewSheet` | Renders A4 pages with legend + 7×7 grid |
 
 ---
@@ -231,18 +231,19 @@ Character maze worksheets where children find a path of target characters throug
 
 `generateMaze()` in `utils.ts`:
 1. Uses DFS path-finding from `src/utils/maze-tools.ts`
-2. WORD mode: single character along start-to-end path
+2. WORD mode: each Chinese character becomes its own maze page
 3. PHRASE mode: words placed horizontally/vertically in the grid
 4. SENTENCE mode: backtracking path through sentence characters
 5. Fill remaining cells with random distractor characters
+6. Pages capped at `MAX_PAGES = 50`; filler character pool precomputed once per generation
 
 ### UI Components
 
 | Component | Purpose |
 |-----------|---------|
 | `CharMazeView` | Mounts Workbench |
-| `ControlPanel` | Mode selector, input, preset loader, grid size, words/page |
-| `PreviewSheet` | Class component with pagination, maze grid, start/end icons |
+| `ControlPanel` | Mode toggle buttons (word/phrase/sentence), level + multi-select lesson loader, manual input, grid size, words/page — uses `SettingCard` |
+| `PreviewSheet` | Maze grid with start/end icons, page navigation |
 
 ---
 
@@ -280,7 +281,7 @@ The `generate` function returns an empty array — the `SheetConfig` drives rend
 | Component | Purpose |
 |-----------|---------|
 | `CharTraceView` | Mounts Workbench (autoGenerate disabled) |
-| `ControlPanel` | Extensive settings: content mode, grid type/size/color, font, colors, layout, pinyin/stroke toggles, presets |
+| `ControlPanel` | Lesson content loader (level + multi-select lessons + load buttons), grid type/size/color, font, colors, layout, pinyin toggle, presets — uses `SettingCard` with green theme |
 | `PaperSheet` | Renders A4 tracing worksheets with grids, trace copies, annotations |
 | `GridBox` | Individual grid cell rendering |
 
@@ -289,7 +290,6 @@ The `generate` function returns an empty array — the `SheetConfig` drives rend
 - **Mi (米字格)**: Diagonal cross-divided square
 - **Square**: Plain square grid
 - **English Lines**: Four-line grid for English writing
-- **None**: No grid lines
 
 ---
 
@@ -498,7 +498,7 @@ _From UX Audit Round 2 — implicit syntax findings._
 
 ### chartrace `text` field
 
-Comma (`,` / `，`) and newline (`\n`) are **control characters** that auto-detect content mode:
+Content mode is auto-detected from text delimiters:
 
 | Input | Detected Mode | Result |
 |-------|--------------|--------|
@@ -506,7 +506,7 @@ Comma (`,` / `，`) and newline (`\n`) are **control characters** that auto-dete
 | Contains `,` or `，` | PHRASES | Comma-separated segments as phrase rows |
 | Contains `\n` | SENTENCES | One sentence per line, `traceCount` forced to 1 |
 
-English mode (gridType=ENGLISH_LINES): 3-tier fallback — `\n/,` split → space split → per-character split.
+Load buttons (word/phrase/sentence) set the content mode and load corresponding data from selected lessons. English mode (gridType=ENGLISH_LINES): 3-tier fallback — `\n/,` split → space split → per-character split.
 
 ### charcolor `userInput` field
 
@@ -514,7 +514,7 @@ English mode (gridType=ENGLISH_LINES): 3-tier fallback — `\n/,` split → spac
 
 ### charmaze `userInput` field
 
-WORD/PHRASE modes split by `/[\s,;，；、]+/`. SENTENCE mode splits by `\n` only — commas ARE content in sentence mode but ARE separators in word/phrase mode.
+WORD/PHRASE modes split by `/[\s,;，；、]+/`. SENTENCE mode splits by `\n` only — commas ARE content in sentence mode but ARE separators in word/phrase mode. In WORD mode, each Chinese character becomes an individual token (split per character after initial delimiter split).
 
 ### math-genie `theme` field
 
@@ -604,6 +604,14 @@ _From UX Audit Round 1 & 2 task lists._
 | R2-05 | Charmaze | WORD mode multi-char detection warning |
 | R2-06 | Charmaze | PHRASE mode overflow → visible Error |
 | — | Charcolor | Changed to single-char-only, non-Chinese warning |
+| R3-01 | All tools | InputLabel replaced SettingsField black subtitles for Select and TextField controls |
+| R3-02 | Chartrace | Migrated from SettingsSection to SettingCard; removed NONE grid type and stroke count |
+| R3-03 | Charmaze | Lesson selector refactored to chartrace-style: level + multi-select lessons + mode toggle buttons; MAX_PAGES=50 |
+| R3-04 | Charmaze | Performance fix: cached loadMiemieLessons, precomputed filler pool, page cap |
+| R3-05 | Charcolor | Multi-select book loader; manual input merged into material card |
+| R3-06 | Math Genie | Adaptive font scaling for multi-op and fill-in-the-blank based on digit/operand count |
+| R3-07 | Sidebar | Icons synced with header title bar (PaletteIcon, MapIcon, EditNoteIcon) |
+| R3-08 | i18n | Fixed {count} → {{count}} interpolation in charTrace traceCopiesValue/repeatCount |
 
 ---
 

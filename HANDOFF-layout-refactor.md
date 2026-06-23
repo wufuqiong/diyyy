@@ -67,61 +67,22 @@ interface WorksheetPaperProps {
 
 ---
 
-## 3. 剩余任务：迁移 math-genie 与 hundred-chart 设置面板到 `SettingCard`
+## 3. 已完成：所有工具设置面板已迁移到 `SettingCard`（6/6）
 
-其余 4 个工具（charcolor / charmaze / chartrace / word-search）的设置面板已用 `SettingCard`，这两个还没用，需对齐。
+### 3.1 已迁移文件
 
-### 3.1 参考实现（务必照抄这套结构）
-
-- 共享原语：`src/sections/_shared/SettingCard.tsx`、`src/sections/_shared/SettingsPanel.tsx`（导出 `SettingsField`、`SettingsSection`、`MaybeTooltip` 等）。
-- 最佳范例：`src/sections/charcolor/components/ControlPanel.tsx`（见其 `return`：多个 `SettingCard` 包 `SettingsField`）。
-
-标准用法：
-
-```tsx
-import { SettingCard } from 'src/sections/_shared/SettingCard';
-import { SettingsField } from 'src/sections/_shared/SettingsPanel';
-import { candyColors } from 'src/theme/tokens';
-
-// 每组字段一张卡：
-<SettingCard label={t('...')} toolColor={candyColors.blue /* 见下 */}>
-  <SettingsField label={t('...')} caption={...} toolId="math-genie" helpAnchor="...">
-    {/* 原有的 Select / Slider / TextField / 按钮组 等控件，保持不变 */}
-  </SettingsField>
-  {/* 多个 SettingsField ... */}
-</SettingCard>
-```
-
-`toolColor` 取值：
-- **math-genie** → `candyColors.blue`
-- **hundred-chart** → `candyColors.purple`
-
-### 3.2 待迁移文件
-
-| 工具 | 文件 | 当前状态 |
+| 工具 | 文件 | 状态 |
 |---|---|---|
-| math-genie | `src/sections/math-genie/components/WorksheetSettings.tsx`（约 34KB，最大） | 用自定义布局/分节，未用 `SettingCard`。 |
-| hundred-chart | `src/sections/hundred-chart/components/HundredChartSettings.tsx`（约 7.4KB） | 未用 `SettingCard`。 |
-| hundred-chart | `src/sections/hundred-chart/components/CrossPuzzleSettings.tsx`（约 9.5KB） | 未用 `SettingCard`。 |
+| math-genie | `src/sections/math-genie/components/WorksheetSettings.tsx` | ✅ 已用 `SettingCard` |
+| hundred-chart | `src/sections/hundred-chart/components/HundredChartSettings.tsx` | ✅ 已用 `SettingCard` |
+| hundred-chart | `src/sections/hundred-chart/components/CrossPuzzleSettings.tsx` | ✅ 已用 `SettingCard` |
 
-> 注意：hundred-chart 在 `grid` / `cross` 两种 mode 下分别渲染上面两个设置组件之一（见 `HundredChartSettings.tsx` 内部按 `config.mode` 分发，或 `features/hundred-chart/config.tsx`）。两个都要迁。
+### 3.2 额外完成的设置面板改进
 
-### 3.3 迁移步骤（每个文件）
-
-1. 阅读现有 `return`，识别"逻辑分组"（如：数据来源 / 选项 / 内容 / 显示设置 …）。
-2. 每个分组用一张 `<SettingCard label={分组标题} toolColor={...}>` 包裹。
-3. 组内每个控件用 `<SettingsField label caption?>` 包裹；**控件本身（Select/Slider/Switch/TextField/按钮）原样保留**，不要改其逻辑、`onChange`、i18n key。
-4. 顶层返回多张 `SettingCard` 的 `<>…</>`（`SettingsPanel` 已在 `Workbench` 里用 `<Stack>` 自动加卡片间距，**不要**自己再包 `Paper`/外层间距）。
-5. 删除迁移后变为冗余的自绘分节标题/容器/间距代码（只删自己造成冗余的，别动无关代码）。
-6. label/caption 文案优先复用现有 i18n key；如分组需要新标题且无 key，按现有命名风格在 i18n 资源中补（与现有 4 个工具一致）。
-
-### 3.4 验收标准
-
-- `npx tsc --noEmit` 0 错误；`npm run dev` checker 0 error/warning（新引入的）。
-- 视觉上左侧设置区与 charcolor/charmaze 等一致：白色糖果卡 + 工具色分组标题 + 卡间距统一。
-- 所有原有功能（生成/选项/开关/滑块/打印）行为不变。
-- 不改预览区与题目内容渲染。
-- import 顺序通过 `perfectionist/sort-imports`（必要时 `npx eslint --fix <file>`）。
+- **chartrace ControlPanel** — 从 `SettingsSection` 迁移到 `SettingCard`，控件标签替换为 `InputLabel`，多步运算按钮组改为单行 4 按钮，去掉了"无"网格类型和"笔画数"选项。
+- **charmaze ControlPanel** — 重构为 chartrace 风格的教材选择（级别下拉 + 课册多选 + 模式切换按钮），去掉了独立的模式选择器，新增页数上限 `MAX_PAGES = 50`。
+- **charcolor ControlPanel** — 书册选择器改为多选，手动输入区合并到教材来源卡片。
+- **全局 InputLabel 替换** — 所有 `Select` 和 `TextField` 控件统一使用 MUI `InputLabel` 或 `TextField label` 属性，替代 `SettingsField` 的黑色小标题。
 
 ---
 

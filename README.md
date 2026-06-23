@@ -9,16 +9,22 @@
 ## Tools
 
 ### Math Genie
-Generate arithmetic worksheets with addition, subtraction, mixed operations, and multi-step problems. Choose from text, emoji, or word-problem display modes. Supports fill-in-the-blank, fact families, number bonds, zero drills, and customizable difficulty ranges.
+Generate arithmetic worksheets with addition, subtraction, mixed operations, and multi-step problems. Choose from text, emoji, or word-problem display modes. Supports fill-in-the-blank, fact families, number bonds, zero drills, and customizable difficulty ranges. Font sizes auto-scale to fit large numbers and long equations on one line.
 
 ### Char Trace
-Create Chinese character tracing sheets with Tianzige (田字格), Mizige (米字格), square, or English 4-line grids. Adjust trace count, font, colors, pinyin display, stroke count, and stroke order. Supports characters, phrases, sentences, and alphabet practice.
+Create Chinese character tracing sheets with Tianzige (田字格), Mizige (米字格), square, or English 4-line grids. Adjust trace count, font, colors, pinyin display, and stroke count. Supports characters, phrases, sentences, Pinyin, and alphabet practice. Load content from preset lesson libraries.
 
 ### Char Maze
-Build character recognition mazes where kids find target characters hidden in a grid. Supports word, phrase, and sentence modes with adjustable grid sizes. Load from preset lesson libraries or type your own content.
+Build character recognition mazes in word, phrase, or sentence modes with adjustable grid sizes (8×8 to 12×12). Select lessons from preset libraries via multi-select, or type custom content. Mode is controlled via toggle buttons that also load content from selected lessons.
 
 ### Char Color
-Generate "find and color" worksheets — kids locate and color target characters among others. Great for early character recognition. Choose from preset word libraries or enter custom text.
+Generate "find and color" worksheets — kids locate and color target characters among others. Choose from 4 color presets, adjust words per page, and load content from multi-select lesson books.
+
+### Hundred Chart
+10×10 hundred-chart worksheets with two modes: grid fill-in (random/pattern/manual blank strategies) and cross puzzles (arithmetic puzzles with configurable difficulty). Multi-version support with optional answer keys.
+
+### Word Search
+English word-search worksheets: target words hidden in a letter grid with configurable grid size, difficulty, and display options. Load preset themes or type custom words. Supports answer key pages.
 
 ---
 
