@@ -48,7 +48,7 @@ export const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
       )}
       <Tooltip title={isSaving ? t('common.savingPdf') : t('common.savePdf')} arrow>
         <span>
-          <IconButton onClick={onSavePdf} disabled={isSaving} size="small" sx={activeSx(candyColors.red)}>
+          <IconButton onClick={onSavePdf} disabled={isSaving} size="small" sx={activeSx(candyColors.red)} data-testid="toolbar-save-pdf">
             <PdfIcon fontSize="small" />
           </IconButton>
         </span>

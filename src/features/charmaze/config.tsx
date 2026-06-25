@@ -12,6 +12,7 @@ import { ControlPanel } from 'src/sections/charmaze/components/ControlPanel';
 import { ScaledPreviewSheet } from 'src/sections/charmaze/view/preview-sheet';
 
 import { generateMazePages } from './utils';
+import { TABLE_SIZE_PRESETS } from './types';
 
 import type { MazePageData, CharMazeConfig } from './types';
 
@@ -68,4 +69,5 @@ export const charmazeTool: WorksheetTool<CharMazeConfig, MazePageData> = {
     route: '/charmaze',
   },
   deriveTitle: (_config) => '识字迷宫',
+  deriveContentColumns: (config) => TABLE_SIZE_PRESETS[config.selectedTableSize]?.cols,
 };

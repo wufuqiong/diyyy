@@ -14,4 +14,6 @@ export interface WorksheetTool<Config = any, Problem = any> {
   Settings: React.FC<{ config: Config; onChange: (c: Config) => void; onGenerate?: () => void; isGenerating?: boolean }>;
   meta: WorksheetToolMeta;
   deriveTitle?: (config: Config) => string;
+  /** Number of content columns for preview-stage width calculation (optional). */
+  deriveContentColumns?: (config: Config) => number | undefined;
 }

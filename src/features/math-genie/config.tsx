@@ -199,4 +199,9 @@ export const mathGenieTool: WorksheetTool<WorksheetConfig, MathProblem> = {
     icon: <CalculateIcon />,
     route: '/math-genie',
   },
+  deriveContentColumns: (config) => {
+    if (config.displayMode === DisplayMode.WORD_PROBLEM) return 1;
+    if (config.displayMode === DisplayMode.EMOJI) return 2;
+    return config.textColumns || 2;
+  },
 };

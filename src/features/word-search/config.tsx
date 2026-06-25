@@ -7,10 +7,10 @@ import SearchIcon from '@mui/icons-material/Search';
 
 import i18n from 'src/i18n/config';
 
-import { GridSizePreset, WORDS_PER_PAGE, WordSearchDifficulty } from './types';
 import { generateSeed, generateWordSearchGrid } from './generators/grid-generator';
 import WordSearchPreview from '../../sections/word-search/components/PreviewSheet';
 import WordSearchSettings from '../../sections/word-search/components/ControlPanel';
+import { GridSizePreset, WORDS_PER_PAGE, GRID_DIMENSIONS, WordSearchDifficulty } from './types';
 
 import type { WordSearchSheet, WordSearchConfig } from './types';
 
@@ -108,4 +108,5 @@ export const wordSearchTool: WorksheetTool<WordSearchConfig, WordSearchSheet> = 
     icon: <SearchIcon />,
     route: '/word-search',
   },
+  deriveContentColumns: (config) => GRID_DIMENSIONS[config.gridSize]?.cols,
 };

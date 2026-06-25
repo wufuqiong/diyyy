@@ -472,7 +472,7 @@ describe('Math Genie Generators', () => {
 
   // ---------- calculateOptimalProblemsPerPage tests ----------
   describe('calculateOptimalProblemsPerPage', () => {
-    it('TEXT: standard 2 columns returns 20', async () => {
+    it('TEXT: standard 2 columns returns 18', async () => {
       const { calculateOptimalProblemsPerPage } = await import('src/features/math-genie/shared/layout');
       const result = calculateOptimalProblemsPerPage({
         displayMode: DisplayMode.TEXT,
@@ -482,7 +482,7 @@ describe('Math Genie Generators', () => {
         operation: OperationType.ADDITION,
         difficulty: DifficultyLevel.EASY,
       });
-      expect(result).toBe(20);
+      expect(result).toBe(18);
     });
 
     it('TEXT: number bond 2 columns returns 8', async () => {
@@ -498,7 +498,7 @@ describe('Math Genie Generators', () => {
       expect(result).toBe(8);
     });
 
-    it('TEXT: multi-op 5 operands 2 columns returns 22', async () => {
+    it('TEXT: multi-op 5 operands 2 columns returns 20', async () => {
       const { calculateOptimalProblemsPerPage } = await import('src/features/math-genie/shared/layout');
       const result = calculateOptimalProblemsPerPage({
         displayMode: DisplayMode.TEXT,
@@ -509,7 +509,7 @@ describe('Math Genie Generators', () => {
         difficulty: DifficultyLevel.EASY,
         multiOperationConfig: { mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 5 },
       });
-      expect(result).toBe(22);
+      expect(result).toBe(20);
     });
 
     it('TEXT: 3 columns clamps to max 30', async () => {
@@ -522,10 +522,10 @@ describe('Math Genie Generators', () => {
         operation: OperationType.ADDITION,
         difficulty: DifficultyLevel.EASY,
       });
-      expect(result).toBe(30);
+      expect(result).toBe(27);
     });
 
-    it('EMOJI: small range max<=5 returns 12', async () => {
+    it('EMOJI: small range max<=5 returns 10', async () => {
       const { calculateOptimalProblemsPerPage } = await import('src/features/math-genie/shared/layout');
       const result = calculateOptimalProblemsPerPage({
         displayMode: DisplayMode.EMOJI,
@@ -535,7 +535,7 @@ describe('Math Genie Generators', () => {
         operation: OperationType.ADDITION,
         difficulty: DifficultyLevel.EASY,
       });
-      expect(result).toBe(12);
+      expect(result).toBe(10);
     });
 
     it('EMOJI: large range max>10 returns 6', async () => {

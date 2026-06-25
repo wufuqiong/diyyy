@@ -49,4 +49,5 @@ export const charcolorTool: WorksheetTool<CharColorConfig, PageData> = {
     route: '/charcolor',
   },
   deriveTitle: (_config) => '识字涂色',
+  deriveContentColumns: (_config) => 7,
 };

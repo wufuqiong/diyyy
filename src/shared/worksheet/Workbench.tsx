@@ -55,6 +55,8 @@ export function Workbench<Config = any, Problem = any>({
 
   const isAuto = typeof autoGenerate === 'function' ? autoGenerate(config) : autoGenerate;
 
+  const contentColumns = tool.deriveContentColumns?.(config);
+
   const navKey = tool.id === 'math-genie' ? 'mathGenie' : tool.id === 'hundred-chart' ? 'hundredChart' : tool.id === 'word-search' ? 'wordSearch' : tool.id;
 
   const toolColor = toolColors[tool.id] || candyColors.blue;
@@ -249,7 +251,7 @@ export function Workbench<Config = any, Problem = any>({
           </Alert>
         )}
 
-        <PreviewStage>
+        <PreviewStage contentColumns={contentColumns}>
           <tool.Preview config={config} problems={problems} pdfContainerRef={pdfContainerRef} onConfigChange={setConfig} />
         </PreviewStage>
       </ResponsiveWorkbench>

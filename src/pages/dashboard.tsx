@@ -4,14 +4,14 @@ import { Link as RouterLink } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
-import DrawIcon from '@mui/icons-material/Draw';
+import MapIcon from '@mui/icons-material/Map';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import SearchIcon from '@mui/icons-material/Search';
+import PaletteIcon from '@mui/icons-material/Palette';
+import EditNoteIcon from '@mui/icons-material/EditNote';
 import CalculateIcon from '@mui/icons-material/Calculate';
-import ColorLensIcon from '@mui/icons-material/ColorLens';
-import ExtensionIcon from '@mui/icons-material/Extension';
 
 import { CONFIG } from 'src/config-global';
 import { ink, shadow, radius, toolColors, candyColors } from 'src/theme/tokens';
@@ -58,6 +58,9 @@ function ToolCard({ title, description, icon, to, toolId }: ToolCardProps) {
   return (
     <Box
       sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         borderRadius: radius.card,
         overflow: 'visible',
         transition: 'transform 0.25s ease, box-shadow 0.25s ease',
@@ -127,6 +130,9 @@ function ToolCard({ title, description, icon, to, toolId }: ToolCardProps) {
       {/* Bottom segment — white card that overlaps top */}
       <Box
         sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
           bgcolor: '#fff',
           borderBottomLeftRadius: radius.card,
           borderBottomRightRadius: radius.card,
@@ -143,6 +149,7 @@ function ToolCard({ title, description, icon, to, toolId }: ToolCardProps) {
       >
         <Typography
           sx={{
+            flex: 1,
             fontFamily: '"Quicksand", "Noto Sans SC", sans-serif',
             fontWeight: 500,
             fontSize: '0.8rem',
@@ -198,21 +205,21 @@ function DashboardContent() {
     {
       title: t('nav.charcolor'),
       description: t('dashboard.features.charColorDesc'),
-      icon: <ColorLensIcon />,
+      icon: <PaletteIcon />,
       to: '/charcolor',
       toolId: 'charcolor',
     },
     {
       title: t('nav.charmaze'),
       description: t('dashboard.features.charMazeDesc'),
-      icon: <ExtensionIcon />,
+      icon: <MapIcon />,
       to: '/charmaze',
       toolId: 'charmaze',
     },
     {
       title: t('nav.chartrace'),
       description: t('dashboard.features.charTraceDesc'),
-      icon: <DrawIcon />,
+      icon: <EditNoteIcon />,
       to: '/chartrace',
       toolId: 'chartrace',
     },
@@ -268,7 +275,7 @@ function DashboardContent() {
       </Box>
 
       {/* Tool cards */}
-      <Grid container spacing={3}>
+      <Grid container spacing={3} alignItems="stretch">
         {tools.map((tool) => (
           <Grid key={tool.toolId} size={{ xs: 12, sm: 6, md: 4 }}>
             <ToolCard {...tool} />

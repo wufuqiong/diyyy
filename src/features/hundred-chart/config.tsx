@@ -167,6 +167,7 @@ export const hundredChartTool: WorksheetTool<HundredChartConfig, HundredChartShe
   Preview,
   Settings,
   deriveTitle,
+  deriveContentColumns: (config) => (config.mode === 'grid' ? 10 : config.columnsPerRow || 4),
   meta: {
     title: '百数板 - DIYYY',
     icon: <GridOnIcon />,

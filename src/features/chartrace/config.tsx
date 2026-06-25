@@ -61,4 +61,5 @@ export const chartraceTool: WorksheetTool<SheetConfig, null> = {
     route: '/chartrace',
   },
   deriveTitle: (config) => config.headerTitle,
+  deriveContentColumns: (config) => (config.gridType === 'english' ? undefined : config.colsPerRow || 4),
 };

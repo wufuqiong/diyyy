@@ -46,7 +46,6 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
   const opMinW = Math.round(fontSizeNum * 14);
 
   const answerH = Math.round(fontSizeNum * 20);
-  const moNumW = Math.round(fontSizeNum * 17);
 
   if (isNumberBond && numberBondWhole !== undefined && numberBondParts) {
     return <NumberBondNode whole={numberBondWhole} parts={numberBondParts} blankIndex={numberBondBlankIndex} showAnswers={showAnswers} />;
