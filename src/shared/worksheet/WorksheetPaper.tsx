@@ -104,13 +104,13 @@ export const WorksheetPaper: React.FC<WorksheetPaperProps> = ({
 
   const printPaperSx = {
     width: '210mm',
-    minHeight: '297mm',
+    height: '297mm',
     boxSizing: 'border-box' as const,
     display: 'flex',
     flexDirection: 'column' as const,
     backgroundColor: '#fff',
     padding: paperPadding,
-    margin: '0 auto',
+    overflow: 'hidden',
   };
 
   return (

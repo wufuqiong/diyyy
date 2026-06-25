@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test.describe('Visual Regression Tests', () => {
   test.describe('Default state — full page', () => {
@@ -7,9 +7,8 @@ test.describe('Visual Regression Tests', () => {
     for (const tool of tools) {
       test(`${tool} default state`, async ({ page }) => {
         await page.goto(`/${tool}`);
-        await page.waitForTimeout(800);
-        // Baseline not yet generated — run with --update-snapshots after review
-        // await expect(page).toHaveScreenshot(`${tool}-default.png`, { fullPage: true });
+        await page.waitForTimeout(1000);
+        await expect(page).toHaveScreenshot(`${tool}-default.png`, { fullPage: true, timeout: 10000 });
       });
     }
   });
