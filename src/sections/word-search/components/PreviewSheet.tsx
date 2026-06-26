@@ -44,22 +44,39 @@ const buildDirectionHint = (difficulty: WordSearchDifficulty): string => {
   return `Words may be hidden ${joined}${hasReverse ? ' (including backwards)' : ''}.`;
 };
 
-const BubbleTitle: React.FC<{ title: string }> = ({ title }) => (
+const MAX_TITLE_WIDTH = 580;
+const TITLE_GAP = 8;
+const MAX_BUBBLE = 58;
+const BUBBLE_PAD = 18; // px (1.5) × 2 + border (3px) × 2 ≈ 21px; use 18px for content area
 
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
+const BubbleTitle: React.FC<{ title: string }> = ({ title }) => {
+  const chars = Array.from(title).filter((ch) => ch.trim() !== '');
+  const bubbleSize = Math.min(MAX_BUBBLE, Math.floor((MAX_TITLE_WIDTH - (chars.length - 1) * TITLE_GAP) / chars.length));
+  const fontSize = Math.round(bubbleSize * 0.62);
+
+  return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', gap: `${TITLE_GAP}px`, flexWrap: 'nowrap' }}>
       {Array.from(title).map((ch, i) =>
         ch.trim() === '' ? (
-          <Box key={i} sx={{ width: 14 }} />
+          <Box key={i} sx={{ width: `${Math.round(bubbleSize * 0.25)}px`, flexShrink: 0 }} />
         ) : (
           <Box
             key={i}
             sx={{
-              minWidth: 58, height: 58, px: 1.5,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: `${bubbleSize}px`,
+              height: `${bubbleSize}px`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
               borderRadius: '999px',
               border: `3px solid ${candyColors.pink}`,
-              backgroundColor: '#fff', color: candyColors.pink,
-              fontSize: 36, fontWeight: 800, lineHeight: 1, textTransform: 'uppercase',
+              backgroundColor: '#fff',
+              color: candyColors.pink,
+              fontSize,
+              fontWeight: 800,
+              lineHeight: 1,
+              textTransform: 'uppercase',
             }}
           >
             {ch}
@@ -68,6 +85,7 @@ const BubbleTitle: React.FC<{ title: string }> = ({ title }) => (
       )}
     </Box>
   );
+};
 
 const Instruction: React.FC<{ difficulty: WordSearchDifficulty }> = ({ difficulty }) => (
   <Box sx={{ textAlign: 'center', maxWidth: 520 }}>
