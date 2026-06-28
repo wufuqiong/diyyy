@@ -585,6 +585,22 @@ Components: `SafariPrintWarning.tsx`, `is-safari.ts`, integration in `Workbench.
 
 ---
 
+## Comparison Feature (Math Genie)
+
+`SpecialPracticeType.COMPARISON` with two subtypes (`ComparisonSubType`):
+
+| Subtype | Pattern (EMOJI) | Text | Word Problem |
+|---------|-----------------|------|-------------|
+| 比大小 MAGNITUDE | Emoji groups + ○ for `><=` | `5 ○ 8` → fill `><=` | Disabled (N/A) |
+| 比多少 DIFFERENCE | Emoji rows + "X比Y多/少___个" | `5比7少___个` | "小明有5个🍎，小红有3个..." |
+
+- Reuses `displayMode` toggle (EMOJI/TEXT/WORD_PROBLEM) for presentation
+- EMOJI mode capps to max 10 (confirmation prompt if exceed)
+- Two-step settings: top-level "题型大类" selector → comparison-specific cards
+- Generators: `comparison.ts` (core) + `comparison-word-problem.ts` (word problems)
+- Rendering: `<ComparisonCard>` Paper wrapper matching arithmetic EMOJI style
+- `deriveContentColumns`: COMPARISON+EMOJI→2, TEXT→config.textColumns
+
 ## UX Improvements Applied
 
 _From UX Audit Round 1 & 2 task lists._
@@ -603,15 +619,15 @@ _From UX Audit Round 1 & 2 task lists._
 | R2-03 | Math Genie | Theme onChange/onInputChange race condition fix |
 | R2-05 | Charmaze | WORD mode multi-char detection warning |
 | R2-06 | Charmaze | PHRASE mode overflow → visible Error |
-| — | Charcolor | Changed to single-char-only, non-Chinese warning |
-| R3-01 | All tools | InputLabel replaced SettingsField black subtitles for Select and TextField controls |
-| R3-02 | Chartrace | Migrated from SettingsSection to SettingCard; removed NONE grid type and stroke count |
-| R3-03 | Charmaze | Lesson selector refactored to chartrace-style: level + multi-select lessons + mode toggle buttons; MAX_PAGES=50 |
-| R3-04 | Charmaze | Performance fix: cached loadMiemieLessons, precomputed filler pool, page cap |
-| R3-05 | Charcolor | Multi-select book loader; manual input merged into material card |
-| R3-06 | Math Genie | Adaptive font scaling for multi-op and fill-in-the-blank based on digit/operand count |
-| R3-07 | Sidebar | Icons synced with header title bar (PaletteIcon, MapIcon, EditNoteIcon) |
-| R3-08 | i18n | Fixed {count} → {{count}} interpolation in charTrace traceCopiesValue/repeatCount |
+| R3-06 | Math Genie | Adaptive font scaling for multi-op and fill-in-the-blank |
+| R3-07 | Sidebar | Icons synced with header |
+| R4-01 | Math Genie | Comparison exercises: 比大小/比多少 with emoji/text/word-problem modes |
+| R4-02 | Math Genie | Two-step exercise type selector (arithmetic / comparison) |
+| R4-03 | Math Genie | WORD_PROBLEM_COMPARISON removed, merged into COMPARISON |
+| R4-04 | Dashboard | Card sizing uniform, icons synced |
+| R4-05 | Word Search | BubbleTitle auto-shrinks for long titles |
+| R4-06 | All tools | Print Paper height fix (minHeight→height+overflow:hidden) |
+| R4-07 | Math Genie | Compare magnitude worksheet instruction hint |
 
 ---
 

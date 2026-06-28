@@ -410,16 +410,11 @@ Run: `npx vitest run src/features/word-search/generators/__tests__/grid-generato
 
 ---
 
-# Layer 3: Visual Regression Tests (FRAMEWORK READY — BASELINE PENDING)
+# Layer 3: Visual Regression Tests
 
 **Framework:** Playwright (`toHaveScreenshot()`)
 **测试文件:** `e2e/visual/regression.spec.ts`
-**配置:** `playwright.config.ts`
-**测试文件目录:** `e2e/visual/`
-**截图基线目录:** `e2e/visual/__screenshots__/`（`.gitignore` 已配置为跟踪）
-
-> **IMPORTANT — baseline 截图当前尚未生成。** 在框架实现完成后，需要人工审核确认预览渲染无误，再手动执行
-> `npx playwright test --update-snapshots` 生成并提交截图基线。在此之前 CI 中 visual regression job 应标记为 allow-failure。
+**截图基线:** `e2e/visual/regression.spec.ts-snapshots/`（6 tools × default state）
 
 ---
 
@@ -551,10 +546,10 @@ Run: `npx vitest run src/features/word-search/generators/__tests__/grid-generato
 
 | Category | Screenshots | Status |
 |----------|-------------|--------|
-| Default state (6 tools) | 6 | Framework ready, baseline pending |
+| Default state (6 tools) | 6 | ✅ |
 | Filled state (6 tools) | - | TODO |
 | Component close-ups | - | TODO |
-| **Layer 3 total** | **6 (stub)** | |
+| **Layer 3 total** | **6** | |
 
 ## Layer 4: E2E Integration Tests
 
@@ -574,7 +569,7 @@ Run: `npx vitest run src/features/word-search/generators/__tests__/grid-generato
 
 ```bash
 # All Layer 1 + 2 tests
-npx vitest run                    # single run (155 tests)
+npx vitest run                    # single run (182 tests)
 
 # Single test file
 npx vitest run src/sections/charcolor/__tests__/utils.test.ts
