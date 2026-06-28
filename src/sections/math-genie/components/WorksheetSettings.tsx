@@ -39,6 +39,7 @@ import {
   ProblemType,
   OperationType,
   DifficultyLevel,
+  ComparisonSubType,
   MultiOperationMode,
   SpecialPracticeType,
 } from 'src/types';
@@ -133,13 +134,16 @@ const WorksheetSettings: React.FC<Props> = ({
     specialPracticeType = SpecialPracticeType.NONE,
     multiOperationConfig,
     autoPreview = true,
-    excludeComparisonProblems = false,
+    comparisonConfig,
   } = config;
 
   const { t } = useTranslation();
 
   const activeProblemType = problemType;
   const isSpecialSelected = specialPracticeType !== SpecialPracticeType.NONE;
+  const isComparisonSelected = specialPracticeType === SpecialPracticeType.COMPARISON;
+  const isNumberBond = specialPracticeType === SpecialPracticeType.NUMBER_BOND;
+  const hideArithmeticControls = isComparisonSelected || isNumberBond;
   const isEmoji = displayMode === DisplayMode.EMOJI;
   const isWordProblem = displayMode === DisplayMode.WORD_PROBLEM;
   const isMultiOp = operation === OperationType.MULTI_OPERATIONS;
@@ -147,6 +151,7 @@ const WorksheetSettings: React.FC<Props> = ({
 
   const [snack, setSnack] = useState<{ open: boolean; msg: string }>({ open: false, msg: '' });
   const [showMultiOpPanel, setShowMultiOpPanel] = useState(false);
+  const [emojiLimitConfirm, setEmojiLimitConfirm] = useState<{ open: boolean; pendingDisplayMode?: DisplayMode }>({ open: false });
   const notify = (msg: string) => setSnack({ open: true, msg });
 
   // ---------- Derived ----------
@@ -262,8 +267,17 @@ const WorksheetSettings: React.FC<Props> = ({
 
   // ---------- Handlers ----------
 
+  const getEffectiveMax = () => {
+    if (difficulty === DifficultyLevel.CUSTOM) return customDifficulty?.max ?? 20;
+    return difficulty as number;
+  };
+
   const handleDisplayMode = (next: DisplayMode | null) => {
     if (!next || next === displayMode) return;
+    if (next === DisplayMode.EMOJI && isComparisonSelected && getEffectiveMax() > 10) {
+      setEmojiLimitConfirm({ open: true, pendingDisplayMode: next });
+      return;
+    }
     const updates: Partial<WorksheetConfig> = { displayMode: next };
     if (next === DisplayMode.EMOJI && isMultiOp) {
       updates.operation = OperationType.ADDITION;
@@ -271,12 +285,12 @@ const WorksheetSettings: React.FC<Props> = ({
     }
     if (next === DisplayMode.WORD_PROBLEM) {
       if (activeProblemType === ProblemType.FILL_BLANK) updates.problemType = ProblemType.STANDARD;
-      if (isSpecialSelected && specialPracticeType !== SpecialPracticeType.WORD_PROBLEM_COMPARISON) {
+      if (isSpecialSelected && !isComparisonSelected) {
         updates.specialPracticeType = SpecialPracticeType.NONE;
       }
-    }
-    if (next !== DisplayMode.WORD_PROBLEM && specialPracticeType === SpecialPracticeType.WORD_PROBLEM_COMPARISON) {
-      updates.specialPracticeType = SpecialPracticeType.NONE;
+      if (isComparisonSelected) {
+        updates.comparisonConfig = { subType: ComparisonSubType.DIFFERENCE };
+      }
     }
     onChange({ ...config, ...updates });
   };
@@ -324,12 +338,15 @@ const WorksheetSettings: React.FC<Props> = ({
       return;
     }
     const updates: Partial<WorksheetConfig> = { specialPracticeType: next };
-    if (next === SpecialPracticeType.WORD_PROBLEM_COMPARISON) {
-      updates.displayMode = DisplayMode.WORD_PROBLEM;
-      if (isMultiOp) updates.operation = OperationType.MIXED;
+    if (next === SpecialPracticeType.COMPARISON) {
+      updates.comparisonConfig = { subType: ComparisonSubType.MAGNITUDE };
+      updates.displayMode = DisplayMode.TEXT;
+      if (isMultiOp) updates.operation = OperationType.ADDITION;
+    } else if (next === SpecialPracticeType.NUMBER_BOND && displayMode !== DisplayMode.TEXT) {
+      updates.displayMode = DisplayMode.TEXT;
     } else {
-      if (specialPracticeType === SpecialPracticeType.WORD_PROBLEM_COMPARISON) {
-        updates.displayMode = DisplayMode.TEXT;
+      if (specialPracticeType === SpecialPracticeType.COMPARISON) {
+        updates.comparisonConfig = undefined;
       }
       if (next !== SpecialPracticeType.NONE && isMultiOp) {
         updates.operation = OperationType.ADDITION;
@@ -364,14 +381,6 @@ const WorksheetSettings: React.FC<Props> = ({
     if (checked && specialPracticeType === SpecialPracticeType.ZERO_DRILL) {
       updates.specialPracticeType = SpecialPracticeType.NONE;
       notify(t('mathGenie.zeroDrillTurnedOff'));
-    }
-    onChange({ ...config, ...updates });
-  };
-
-  const handleExcludeComparison = (checked: boolean) => {
-    const updates: Partial<WorksheetConfig> = { excludeComparisonProblems: checked };
-    if (checked && specialPracticeType === SpecialPracticeType.WORD_PROBLEM_COMPARISON) {
-      updates.specialPracticeType = SpecialPracticeType.NONE;
     }
     onChange({ ...config, ...updates });
   };
@@ -412,7 +421,46 @@ const WorksheetSettings: React.FC<Props> = ({
 
   return (
     <>
-          <SettingCard label={t('mathGenie.sectionOutput')} toolColor={candyColors.blue}>
+      <SettingCard label={t('mathGenie.exerciseType')} toolColor={candyColors.blue}>
+        <SettingsField>
+          <ToggleButtonGroup
+            value={isComparisonSelected ? SpecialPracticeType.COMPARISON : SpecialPracticeType.NONE}
+            exclusive fullWidth size="small"
+            onChange={(_, v) => {
+              if (!v) return;
+              if (v === SpecialPracticeType.COMPARISON) {
+                onChange({ ...config, specialPracticeType: SpecialPracticeType.COMPARISON, comparisonConfig: { subType: ComparisonSubType.MAGNITUDE }, displayMode: DisplayMode.TEXT });
+              } else {
+                onChange({ ...config, specialPracticeType: SpecialPracticeType.NONE, comparisonConfig: undefined, displayMode: DisplayMode.TEXT });
+              }
+            }}
+          >
+            <ToggleButton value={SpecialPracticeType.NONE}>{t('mathGenie.arithmetic')}</ToggleButton>
+            <ToggleButton value={SpecialPracticeType.COMPARISON}>{t('mathGenie.comparisonPractice')}</ToggleButton>
+          </ToggleButtonGroup>
+        </SettingsField>
+      </SettingCard>
+
+      {isComparisonSelected && (
+        <SettingCard label={t('mathGenie.comparisonSubType')} toolColor={candyColors.blue}>
+          <SettingsField label={t('mathGenie.comparisonSubType')}>
+            <ToggleButtonGroup
+              value={comparisonConfig?.subType ?? ComparisonSubType.MAGNITUDE}
+              exclusive fullWidth size="small"
+              onChange={(_, v) => { if (!v) return; onChange({ ...config, comparisonConfig: { subType: v as ComparisonSubType } }); }}
+            >
+              <ToggleButton value={ComparisonSubType.MAGNITUDE} disabled={displayMode === DisplayMode.WORD_PROBLEM}>
+                {t('mathGenie.comparisonMagnitude')}
+              </ToggleButton>
+              <ToggleButton value={ComparisonSubType.DIFFERENCE}>
+                {t('mathGenie.comparisonDifference')}
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </SettingsField>
+        </SettingCard>
+      )}
+
+      <SettingCard label={t('mathGenie.sectionOutput')} toolColor={candyColors.blue}>
               <SettingsField>
                 <ToggleButtonGroup
                   value={displayMode}
@@ -422,8 +470,8 @@ const WorksheetSettings: React.FC<Props> = ({
                   onChange={(_, v) => handleDisplayMode(v)}
                 >
                   <ToggleButton value={DisplayMode.TEXT}>📝 {t('mathGenie.textMode')}</ToggleButton>
-                  <ToggleButton value={DisplayMode.EMOJI}>🎨 {t('mathGenie.emojiMode')}</ToggleButton>
-                  <ToggleButton value={DisplayMode.WORD_PROBLEM}>📖 {t('mathGenie.wordProblem')}</ToggleButton>
+                  <ToggleButton value={DisplayMode.EMOJI} disabled={isNumberBond}>🎨 {t('mathGenie.emojiMode')}</ToggleButton>
+                  <ToggleButton value={DisplayMode.WORD_PROBLEM} disabled={isNumberBond}>📖 {t('mathGenie.wordProblem')}</ToggleButton>
                 </ToggleButtonGroup>
               </SettingsField>
 
@@ -549,51 +597,52 @@ const WorksheetSettings: React.FC<Props> = ({
               />
           </SettingCard>
 
+          {!isComparisonSelected && (
           <SettingCard label={t('mathGenie.sectionProblem')} toolColor={candyColors.blue}>
-              <SettingsField>
-                <ToggleButtonGroup
-                  value={operation}
-                  exclusive
-                  fullWidth
-                  size="small"
-                  onChange={(_, v) => handleOperation(v)}
-                >
-                  <ToggleButton value={OperationType.ADDITION}>+</ToggleButton>
-                  <ToggleButton value={OperationType.SUBTRACTION}>−</ToggleButton>
-                  <ToggleButton value={OperationType.MIXED}>±</ToggleButton>
-                  <MaybeTooltip
-                    title={multiOpUnavailableReason}
-                    show={Boolean(multiOpUnavailableReason)}
+              {!hideArithmeticControls && (
+                <SettingsField>
+                  <ToggleButtonGroup
+                    value={operation}
+                    exclusive fullWidth size="small"
+                    onChange={(_, v) => handleOperation(v)}
                   >
-                    <ToggleButton
-                      value={OperationType.MULTI_OPERATIONS}
-                      disabled={Boolean(multiOpUnavailableReason)}
+                    <ToggleButton value={OperationType.ADDITION}>+</ToggleButton>
+                    <ToggleButton value={OperationType.SUBTRACTION}>−</ToggleButton>
+                    <ToggleButton value={OperationType.MIXED}>±</ToggleButton>
+                    <MaybeTooltip
+                      title={multiOpUnavailableReason}
+                      show={Boolean(multiOpUnavailableReason)}
                     >
-                      {t('mathGenie.multi')}
-                    </ToggleButton>
-                  </MaybeTooltip>
-                </ToggleButtonGroup>
-              </SettingsField>
+                      <ToggleButton
+                        value={OperationType.MULTI_OPERATIONS}
+                        disabled={Boolean(multiOpUnavailableReason)}
+                      >
+                        {t('mathGenie.multi')}
+                      </ToggleButton>
+                    </MaybeTooltip>
+                  </ToggleButtonGroup>
+                </SettingsField>
+              )}
 
-              <SettingsField
-                label={t('mathGenie.problemType')}
-                caption={
-                  fillBlankInEmojiOnlyWithSpecial
-                    ? t('mathGenie.fillBlankEmojiHint')
-                    : undefined
-                }
-              >
-                <ToggleButtonGroup
-                  value={activeProblemType}
-                  exclusive
-                  fullWidth
-                  size="small"
-                  onChange={(_, v) => handleProblemType(v)}
+              {!hideArithmeticControls && (
+                <SettingsField
+                  label={t('mathGenie.problemType')}
+                  caption={
+                    fillBlankInEmojiOnlyWithSpecial
+                      ? t('mathGenie.fillBlankEmojiHint')
+                      : undefined
+                  }
                 >
-                  <ToggleButton value={ProblemType.STANDARD}>7 + 3 = 10</ToggleButton>
-                  <ToggleButton value={ProblemType.FILL_BLANK}>7 + _ = 10</ToggleButton>
-                </ToggleButtonGroup>
-              </SettingsField>
+                  <ToggleButtonGroup
+                    value={activeProblemType}
+                    exclusive fullWidth size="small"
+                    onChange={(_, v) => handleProblemType(v)}
+                  >
+                    <ToggleButton value={ProblemType.STANDARD}>7 + 3 = 10</ToggleButton>
+                    <ToggleButton value={ProblemType.FILL_BLANK}>7 + _ = 10</ToggleButton>
+                  </ToggleButtonGroup>
+                </SettingsField>
+              )}
 
               <SettingsField label={t('mathGenie.specialPractice')}>
                 <ToggleButtonGroup
@@ -623,19 +672,11 @@ const WorksheetSettings: React.FC<Props> = ({
                   <Tooltip title={t('mathGenie.numberBondTooltip')} arrow placement="top">
                     <ToggleButton value={SpecialPracticeType.NUMBER_BOND}>{t('mathGenie.numberBond')}</ToggleButton>
                   </Tooltip>
-                  <MaybeTooltip
-                    title={t('mathGenie.excludeComparisonDisabled')}
-                    show={excludeComparisonProblems}
-                  >
-                    <Tooltip title={t('mathGenie.comparisonTooltip')} arrow placement="top">
-                      <ToggleButton
-                        value={SpecialPracticeType.WORD_PROBLEM_COMPARISON}
-                      disabled={excludeComparisonProblems}
-                    >
-                      {t('mathGenie.comparison')}
+                  <Tooltip title={t('mathGenie.comparisonPracticeTooltip')} arrow placement="top">
+                    <ToggleButton value={SpecialPracticeType.COMPARISON}>
+                      {t('mathGenie.comparisonPractice')}
                     </ToggleButton>
-                    </Tooltip>
-                  </MaybeTooltip>
+                  </Tooltip>
                 </ToggleButtonGroup>
               </SettingsField>
 
@@ -817,6 +858,7 @@ const WorksheetSettings: React.FC<Props> = ({
               )}
             </Stack>
           </SettingCard>
+          )}
 
           <SettingCard label={t('mathGenie.sectionRules')} toolColor={candyColors.blue}>
             <Stack spacing={1}>
@@ -836,20 +878,6 @@ const WorksheetSettings: React.FC<Props> = ({
                 {t('mathGenie.excludeZerosHint')}
               </Typography>
 
-              {isWordProblem && (
-                <FormControlLabel
-                  sx={{ ml: 0 }}
-                  control={
-                    <Switch
-                      checked={excludeComparisonProblems}
-                      onChange={(e) => handleExcludeComparison(e.target.checked)}
-                      color="primary"
-                      size="small"
-                    />
-                  }
-                  label={<Typography variant="body2">{t('mathGenie.excludeComparison')}</Typography>}
-                />
-              )}
             </Stack>
           </SettingCard>
 
@@ -866,6 +894,41 @@ const WorksheetSettings: React.FC<Props> = ({
           sx={{ width: '100%' }}
         >
           {snack.msg}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={emojiLimitConfirm.open}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        onClose={() => setEmojiLimitConfirm({ open: false })}
+      >
+        <Alert
+          severity="warning"
+          variant="filled"
+          action={
+            <Stack direction="row" spacing={1}>
+              <Button size="small" color="inherit" onClick={() => {
+                const pending = emojiLimitConfirm.pendingDisplayMode;
+                setEmojiLimitConfirm({ open: false });
+                const updates: Partial<WorksheetConfig> = {};
+                if (pending !== undefined) updates.displayMode = pending;
+                if (getEffectiveMax() > 10) {
+                  updates.customDifficulty = { min: 1, max: 10 };
+                  updates.difficulty = DifficultyLevel.CUSTOM;
+                }
+                if (isMultiOp) updates.operation = OperationType.ADDITION;
+                onChange({ ...config, ...updates });
+              }}>
+                继续（改为10以内）
+              </Button>
+              <Button size="small" color="inherit" onClick={() => setEmojiLimitConfirm({ open: false })}>
+                {t('common.cancel')}
+              </Button>
+            </Stack>
+          }
+          sx={{ width: '100%' }}
+        >
+          数字超过10在图案模式下会显示不全，建议将数字范围限制在10以内。
         </Alert>
       </Snackbar>
     </>

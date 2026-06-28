@@ -11,6 +11,7 @@ import {
   ProblemType,
   OperationType,
   DifficultyLevel,
+  ComparisonSubType,
   MultiOperationMode,
   SpecialPracticeType,
 } from 'src/types';
@@ -43,7 +44,6 @@ const defaultConfig: WorksheetConfig = {
   specialPracticeType: SpecialPracticeType.NONE,
   multiOperationConfig: { mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 3 },
   excludeZeroProblems: false,
-  excludeComparisonProblems: false,
   autoPreview: true,
 };
 
@@ -65,7 +65,7 @@ async function generate(config: WorksheetConfig): Promise<MathProblem[]> {
     config.operation === OperationType.MULTI_OPERATIONS ? config.multiOperationConfig : undefined,
     config.excludeZeroProblems || false,
     config.displayMode,
-    config.excludeComparisonProblems || false,
+    config.comparisonConfig,
   );
 
   const shouldUseVerticalFactFamilyOrder =
@@ -105,6 +105,8 @@ async function generate(config: WorksheetConfig): Promise<MathProblem[]> {
     numberBondWhole: p.numberBondWhole,
     numberBondParts: p.numberBondParts,
     numberBondBlankIndex: p.numberBondBlankIndex,
+    isComparison: p.isComparison || false,
+    comparisonData: p.comparisonData,
   }));
 }
 
@@ -123,6 +125,10 @@ function deriveWorksheetTitle(config: WorksheetConfig): string {
   }
   if (config.specialPracticeType === SpecialPracticeType.NUMBER_BOND) {
     return `数字分解小乐园 ${rangeStr}`;
+  }
+  if (config.specialPracticeType === SpecialPracticeType.COMPARISON && config.comparisonConfig) {
+    const subLabel = config.comparisonConfig.subType === ComparisonSubType.MAGNITUDE ? '比大小' : '比多少';
+    return `${subLabel} ${rangeStr}`;
   }
 
   // Word problem display mode
@@ -161,18 +167,25 @@ const Preview: React.FC<{ config: WorksheetConfig; problems: MathProblem[]; pdfC
   config,
   problems,
   pdfContainerRef,
-}) => (
-  <WorksheetPreview
-    problems={problems}
-    title={deriveWorksheetTitle(config)}
-    theme={config.theme}
-    showAnswers={config.showAnswers || false}
-    displayMode={config.displayMode}
-    textColumns={config.textColumns || 2}
-    problemsPerPage={config.problemsPerPage}
-    pdfContainerRef={pdfContainerRef}
-  />
-);
+}) => {
+  const instruction = config.specialPracticeType === SpecialPracticeType.COMPARISON && config.comparisonConfig?.subType === ComparisonSubType.MAGNITUDE
+    ? '在 ○ 中填上 >、< 或 ='
+    : undefined;
+
+  return (
+    <WorksheetPreview
+      problems={problems}
+      title={deriveWorksheetTitle(config)}
+      theme={config.theme}
+      showAnswers={config.showAnswers || false}
+      displayMode={config.displayMode}
+      textColumns={config.textColumns || 2}
+      problemsPerPage={config.problemsPerPage}
+      pdfContainerRef={pdfContainerRef}
+      instruction={instruction}
+    />
+  );
+};
 
 const Settings: React.FC<{
   config: WorksheetConfig;
@@ -200,6 +213,9 @@ export const mathGenieTool: WorksheetTool<WorksheetConfig, MathProblem> = {
     route: '/math-genie',
   },
   deriveContentColumns: (config) => {
+    if (config.specialPracticeType === SpecialPracticeType.COMPARISON) {
+      return config.displayMode === DisplayMode.EMOJI ? 2 : config.textColumns || 1;
+    }
     if (config.displayMode === DisplayMode.WORD_PROBLEM) return 1;
     if (config.displayMode === DisplayMode.EMOJI) return 2;
     return config.textColumns || 2;

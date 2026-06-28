@@ -5,7 +5,7 @@ import React from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 
 import { colors } from 'src/theme/tokens';
-import { DisplayMode, ProblemType } from 'src/types';
+import { DisplayMode, ProblemType, ComparisonSubType } from 'src/types';
 
 interface Props {
   problem: MathProblem;
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAnswers, displayMode, pageFontSize }) => {
-  const { operation, num1, num2, emoji1, emoji2, answer, problemType, blankPosition, isMultiOperation, numbers, operators, emojis, isNumberBond, numberBondWhole, numberBondParts, numberBondBlankIndex, isWordProblem, wordProblemText, wordProblemOperation, wordProblemMeasure } = problem;
+  const { operation, num1, num2, emoji1, emoji2, answer, problemType, blankPosition, isMultiOperation, numbers, operators, emojis, isNumberBond, numberBondWhole, numberBondParts, numberBondBlankIndex, isWordProblem, wordProblemText, wordProblemOperation, wordProblemMeasure, isComparison, comparisonData } = problem;
 
   // Compute max digit length across all relevant numbers
   const maxDigits = (vals: number[]) => Math.max(...vals.map((v) => String(v).length));
@@ -65,6 +65,10 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
         measure={wpMeasure}
       />
     );
+  }
+
+  if (isComparison && comparisonData) {
+    return <ComparisonRenderer data={comparisonData} showAnswers={showAnswers} index={index} displayMode={displayMode} />;
   }
 
   const blankSquareSx = {
@@ -581,6 +585,154 @@ const NumberBondNode: React.FC<{
         </g>
       </svg>
     </Box>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Comparison problem renderer
+// ---------------------------------------------------------------------------
+
+const CMP_SYMBOL_FONT = { fontSize: 26, fontWeight: 800, fontFamily: '"Baloo 2","Noto Sans SC",sans-serif', color: '#333' };
+const CMP_LABEL_FONT = { fontSize: 18, fontWeight: 600, fontFamily: '"Quicksand","Noto Sans SC",sans-serif', color: '#333' };
+const CMP_EMOJI_FONT = { fontSize: 26, lineHeight: 1.2 };
+
+interface ComparisonRendererProps {
+  data: import('src/types').ComparisonData;
+  showAnswers: boolean;
+  index: number;
+}
+
+const ComparisonRenderer: React.FC<ComparisonRendererProps & { displayMode: DisplayMode }> = ({ data, showAnswers, index, displayMode }) => {
+  const isEmoji = displayMode === DisplayMode.EMOJI;
+
+  switch (data.subtype) {
+    case ComparisonSubType.MAGNITUDE:
+      return <MagnitudeComparison data={data} showAnswers={showAnswers} isEmoji={isEmoji} />;
+    case ComparisonSubType.DIFFERENCE:
+      return <DifferenceComparison data={data} showAnswers={showAnswers} isEmoji={isEmoji} isWordProblem={displayMode === DisplayMode.WORD_PROBLEM} />;
+    default:
+      return null;
+  }
+};
+
+/** Renders emoji repeated `count` times */
+const EmojiRow: React.FC<{ emoji: string; count: number }> = React.memo(({ emoji, count }) => (
+  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center', lineHeight: 1.2 }}>
+    {Array.from({ length: count }, (_, i) => (
+      <Box key={i} component="span" sx={CMP_EMOJI_FONT}>{emoji}</Box>
+    ))}
+  </Box>
+));
+
+/** Circle with optional symbol inside */
+const SymbolCircle: React.FC<{ symbol?: string; showAnswers: boolean; size?: number }> = ({ symbol, showAnswers, size = 38 }) => (
+  <Box
+    sx={{
+      width: size, height: size, borderRadius: '50%',
+      border: '2.5px solid #555', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
+    }}
+  >
+    {showAnswers ? (
+      <Typography sx={{ ...CMP_SYMBOL_FONT, fontSize: Math.round(size * 0.55) }}>{symbol}</Typography>
+    ) : null}
+  </Box>
+);
+
+// Shared Paper wrapper matching EMOJI arithmetic style
+const ComparisonCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <Paper
+    elevation={0}
+    sx={{
+      p: 2,
+      mb: 1,
+      border: `1px solid ${colors.borderLight}`,
+      borderRadius: 2,
+      backgroundColor: colors.paper,
+      boxShadow: 'none',
+      '@media print': { backgroundColor: 'white !important', boxShadow: 'none !important' },
+    }}
+  >
+    {children}
+  </Paper>
+);
+
+// ---- Type 1: 比大小 (fill >, <, =) ----
+
+const MagnitudeComparison: React.FC<{ data: import('src/types').ComparisonData; showAnswers: boolean; isEmoji: boolean }> = ({ data, showAnswers, isEmoji }) => (
+  <ComparisonCard>
+    {isEmoji ? (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+        <Paper elevation={0} sx={{ border: '2px solid #ddd', borderRadius: 2, p: 1.5, minWidth: 70, textAlign: 'center' }}>
+          <EmojiRow emoji={data.groupA.emoji} count={data.groupA.count} />
+        </Paper>
+        <SymbolCircle symbol={data.relation} showAnswers={showAnswers} />
+        <Paper elevation={0} sx={{ border: '2px solid #ddd', borderRadius: 2, p: 1.5, minWidth: 70, textAlign: 'center' }}>
+          <EmojiRow emoji={data.groupB.emoji} count={data.groupB.count} />
+        </Paper>
+      </Box>
+    ) : (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+        <Typography sx={CMP_SYMBOL_FONT}>{data.groupA.count}</Typography>
+        <SymbolCircle symbol={data.relation} showAnswers={showAnswers} />
+        <Typography sx={CMP_SYMBOL_FONT}>{data.groupB.count}</Typography>
+      </Box>
+    )}
+  </ComparisonCard>
+);
+
+// ---- Type 2: 比多少 (fill difference) ----
+
+const DifferenceComparison: React.FC<{ data: import('src/types').ComparisonData; showAnswers: boolean; isEmoji: boolean; isWordProblem?: boolean }> = ({ data, showAnswers, isEmoji, isWordProblem }) => {
+  const dirText = data.relation === '>' ? '多' : '少';
+
+  if (isWordProblem && data.wordProblemText) {
+    return (
+      <ComparisonCard>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Typography sx={{ fontSize: 15, fontWeight: 500, color: '#333', lineHeight: 1.6 }}>
+            {data.wordProblemText}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, alignSelf: 'center' }}>
+            <Box sx={{
+              width: 42, height: 34, border: '2.5px solid #555', borderRadius: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {showAnswers ? <Typography sx={CMP_SYMBOL_FONT}>{data.difference}</Typography> : null}
+            </Box>
+            <Typography sx={CMP_LABEL_FONT}>个</Typography>
+          </Box>
+        </Box>
+      </ComparisonCard>
+    );
+  }
+
+  const labelA = isEmoji ? data.groupA.emoji : String(data.groupA.count);
+  const labelB = isEmoji ? data.groupB.emoji : String(data.groupB.count);
+
+  return (
+    <ComparisonCard>
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
+        {isEmoji && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.5, width: '100%' }}>
+            <EmojiRow emoji={data.groupA.emoji} count={data.groupA.count} />
+            <EmojiRow emoji={data.groupB.emoji} count={data.groupB.count} />
+          </Box>
+        )}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography sx={CMP_LABEL_FONT}>
+            {labelA} 比 {labelB} {dirText}
+          </Typography>
+          <Box sx={{
+            width: 42, height: 34, border: '2.5px solid #555', borderRadius: 1,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {showAnswers ? <Typography sx={CMP_SYMBOL_FONT}>{data.difference}</Typography> : null}
+          </Box>
+          <Typography sx={CMP_LABEL_FONT}>个</Typography>
+        </Box>
+      </Box>
+    </ComparisonCard>
   );
 };
 

@@ -56,7 +56,12 @@ export enum SpecialPracticeType {
   ZERO_DRILL = 'zero_drill',
   FACT_FAMILY = 'fact_family',
   NUMBER_BOND = 'number_bond',
-  WORD_PROBLEM_COMPARISON = 'word_problem_comparison',
+  COMPARISON = 'comparison',
+}
+
+export enum ComparisonSubType {
+  MAGNITUDE = 'magnitude',
+  DIFFERENCE = 'difference',
 }
 
 export enum MultiOperationMode {
@@ -97,6 +102,18 @@ export interface MathProblem {
   wordProblemText?: string;
   wordProblemOperation?: 'addition' | 'subtraction';
   wordProblemMeasure?: string;
+  // 比较题
+  isComparison?: boolean;
+  comparisonData?: ComparisonData;
+}
+
+export interface ComparisonData {
+  subtype: ComparisonSubType;
+  groupA: { emoji: string; count: number };
+  groupB: { emoji: string; count: number };
+  relation: '>' | '<' | '=';
+  difference: number;
+  wordProblemText?: string;
 }
 
 export interface WorksheetConfig {
@@ -115,8 +132,8 @@ export interface WorksheetConfig {
   specialPracticeType?: SpecialPracticeType; // 专项练习类型
   multiOperationConfig?: MultiOperationConfig; // 多重运算配置
   excludeZeroProblems?: boolean;
-  excludeComparisonProblems?: boolean;
   autoPreview?: boolean;
+  comparisonConfig?: { subType: ComparisonSubType };
 }
 
 export interface CustomDifficultyRange {

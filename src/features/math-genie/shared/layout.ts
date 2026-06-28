@@ -93,6 +93,7 @@ function getMinCellHeightText(
   multiOperationConfig?: MultiOperationConfig,
 ): number {
   if (specialPracticeType === SpecialPracticeType.NUMBER_BOND) return 47;
+  if (specialPracticeType === SpecialPracticeType.COMPARISON) return 22;
   if (operation === OperationType.MULTI_OPERATIONS && multiOperationConfig) {
     if (multiOperationConfig.numberCount >= 5) return 18;
     return 20;
@@ -142,7 +143,9 @@ export function calculateOptimalProblemsPerPage(params: OptimalParams): number {
 
   if (displayMode === DisplayMode.EMOJI) {
     const maxNum = getEffectiveMax(difficulty, customDifficulty);
-    const minH = getMinCellHeightEmoji(maxNum);
+    const minH = specialPracticeType === SpecialPracticeType.COMPARISON
+      ? Math.max(getMinCellHeightEmoji(maxNum), 48)
+      : getMinCellHeightEmoji(maxNum);
     return Math.max(2, findMaxProblemsByContentHeight(2, minH));
   }
 

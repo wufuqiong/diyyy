@@ -23,6 +23,15 @@ export interface RawMathProblem {
   wordProblemMeasure?: string;
   // Explicit precomputed answer (used by multi-step word problems with >2 operands)
   answer?: number;
+  // Comparison fields
+  isComparison?: boolean;
+  comparisonData?: {
+    subtype: import('src/types').ComparisonSubType;
+    groupA: { emoji: string; count: number };
+    groupB: { emoji: string; count: number };
+    relation: '>' | '<' | '=';
+    difference: number;
+  };
 }
 
 export const THEME_EMOJIS: Record<string, string[]> = {

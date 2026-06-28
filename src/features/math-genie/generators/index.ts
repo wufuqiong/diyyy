@@ -1,10 +1,11 @@
 import type { DifficultyRatios, MultiOperationConfig, CustomDifficultyRange } from 'src/types';
 
-import { ProblemType, DisplayMode, OperationType, DifficultyLevel, MultiOperationMode, SpecialPracticeType } from 'src/types';
+import { ProblemType, DisplayMode, OperationType, DifficultyLevel, ComparisonSubType, MultiOperationMode, SpecialPracticeType } from 'src/types';
 
 import { generateFillBlankProblems } from './fill-blank';
 import { generateMultiOperationProblems } from './multi-op';
 import { generateZeroDrillProblems } from './special-practice/zero-drill';
+import { generateComparisonProblems } from './special-practice/comparison';
 import { THEME_EMOJIS, THEME_TITLES, isChineseTheme } from './shared/types';
 import { generateFactFamilyProblems } from './special-practice/fact-family';
 import { generateNumberBondProblems } from './special-practice/number-bond';
@@ -29,7 +30,7 @@ async function generateMathProblems(
   multiOperationConfig?: MultiOperationConfig,
   excludeZeroProblems: boolean = false,
   displayMode: DisplayMode = DisplayMode.TEXT,
-  excludeComparisonProblems: boolean = false,
+  comparisonConfig?: { subType: ComparisonSubType },
 ): Promise<{ problems: RawMathProblem[]; titleSuggestion: string }> {
   try {
     const activeCustomDifficulty = difficulty === DifficultyLevel.CUSTOM ? customDifficulty : undefined;
@@ -42,11 +43,7 @@ async function generateMathProblems(
         : difficulty === DifficultyLevel.MEDIUM ? [1, 10]
         : [1, 20];
 
-      const comparisonOnly = specialPracticeType === SpecialPracticeType.WORD_PROBLEM_COMPARISON;
-
-      const titleSuggestion = isChineseTheme(theme)
-        ? comparisonOnly ? '比多少高阶练习' : '应用题练习'
-        : comparisonOnly ? 'Comparison Word Problems' : 'Word Problems';
+      const titleSuggestion = isChineseTheme(theme) ? '应用题练习' : 'Word Problems';
 
       // Multi-step word problems (连加/连减/加减混合)
       if (operation === OperationType.MULTI_OPERATIONS && multiOperationConfig) {
@@ -92,8 +89,6 @@ async function generateMathProblems(
         range: wpRange,
         count,
         excludeZero: excludeZeroProblems,
-        excludeComparison: excludeComparisonProblems,
-        comparisonOnly,
       });
 
       return {
@@ -188,6 +183,26 @@ async function generateMathProblems(
         excludeZeroProblems
       );
       return { problems: bondProblems, titleSuggestion };
+    }
+
+    if (specialPracticeType === SpecialPracticeType.COMPARISON && comparisonConfig) {
+      const rangeLabel = activeCustomDifficulty ? `${activeCustomDifficulty.min}-${activeCustomDifficulty.max}` : `1-${maxNumber}`;
+      // WORD_PROBLEM → always 比多少
+      const effectiveSubType = comparisonConfig.subType;
+      const isMagnitude = effectiveSubType === ComparisonSubType.MAGNITUDE;
+      const cmpTitle = isChineseTheme(theme)
+        ? `${isMagnitude ? '比大小' : '比多少'} ${rangeLabel}`
+        : `${isMagnitude ? 'Compare Magnitude' : 'Compare Difference'} ${rangeLabel}`;
+      const cmpProblems = generateComparisonProblems({
+        count,
+        subType: effectiveSubType,
+        emojiPool: emojis,
+        countRange: activeCustomDifficulty
+          ? { min: activeCustomDifficulty.min, max: activeCustomDifficulty.max }
+          : { min: 1, max: maxNumber },
+        displayMode,
+      });
+      return { problems: cmpProblems, titleSuggestion: cmpTitle };
     }
 
     if (problemType === ProblemType.FILL_BLANK) {

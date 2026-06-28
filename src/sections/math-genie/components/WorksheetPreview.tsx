@@ -20,10 +20,11 @@ interface Props {
   textColumns?: 2 | 3;
   problemsPerPage?: number;
   pdfContainerRef?: React.RefObject<HTMLDivElement | null>;
+  instruction?: string;
 }
 
 const WorksheetPreview: React.FC<Props> = React.memo(
-  ({ problems, title, theme, showAnswers, displayMode, textColumns = 2, problemsPerPage = 16, pdfContainerRef }) => {
+  ({ problems, title, theme, showAnswers, displayMode, textColumns = 2, problemsPerPage = 16, pdfContainerRef, instruction }) => {
     const layout = derivePageLayout({ columns: textColumns, problemsPerPage });
 
     const totalPages = useMemo(
@@ -76,6 +77,11 @@ const WorksheetPreview: React.FC<Props> = React.memo(
               >
                 {title || `${theme} Math Worksheet`}
               </Typography>
+              {instruction && (
+                <Typography variant="body2" sx={{ color: 'grey.600', mt: 0.5 }}>
+                  {instruction}
+                </Typography>
+              )}
               {totalPages > 1 && (
                 <Typography
                   variant="body2"
