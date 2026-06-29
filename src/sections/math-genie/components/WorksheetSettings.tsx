@@ -4,21 +4,17 @@ import { useTranslation } from 'react-i18next';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import {
-  Balance as BalanceIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
 import {
   Box,
-  Tab,
-  Tabs,
   Alert,
   Stack,
   Button,
   Select,
   Slider,
   Switch,
-  Divider,
   Tooltip,
   MenuItem,
   Snackbar,
@@ -274,7 +270,7 @@ const WorksheetSettings: React.FC<Props> = ({
 
   const handleDisplayMode = (next: DisplayMode | null) => {
     if (!next || next === displayMode) return;
-    if (next === DisplayMode.EMOJI && isComparisonSelected && getEffectiveMax() > 10) {
+    if (next === DisplayMode.EMOJI && getEffectiveMax() > 10) {
       setEmojiLimitConfirm({ open: true, pendingDisplayMode: next });
       return;
     }
@@ -459,6 +455,29 @@ const WorksheetSettings: React.FC<Props> = ({
           </SettingsField>
         </SettingCard>
       )}
+
+      <SettingCard label={t('mathGenie.sectionDifficulty')} toolColor={candyColors.blue}>
+        <SettingsField>
+          <ToggleButtonGroup
+            value={difficulty} exclusive fullWidth size="small"
+            onChange={(_, v) => handleDifficulty(v)}
+          >
+            <ToggleButton value={DifficultyLevel.EASY}>1–5</ToggleButton>
+            <ToggleButton value={DifficultyLevel.MEDIUM}>1–10</ToggleButton>
+            <ToggleButton value={DifficultyLevel.HARD}>1–20</ToggleButton>
+            <ToggleButton value={DifficultyLevel.CUSTOM}>{t('mathGenie.custom')}</ToggleButton>
+          </ToggleButtonGroup>
+        </SettingsField>
+        {difficulty === DifficultyLevel.CUSTOM && (
+          <SettingsField caption={t('mathGenie.customRangeHint', { min: customDifficulty?.min ?? 1, max: customDifficulty?.max ?? 20 })}>
+            <Slider
+              value={[customDifficulty?.min ?? 1, customDifficulty?.max ?? 20]}
+              onChange={handleCustomRange} min={1} max={100} step={1}
+              valueLabelDisplay="auto" disableSwap
+            />
+          </SettingsField>
+        )}
+      </SettingCard>
 
       <SettingCard label={t('mathGenie.sectionOutput')} toolColor={candyColors.blue}>
               <SettingsField>
@@ -745,118 +764,6 @@ const WorksheetSettings: React.FC<Props> = ({
                   </Stack>
                 </Box>
               )}
-          <Divider sx={{ my: 2, borderColor: 'rgba(58,53,80,0.1)', borderStyle: 'dashed' }} />
-            <Tabs
-              value={useMixMode ? 'mix' : 'single'}
-              onChange={handleMixModeTab}
-              variant="fullWidth"
-              sx={{ mt: 0.5, minHeight: 36, '& .MuiTab-root': { minHeight: 36, py: 0.5 } }}
-            >
-              <Tab value="single" label={t('mathGenie.single')} />
-              <Tab value="mix" label={t('mathGenie.mix')} />
-            </Tabs>
-
-            <Stack spacing={2} sx={{ mt: 2 }}>
-              {!useMixMode && (
-                <ToggleButtonGroup
-                  value={difficulty}
-                  exclusive
-                  fullWidth
-                  size="small"
-                  onChange={(_, v) => handleDifficulty(v)}
-                >
-                  <ToggleButton value={DifficultyLevel.EASY}>1–5</ToggleButton>
-                  <ToggleButton value={DifficultyLevel.MEDIUM}>1–10</ToggleButton>
-                  <ToggleButton value={DifficultyLevel.HARD}>1–20</ToggleButton>
-                  <ToggleButton value={DifficultyLevel.CUSTOM}>{t('mathGenie.custom')}</ToggleButton>
-                </ToggleButtonGroup>
-              )}
-
-              {!useMixMode && difficulty === DifficultyLevel.CUSTOM && (
-                <SettingsField
-                  caption={t('mathGenie.customRangeHint', { min: customDifficulty?.min ?? 1, max: customDifficulty?.max ?? 20 })}
-                >
-                  <Slider
-                    value={[customDifficulty?.min ?? 1, customDifficulty?.max ?? 20]}
-                    onChange={handleCustomRange}
-                    min={1}
-                    max={100}
-                    step={1}
-                    valueLabelDisplay="auto"
-                    disableSwap
-                  />
-                </SettingsField>
-              )}
-
-              {useMixMode && difficultyRatios && (
-                <Box>
-                  <Stack spacing={1.25}>
-                    {(['easy', 'medium', 'hard', 'custom'] as const).map((k) => (
-                      <Stack key={k} direction="row" spacing={1.5} alignItems="center">
-                        <Typography variant="body2" sx={{ width: 60, textTransform: 'capitalize' }}>
-                          {k}
-                        </Typography>
-                        <Slider
-                          value={difficultyRatios[k]}
-                          onChange={(_, v) => handleRatio(k, v as number)}
-                          min={0}
-                          max={100}
-                          valueLabelDisplay="auto"
-                          sx={{ flex: 1 }}
-                        />
-                        <TextField
-                          value={difficultyRatios[k]}
-                          onChange={(e) => {
-                            const v = parseInt(e.target.value, 10);
-                            if (!isNaN(v)) handleRatio(k, v);
-                          }}
-                          type="number"
-                          size="small"
-                          sx={{ width: 60 }}
-                          inputProps={{ min: 0, max: 100 }}
-                        />
-                      </Stack>
-                    ))}
-                  </Stack>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    justifyContent="space-between"
-                    sx={{ mt: 1 }}
-                  >
-                    <Typography variant="caption" color={ratioTotal === 100 ? 'text.secondary' : 'warning.main'}>
-                      {t('mathGenie.totalPercent')}: {ratioTotal}% {ratioTotal !== 100 && '⚠️'}
-                    </Typography>
-                    <Button
-                      size="small"
-                      startIcon={<BalanceIcon />}
-                      onClick={normalizeRatios}
-                      disabled={ratioTotal === 100 || ratioTotal === 0}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      {t('mathGenie.normalize')}
-                    </Button>
-                  </Stack>
-                  {difficultyRatios.custom > 0 && customDifficulty && (
-                    <SettingsField
-                      label={t('mathGenie.customRange')}
-                      caption={t('mathGenie.customRangeHint', { min: customDifficulty.min, max: customDifficulty.max })}
-                    >
-                      <Slider
-                        value={[customDifficulty.min, customDifficulty.max]}
-                        onChange={handleCustomRange}
-                        min={1}
-                        max={100}
-                        step={1}
-                        valueLabelDisplay="auto"
-                        disableSwap
-                      />
-                    </SettingsField>
-                  )}
-                </Box>
-              )}
-            </Stack>
           </SettingCard>
           )}
 

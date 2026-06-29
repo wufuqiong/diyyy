@@ -282,6 +282,7 @@
     "rowTooSmall": "建议减少题数",
     "wordProblem": "应用题",
     "wordProblemHint": "每页 4 题",
+    "sectionDifficulty": "数值与难度",
     "sectionOutput": "页面与输出",
     "sectionProblem": "题目与难度",
     "sectionRules": "过滤规则",

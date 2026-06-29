@@ -24,7 +24,9 @@ interface FitScaleOptions {
  */
 export function useFitScale({ reservedHeight = 0 }: FitScaleOptions = {}) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(0.7); // reasonable default, avoids flash at scale=1
+  const reservedRef = useRef(reservedHeight);
+  reservedRef.current = reservedHeight;
 
   const measure = useCallback(() => {
     const el = containerRef.current;
@@ -33,20 +35,25 @@ export function useFitScale({ reservedHeight = 0 }: FitScaleOptions = {}) {
     const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
     const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
     const availWidth = el.clientWidth - padX;
-    const availHeight = el.clientHeight - padY - reservedHeight;
+    const availHeight = el.clientHeight - padY - reservedRef.current;
     if (availWidth <= 0 || availHeight <= 0) return;
     const next = Math.min(1, availWidth / A4_WIDTH_PX, availHeight / A4_HEIGHT_PX);
     setScale((prev) => (Math.abs(prev - next) > 0.001 ? next : prev));
-  }, [reservedHeight]);
+  }, []); // stable callback, reads reservedHeight from ref
 
   useLayoutEffect(() => {
+    // Immediate measurement after layout commit.
     measure();
+    // Follow-up measurement after a paint cycle to catch cascading
+    // layout changes (e.g. nav bar appearing when pageCount goes >1).
+    const raf = requestAnimationFrame(measure);
     const el = containerRef.current;
     if (!el) return undefined;
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     window.addEventListener('resize', measure);
     return () => {
+      cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener('resize', measure);
     };

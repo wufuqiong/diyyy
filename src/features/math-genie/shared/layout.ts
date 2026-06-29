@@ -102,9 +102,9 @@ function getMinCellHeightText(
 }
 
 function getMinCellHeightEmoji(maxNum: number): number {
-  if (maxNum <= 5) return 35;
-  if (maxNum <= 10) return 45;
-  return 55;
+  if (maxNum <= 5) return 48;
+  if (maxNum <= 10) return 58;
+  return 58;
 }
 
 function findMaxProblemsByContentHeight(columns: number, minCellHeightMM: number): number {
@@ -143,9 +143,7 @@ export function calculateOptimalProblemsPerPage(params: OptimalParams): number {
 
   if (displayMode === DisplayMode.EMOJI) {
     const maxNum = getEffectiveMax(difficulty, customDifficulty);
-    const minH = specialPracticeType === SpecialPracticeType.COMPARISON
-      ? Math.max(getMinCellHeightEmoji(maxNum), 48)
-      : getMinCellHeightEmoji(maxNum);
+    const minH = getMinCellHeightEmoji(maxNum);
     return Math.max(2, findMaxProblemsByContentHeight(2, minH));
   }
 

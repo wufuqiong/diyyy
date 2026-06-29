@@ -282,6 +282,7 @@
     "rowTooSmall": "Consider reducing count",
     "wordProblem": "Word Problem",
     "wordProblemHint": "4 problems per page",
+    "sectionDifficulty": "Range & Difficulty",
     "sectionOutput": "Page & Output",
     "sectionProblem": "Problems & Difficulty",
     "sectionRules": "Filter Rules",
