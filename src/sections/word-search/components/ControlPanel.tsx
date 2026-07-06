@@ -4,10 +4,9 @@ import type { WordSearchConfig } from 'src/features/word-search/types';
 import { useTranslation } from 'react-i18next';
 import React, { useState, useEffect } from 'react';
 
-import { Clear as ClearIcon, Shuffle as ShuffleIcon } from '@mui/icons-material';
+import { Clear as ClearIcon, Refresh as RefreshIcon, Restore as RestoreIcon, Shuffle as ShuffleIcon } from '@mui/icons-material';
 import {
   Box,
-  Chip,
   Stack,
   Button,
   Select,
@@ -26,7 +25,7 @@ import { shuffleArray } from 'src/utils/array-tools';
 
 import { candyColors } from 'src/theme/tokens';
 import { WORD_THEMES } from 'src/features/word-search/data/word-themes';
-import { GridSizePreset, GRID_DIMENSIONS, WordSearchDifficulty } from 'src/features/word-search/types';
+import { GridSizePreset, WORDS_PER_PAGE, GRID_DIMENSIONS, WordSearchDifficulty } from 'src/features/word-search/types';
 
 import { ColorPicker } from 'src/components/color-utils';
 
@@ -106,10 +105,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
     if (value) onChange({ ...config, difficulty: value });
   };
 
-  const handleListColumnsChange = (e: SelectChangeEvent<number>) => {
-    onChange({ ...config, listColumns: e.target.value as 1 | 2 | 3 | 4 | 5 });
-  };
-
   const handleClearInput = () => {
     setText('');
     onChange({ ...config, words: [], selectedTheme: undefined });
@@ -121,6 +116,32 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
     setText(shuffled.join(', '));
     onChange({ ...config, words: shuffled });
   };
+
+  const handleRandomGenerate = () => {
+    const theme = WORD_THEMES.find((th) => th.id === config.selectedTheme);
+    const pool = theme ? theme.words : config.words;
+    if (pool.length === 0) return;
+    const count = Math.min(WORDS_PER_PAGE[config.gridSize], pool.length);
+    const picked = shuffleArray([...pool]).slice(0, count);
+    setText(picked.join(', '));
+    onChange({ ...config, words: picked });
+  };
+
+  const handleRestoreTheme = () => {
+    const theme = WORD_THEMES.find((th) => th.id === config.selectedTheme);
+    if (!theme) return;
+    setText(theme.words.join(', '));
+    onChange({ ...config, words: theme.words });
+  };
+
+  const currentTheme = WORD_THEMES.find((th) => th.id === config.selectedTheme);
+  const canRestore = currentTheme
+    && (currentTheme.words.length !== config.words.length
+      || !currentTheme.words.every((w, i) => w === config.words[i]));
+
+  const canRandomGenerate = config.selectedTheme
+    ? (WORD_THEMES.find((th) => th.id === config.selectedTheme)?.words.length ?? 0) >= WORDS_PER_PAGE[config.gridSize]
+    : config.words.length > 0;
 
   const capacity = CAPACITY_HINTS[config.gridSize];
 
@@ -168,37 +189,54 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
               placeholder={t('wordSearch.settings.wordsPlaceholder')}
               fullWidth
             />
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<ClearIcon />}
-                onClick={handleClearInput}
-                disabled={!text}
-                sx={{ textTransform: 'none' }}
-              >
-                {t('common.clear')}
-              </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<ShuffleIcon />}
-                onClick={handleShuffleInput}
-                disabled={config.words.length < 2}
-                sx={{ textTransform: 'none' }}
-              >
-                {t('common.shuffle')}
-              </Button>
-            </Box>
+            <Stack spacing={1}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<ClearIcon />}
+                  onClick={handleClearInput}
+                  disabled={!text}
+                  sx={{ textTransform: 'none' }}
+                >
+                  {t('common.clear')}
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<ShuffleIcon />}
+                  onClick={handleShuffleInput}
+                  disabled={config.words.length < 2}
+                  sx={{ textTransform: 'none' }}
+                >
+                  {t('common.shuffle')}
+                </Button>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<RefreshIcon />}
+                  onClick={handleRandomGenerate}
+                  disabled={!canRandomGenerate}
+                  sx={{ textTransform: 'none' }}
+                >
+                  {t('wordSearch.settings.randomPage')}
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<RestoreIcon />}
+                  onClick={handleRestoreTheme}
+                  disabled={!canRestore}
+                  sx={{ textTransform: 'none' }}
+                >
+                  {t('wordSearch.settings.restore')}
+                </Button>
+              </Box>
+            </Stack>
           </Stack>
         </SettingsField>
-        {config.words.length > 0 && (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {config.words.map((w, i) => (
-              <Chip key={`${w}-${i}`} label={w} size="small" variant="outlined" />
-            ))}
-          </Box>
-        )}
       </SettingCard>
 
       <SettingCard label={t('wordSearch.settings.gridSettings')} toolColor={candyColors.pink}>
@@ -259,18 +297,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
             onChange={(e) => onChange({ ...config, title: e.target.value })}
             fullWidth
           />
-        </SettingsField>
-        <SettingsField>
-          <FormControl fullWidth size="small">
-            <InputLabel>{t('wordSearch.settings.listColumns')}</InputLabel>
-            <Select value={config.listColumns} onChange={handleListColumnsChange} label={t('wordSearch.settings.listColumns')}>
-              <MenuItem value={1}>1</MenuItem>
-              <MenuItem value={2}>2</MenuItem>
-              <MenuItem value={3}>3</MenuItem>
-              <MenuItem value={4}>4</MenuItem>
-              <MenuItem value={5}>5</MenuItem>
-            </Select>
-          </FormControl>
         </SettingsField>
         <SettingsField label={t('wordSearch.settings.themeColor')}>
           <ColorPicker

@@ -410,7 +410,9 @@
       "listColumns": "Word List Columns",
       "themeColor": "Theme Color",
       "letterCase": "Letter Case",
-      "showAnswerKey": "Include Answer Key"
+      "showAnswerKey": "Include Answer Key",
+      "randomPage": "Random Page",
+      "restore": "Restore"
     },
     "gridSize": {
       "small": "Small",

@@ -410,7 +410,9 @@
       "listColumns": "单词列表列数",
       "themeColor": "主题颜色",
       "letterCase": "字母大小写",
-      "showAnswerKey": "包含答案页"
+      "showAnswerKey": "包含答案页",
+      "randomPage": "随机生成一页",
+      "restore": "恢复"
     },
     "gridSize": {
       "small": "小",

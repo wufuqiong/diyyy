@@ -65,15 +65,19 @@ function generate(config: WordSearchConfig): WordSearchSheet[] {
   const maxPerPage = WORDS_PER_PAGE[config.gridSize];
   const totalPages = Math.ceil(words.length / maxPerPage);
 
-  // Even distribution: each page gets ceil(total/totalPages) words
-  const perPage = Math.ceil(words.length / totalPages);
+  // Even distribution: each page gets baseCount or baseCount+1 words
+  const baseCount = Math.floor(words.length / totalPages);
+  const remainder = words.length % totalPages;
 
   const sheets: WordSearchSheet[] = [];
   const baseSeed = generateSeed();
   const themeColor = config.themeColor || candyColors.pink;
 
+  let offset = 0;
   for (let page = 0; page < totalPages; page++) {
-    const batch = words.slice(page * perPage, (page + 1) * perPage);
+    const size = baseCount + (page < remainder ? 1 : 0);
+    const batch = words.slice(offset, offset + size);
+    offset += size;
     const pageSeed = baseSeed + page;
     const res = generateWordSearchGrid(batch, config.gridSize, config.difficulty, pageSeed, config.letterCase);
 
