@@ -24,16 +24,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: yarn
 
       - run: yarn install --frozen-lockfile
 
       - run: yarn build
 
-      - uses: actions/configure-pages@v4
+      - uses: actions/configure-pages@v5
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: dist
 
