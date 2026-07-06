@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import SearchIcon from '@mui/icons-material/Search';
 
 import i18n from 'src/i18n/config';
+import { candyColors } from 'src/theme/tokens';
 
 import { generateSeed, generateWordSearchGrid } from './generators/grid-generator';
 import WordSearchPreview from '../../sections/word-search/components/PreviewSheet';
@@ -16,6 +17,36 @@ import type { WordSearchSheet, WordSearchConfig } from './types';
 
 const isEn = i18n.language?.startsWith('en');
 
+/** Font sizes per grid size, matching PreviewSheet.tsx */
+const LIST_FONT_SIZE: Record<GridSizePreset, number> = {
+  small: 24,
+  medium: 21,
+  large: 18,
+};
+
+/** Estimated available vertical px for the word list on one A4 page. */
+const LIST_AVAILABLE: Record<GridSizePreset, number> = {
+  small: 132,
+  medium: 138,
+  large: 200,
+};
+
+/** Estimate default column count so the word list fits on one page. */
+function getDefaultListColumns(words: string[], gridSize: GridSizePreset): 1 | 2 | 3 | 4 | 5 {
+  if (words.length === 0) return 3;
+
+  const fontSize = LIST_FONT_SIZE[gridSize];
+  const rowHeight = fontSize * 1.4 + 8; // line-height 1.4 + gap
+  const containerPad = 26; // py 2.5 (20px) + border (6px)
+  const availableHeight = LIST_AVAILABLE[gridSize];
+  const maxRows = Math.max(1, Math.floor((availableHeight - containerPad) / rowHeight));
+
+  for (let cols = 1; cols <= 5; cols++) {
+    if (Math.ceil(words.length / cols) <= maxRows) return cols as 1 | 2 | 3 | 4 | 5;
+  }
+  return 5;
+}
+
 const defaultConfig: WordSearchConfig = {
   words: [],
   gridSize: GridSizePreset.MEDIUM,
@@ -24,6 +55,7 @@ const defaultConfig: WordSearchConfig = {
   showAnswerKey: false,
   listColumns: 3,
   letterCase: 'lower',
+  themeColor: candyColors.pink,
 };
 
 function generate(config: WordSearchConfig): WordSearchSheet[] {
@@ -38,11 +70,15 @@ function generate(config: WordSearchConfig): WordSearchSheet[] {
 
   const sheets: WordSearchSheet[] = [];
   const baseSeed = generateSeed();
+  const themeColor = config.themeColor || candyColors.pink;
 
   for (let page = 0; page < totalPages; page++) {
     const batch = words.slice(page * perPage, (page + 1) * perPage);
     const pageSeed = baseSeed + page;
     const res = generateWordSearchGrid(batch, config.gridSize, config.difficulty, pageSeed, config.letterCase);
+
+    const adaptiveColumns = getDefaultListColumns(batch, config.gridSize);
+    const effectiveColumns = Math.max(config.listColumns, adaptiveColumns) as 1 | 2 | 3 | 4 | 5;
 
     sheets.push({
       id: uuidv4(),
@@ -50,8 +86,9 @@ function generate(config: WordSearchConfig): WordSearchSheet[] {
       grid: res.grid,
       placedWords: res.placedWords,
       unplacedWords: res.unplacedWords,
-      listColumns: config.listColumns,
+      listColumns: effectiveColumns,
       isAnswerKey: false,
+      themeColor,
       pageNumber: totalPages > 1 ? page + 1 : undefined,
       totalPages: totalPages > 1 ? totalPages : undefined,
     });
@@ -63,8 +100,9 @@ function generate(config: WordSearchConfig): WordSearchSheet[] {
         grid: res.grid,
         placedWords: res.placedWords,
         unplacedWords: res.unplacedWords,
-        listColumns: config.listColumns,
+        listColumns: effectiveColumns,
         isAnswerKey: true,
+        themeColor,
         pageNumber: totalPages > 1 ? page + 1 : undefined,
         totalPages: totalPages > 1 ? totalPages : undefined,
       });

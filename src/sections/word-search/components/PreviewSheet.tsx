@@ -1,11 +1,10 @@
 import type { GridSizePreset, WordSearchSheet, WordSearchConfig, WordSearchDifficulty } from 'src/features/word-search/types';
 
-import React from 'react';
 import { useTranslation } from 'react-i18next';
+import React, { useRef, useState, useCallback, useLayoutEffect } from 'react';
 
 import { Box, Alert, Typography } from '@mui/material';
 
-import { candyColors } from 'src/theme/tokens';
 import { WorksheetPaper } from 'src/shared/worksheet';
 import { DIFFICULTY_DIRECTIONS } from 'src/features/word-search/types';
 
@@ -25,6 +24,27 @@ const LIST_FONT_SIZE: Record<GridSizePreset, number> = {
   small: 24,
   medium: 21,
   large: 18,
+};
+
+/** Light background color for each candy color (word list background). */
+const SOFT_COLOR: Record<string, string> = {
+  '#FF6B6B': '#FFE8E8',
+  '#FFA63D': '#FFF0E0',
+  '#FFD23F': '#FFF8E0',
+  '#4ECB71': '#E8F8EC',
+  '#2EC4B6': '#E0F8F6',
+  '#4D9DE0': '#E6F2FB',
+  '#9B72CF': '#F2ECFA',
+  '#FF7AAE': '#FFE4F0',
+};
+
+const getSoftColor = (themeColor: string) => SOFT_COLOR[themeColor.toUpperCase()] || '#FFE4F0';
+
+/** Estimated available vertical px for the word list on one A4 page, per grid size. */
+const LIST_AVAILABLE_HEIGHT: Record<GridSizePreset, number> = {
+  small: 132,
+  medium: 138,
+  large: 200,
 };
 
 // ---------------------------------------------------------------------------
@@ -47,9 +67,8 @@ const buildDirectionHint = (difficulty: WordSearchDifficulty): string => {
 const MAX_TITLE_WIDTH = 580;
 const TITLE_GAP = 8;
 const MAX_BUBBLE = 58;
-const BUBBLE_PAD = 18; // px (1.5) × 2 + border (3px) × 2 ≈ 21px; use 18px for content area
 
-const BubbleTitle: React.FC<{ title: string }> = ({ title }) => {
+const BubbleTitle: React.FC<{ title: string; themeColor: string }> = ({ title, themeColor }) => {
   const chars = Array.from(title).filter((ch) => ch.trim() !== '');
   const bubbleSize = Math.min(MAX_BUBBLE, Math.floor((MAX_TITLE_WIDTH - (chars.length - 1) * TITLE_GAP) / chars.length));
   const fontSize = Math.round(bubbleSize * 0.62);
@@ -70,9 +89,9 @@ const BubbleTitle: React.FC<{ title: string }> = ({ title }) => {
               justifyContent: 'center',
               flexShrink: 0,
               borderRadius: '999px',
-              border: `3px solid ${candyColors.pink}`,
+              border: `3px solid ${themeColor}`,
               backgroundColor: '#fff',
-              color: candyColors.pink,
+              color: themeColor,
               fontSize,
               fontWeight: 800,
               lineHeight: 1,
@@ -99,7 +118,7 @@ const Instruction: React.FC<{ difficulty: WordSearchDifficulty }> = ({ difficult
 );
 
 const WordGrid: React.FC<{ sheet: WordSearchSheet }> = ({ sheet }) => {
-  const { grid, placedWords, isAnswerKey } = sheet;
+  const { grid, placedWords, isAnswerKey, themeColor } = sheet;
   const cols = grid[0].length;
   const rows = grid.length;
   const CARD_PADDING = 28;
@@ -122,7 +141,7 @@ const WordGrid: React.FC<{ sheet: WordSearchSheet }> = ({ sheet }) => {
       sx={{
         mx: 'auto', width: 'fit-content',
         p: `${CARD_PADDING}px`, borderRadius: '24px',
-        border: `3px solid ${candyColors.pink}`, backgroundColor: '#fff',
+        border: `3px solid ${themeColor}`, backgroundColor: '#fff',
       }}
     >
       <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, ${cellSize}px)`, gridTemplateRows: `repeat(${rows}, ${cellSize}px)` }}>
@@ -150,39 +169,105 @@ const WordGrid: React.FC<{ sheet: WordSearchSheet }> = ({ sheet }) => {
   );
 };
 
-const WordList: React.FC<{ words: string[]; columns: 1 | 2 | 3; gridSize: GridSizePreset }> = ({
-  words, columns, gridSize,
-}) => {
+const LONG_WORD_THRESHOLD = 9;
+
+const WordList: React.FC<{
+  words: string[];
+  columns: 1 | 2 | 3 | 4 | 5;
+  gridSize: GridSizePreset;
+  themeColor: string;
+}> = ({ words, columns, gridSize, themeColor }) => {
+  const listRef = useRef<HTMLDivElement>(null);
+  const [effectiveColumns, setEffectiveColumns] = useState(columns);
+
+  // Increase columns if content overflows the estimated available height.
+  const checkOverflow = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const availableHeight = LIST_AVAILABLE_HEIGHT[gridSize];
+    if (el.scrollHeight > availableHeight && effectiveColumns < 5) {
+      setEffectiveColumns((prev) => Math.min(5, prev + 1) as 1 | 2 | 3 | 4 | 5);
+    }
+  }, [gridSize, effectiveColumns]);
+
+  useLayoutEffect(() => {
+    checkOverflow();
+  }, [checkOverflow, words, columns]);
+
+  // Reset effective columns when inputs change
+  useLayoutEffect(() => {
+    setEffectiveColumns(columns);
+  }, [columns, words]);
+
   if (words.length === 0) return null;
 
   const fontSize = LIST_FONT_SIZE[gridSize];
-  const cols: string[][] = Array.from({ length: columns }, () => []);
-  for (let i = 0; i < words.length; i++) cols[i % columns].push(words[i]);
-  const filled = cols.filter((c) => c.length > 0);
+  const softBg = getSoftColor(themeColor);
+
+  // Distribute words into columns, balancing by weight.
+  // Long words (>= LONG_WORD_THRESHOLD chars) count as weight 2 and
+  // may span 2 grid columns so they don't overflow narrow columns.
+  type GridItem = { word: string; col: number; colSpan: 1 | 2; row: number };
+  const items: GridItem[] = [];
+  const colRow: number[] = Array.from({ length: effectiveColumns }, () => 1);
+
+  for (const word of words) {
+    const colSpan: 1 | 2 = word.length >= LONG_WORD_THRESHOLD ? 2 : 1;
+
+    // Pick the column with fewest occupied rows
+    let col = 0;
+    for (let c = 1; c < effectiveColumns; c++) {
+      if (colRow[c] < colRow[col]) col = c;
+    }
+
+    // Span-2 words must fit within the grid
+    const actualCol = colSpan === 2 && col >= effectiveColumns - 1 ? effectiveColumns - 2 : col;
+    const actualSpan: 1 | 2 = actualCol + colSpan <= effectiveColumns ? colSpan : 1;
+
+    items.push({ word, col: actualCol, colSpan: actualSpan, row: colRow[actualCol] });
+    colRow[actualCol]++;
+    if (actualSpan === 2) {
+      colRow[actualCol + 1] = Math.max(colRow[actualCol + 1], colRow[actualCol]);
+    }
+  }
+
+  const totalRows = Math.max(...colRow) - 1;
 
   return (
     <Box
+      ref={listRef}
       sx={{
         mx: 'auto', width: 'fit-content', minWidth: 360, maxWidth: PRINT_WIDTH + 80,
         px: 4, py: 2.5, borderRadius: '24px',
-        border: `3px solid ${candyColors.pink}`,
-        backgroundColor: '#FFE4F0',
+        border: `3px solid ${themeColor}`,
+        backgroundColor: softBg,
       }}
     >
       <Box
         sx={{
-          display: 'grid', gridTemplateColumns: `repeat(${filled.length}, auto)`,
-          justifyContent: 'space-between', columnGap: 6, rowGap: 1,
+          display: 'grid',
+          gridTemplateColumns: `repeat(${effectiveColumns}, auto)`,
+          gridTemplateRows: `repeat(${totalRows}, auto)`,
+          justifyContent: 'space-between',
+          columnGap: 6,
+          rowGap: 1,
         }}
       >
-        {filled.map((colWords, ci) => (
-          <Box key={ci} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {colWords.map((w, wi) => (
-              <Typography key={wi} sx={{ fontSize, fontWeight: 500, color: '#333', lineHeight: 1.4, overflowWrap: 'anywhere' }}>
-                {w}
-              </Typography>
-            ))}
-          </Box>
+        {items.map(({ word, col, colSpan, row }) => (
+          <Typography
+            key={`${row}-${col}-${word}`}
+            sx={{
+              fontSize,
+              fontWeight: 500,
+              color: '#333',
+              lineHeight: 1.4,
+              gridColumn: colSpan === 2 ? `${col + 1} / span 2` : `${col + 1}`,
+              gridRow: row,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {word}
+          </Typography>
         ))}
       </Box>
     </Box>
@@ -195,10 +280,11 @@ const WordList: React.FC<{ words: string[]; columns: 1 | 2 | 3; gridSize: GridSi
 
 const PageContent: React.FC<{ sheet: WordSearchSheet; config: WordSearchConfig }> = ({ sheet, config }) => {
   const { t } = useTranslation();
+  const themeColor = sheet.themeColor;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, px: 2 }}>
-      <BubbleTitle title={sheet.title} />
+      <BubbleTitle title={sheet.title} themeColor={themeColor} />
 
       {sheet.unplacedWords.length > 0 && !sheet.isAnswerKey && (
         <Alert severity="warning" sx={{ mx: 'auto', maxWidth: 500 }}>
@@ -211,7 +297,12 @@ const PageContent: React.FC<{ sheet: WordSearchSheet; config: WordSearchConfig }
       {!sheet.isAnswerKey && sheet.placedWords.length > 0 && (
         <>
           <Instruction difficulty={config.difficulty} />
-          <WordList words={sheet.placedWords.map((p) => p.word)} columns={sheet.listColumns} gridSize={config.gridSize} />
+          <WordList
+            words={sheet.placedWords.map((p) => p.word)}
+            columns={sheet.listColumns}
+            gridSize={config.gridSize}
+            themeColor={themeColor}
+          />
         </>
       )}
     </Box>

@@ -409,6 +409,7 @@
       "display": "Display",
       "titleLabel": "Title",
       "listColumns": "Word List Columns",
+      "themeColor": "Theme Color",
       "letterCase": "Letter Case",
       "showAnswerKey": "Include Answer Key"
     },

@@ -7,11 +7,13 @@ export interface WordSearchConfig {
   /** 是否生成答案页 */
   showAnswerKey: boolean;
   /** 单词列表展示列数 */
-  listColumns: 1 | 2 | 3;
+  listColumns: 1 | 2 | 3 | 4 | 5;
   /** 网格字母大小写 */
   letterCase: 'upper' | 'lower';
   /** 主题词库选择（可选） */
   selectedTheme?: string;
+  /** 主题色（边框/标题色），默认 #FF7AAE */
+  themeColor?: string;
 }
 
 export enum GridSizePreset {
@@ -75,8 +77,9 @@ export interface WordSearchSheet {
   grid: string[][];
   placedWords: PlacedWord[];
   unplacedWords: string[];
-  listColumns: 1 | 2 | 3;
+  listColumns: 1 | 2 | 3 | 4 | 5;
   isAnswerKey: boolean;
+  themeColor: string;
   /** 1-based page number (undefined when single-page) */
   pageNumber?: number;
   /** Total page count (undefined when single-page) */

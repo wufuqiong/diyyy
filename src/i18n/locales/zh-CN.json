@@ -409,6 +409,7 @@
       "display": "显示",
       "titleLabel": "标题",
       "listColumns": "单词列表列数",
+      "themeColor": "主题颜色",
       "letterCase": "字母大小写",
       "showAnswerKey": "包含答案页"
     },

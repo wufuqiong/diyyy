@@ -4,11 +4,14 @@ import type { WordSearchConfig } from 'src/features/word-search/types';
 import { useTranslation } from 'react-i18next';
 import React, { useState, useEffect } from 'react';
 
+import { Clear as ClearIcon, Shuffle as ShuffleIcon } from '@mui/icons-material';
 import {
   Box,
   Chip,
-  Switch,
+  Stack,
+  Button,
   Select,
+  Switch,
   MenuItem,
   TextField,
   Typography,
@@ -19,12 +22,18 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 
+import { shuffleArray } from 'src/utils/array-tools';
+
 import { candyColors } from 'src/theme/tokens';
 import { WORD_THEMES } from 'src/features/word-search/data/word-themes';
 import { GridSizePreset, GRID_DIMENSIONS, WordSearchDifficulty } from 'src/features/word-search/types';
 
+import { ColorPicker } from 'src/components/color-utils';
+
 import { SettingCard } from 'src/sections/_shared/SettingCard';
 import { SettingsField } from 'src/sections/_shared/SettingsPanel';
+
+const THEME_COLOR_OPTIONS = Object.values(candyColors);
 
 const CAPACITY_HINTS: Record<GridSizePreset, number> = {
   [GridSizePreset.SMALL]: 6,
@@ -98,7 +107,19 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
   };
 
   const handleListColumnsChange = (e: SelectChangeEvent<number>) => {
-    onChange({ ...config, listColumns: e.target.value as 1 | 2 | 3 });
+    onChange({ ...config, listColumns: e.target.value as 1 | 2 | 3 | 4 | 5 });
+  };
+
+  const handleClearInput = () => {
+    setText('');
+    onChange({ ...config, words: [], selectedTheme: undefined });
+  };
+
+  const handleShuffleInput = () => {
+    if (config.words.length < 2) return;
+    const shuffled = shuffleArray(config.words);
+    setText(shuffled.join(', '));
+    onChange({ ...config, words: shuffled });
   };
 
   const capacity = CAPACITY_HINTS[config.gridSize];
@@ -136,16 +157,40 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
               : `${config.words.length} ${t('wordSearch.settings.wordsParsed')} · ${t('wordSearch.settings.capacityHint', { capacity })}`
           }
         >
-          <TextField
-            multiline
-            rows={4}
-            size="small"
-            label={t('wordSearch.settings.wordsInput')}
-            value={text}
-            onChange={(e) => handleInputChange(e.target.value)}
-            placeholder={t('wordSearch.settings.wordsPlaceholder')}
-            fullWidth
-          />
+          <Stack spacing={1}>
+            <TextField
+              multiline
+              rows={4}
+              size="small"
+              label={t('wordSearch.settings.wordsInput')}
+              value={text}
+              onChange={(e) => handleInputChange(e.target.value)}
+              placeholder={t('wordSearch.settings.wordsPlaceholder')}
+              fullWidth
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ClearIcon />}
+                onClick={handleClearInput}
+                disabled={!text}
+                sx={{ textTransform: 'none' }}
+              >
+                {t('common.clear')}
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ShuffleIcon />}
+                onClick={handleShuffleInput}
+                disabled={config.words.length < 2}
+                sx={{ textTransform: 'none' }}
+              >
+                {t('common.shuffle')}
+              </Button>
+            </Box>
+          </Stack>
         </SettingsField>
         {config.words.length > 0 && (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -222,8 +267,18 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, onChange }) 
               <MenuItem value={1}>1</MenuItem>
               <MenuItem value={2}>2</MenuItem>
               <MenuItem value={3}>3</MenuItem>
+              <MenuItem value={4}>4</MenuItem>
+              <MenuItem value={5}>5</MenuItem>
             </Select>
           </FormControl>
+        </SettingsField>
+        <SettingsField label={t('wordSearch.settings.themeColor')}>
+          <ColorPicker
+            options={THEME_COLOR_OPTIONS}
+            value={config.themeColor || candyColors.pink}
+            onChange={(v) => onChange({ ...config, themeColor: v as string })}
+            size={32}
+          />
         </SettingsField>
         <SettingsField label={t('wordSearch.settings.letterCase')}>
           <ToggleButtonGroup
