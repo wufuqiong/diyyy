@@ -203,6 +203,11 @@ export interface SheetConfig {
   showPinyin: boolean;
   showStrokeCount: boolean;
   showStrokeOrder: boolean; // Simulates step-by-step
+
+  // English 4-line
+  englishLineTheme?: 'rainbow' | 'monochrome' | 'same';
+  showLineNumbers?: boolean;
+  traceMode?: 'faded' | 'underline';
 }
 
 export interface CharData {

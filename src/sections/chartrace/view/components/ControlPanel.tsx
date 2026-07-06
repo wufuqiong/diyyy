@@ -611,6 +611,51 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
         </SettingsField>
       </SettingCard>
 
+      {/* ============= ENGLISH 4-LINE ============= */}
+      {isEnglishLines && (
+        <SettingCard label={t('charTrace.settings.englishSection')} toolColor={candyColors.green}>
+          <SettingsField label={t('charTrace.settings.lineTheme')}>
+            <FormControl fullWidth size="small">
+              <Select
+                value={config.englishLineTheme || 'rainbow'}
+                onChange={(e) => handleChange('englishLineTheme', e.target.value)}
+              >
+                <MenuItem value="rainbow">{t('charTrace.settings.lineThemeRainbow')}</MenuItem>
+                <MenuItem value="monochrome">{t('charTrace.settings.lineThemeMonochrome')}</MenuItem>
+                <MenuItem value="same">{t('charTrace.settings.lineThemeSame')}</MenuItem>
+              </Select>
+            </FormControl>
+          </SettingsField>
+
+          <SettingsField>
+            <FormControlLabel
+              sx={{ ml: 0 }}
+              control={
+                <Checkbox
+                  checked={config.showLineNumbers || false}
+                  onChange={(e) => handleChange('showLineNumbers', e.target.checked)}
+                  color="primary"
+                  size="small"
+                />
+              }
+              label={<Typography variant="body2">{t('charTrace.settings.showLineNumbers')}</Typography>}
+            />
+          </SettingsField>
+
+          <SettingsField label={t('charTrace.settings.traceModeLabel')}>
+            <FormControl fullWidth size="small">
+              <Select
+                value={config.traceMode || 'faded'}
+                onChange={(e) => handleChange('traceMode', e.target.value)}
+              >
+                <MenuItem value="faded">{t('charTrace.settings.traceModeFaded')}</MenuItem>
+                <MenuItem value="underline">{t('charTrace.settings.traceModeUnderline')}</MenuItem>
+              </Select>
+            </FormControl>
+          </SettingsField>
+        </SettingCard>
+      )}
+
       {/* ============= PAGE SETUP ============= */}
       <SettingCard label={t('charTrace.settings.pageSetup')} toolColor={candyColors.green}>
         <SettingsField label={t('wordSearch.settings.themeColor')}>

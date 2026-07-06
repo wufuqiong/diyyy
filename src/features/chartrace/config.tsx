@@ -30,6 +30,9 @@ const defaultConfig: SheetConfig = {
   showPinyin: true,
   showStrokeCount: true,
   showStrokeOrder: false,
+  englishLineTheme: 'rainbow',
+  showLineNumbers: false,
+  traceMode: 'faded',
 };
 
 function generate(_config: SheetConfig): null[] {

@@ -6,7 +6,7 @@ import { Box, Typography } from '@mui/material';
 
 import { WorksheetPaper } from 'src/shared/worksheet';
 import { GridType, TraceContentMode } from 'src/types';
-import { colors, sansStack, kaitiStack, pinyinStack, englishHandStack, englishPrintStack } from 'src/theme/tokens';
+import { sansStack, kaitiStack, pinyinStack, englishHandStack, englishPrintStack } from 'src/theme/tokens';
 
 import { GridBox } from './GridBox';
 import { getCharData } from '../utils/charData';
@@ -265,14 +265,47 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
     const y2 = rowHeightPx * 0.333;
     const y3 = rowHeightPx * 0.666;
     const y4 = rowHeightPx - 1;
+    const lineYs = [y1, y2, y3, y4];
+
+    // Line color themes
+    const lineTheme = config.englishLineTheme || 'rainbow';
+    const SPECTRUM = ['#FF6B6B', '#FFA63D', '#FFD23F', '#4ECB71', '#2EC4B6', '#4D9DE0', '#9B72CF', '#FF7AAE'];
+    const getRainbowColors = (): string[] => {
+      const themeHex = config.gridColor.toUpperCase();
+      const idx = SPECTRUM.findIndex((c) => c === themeHex);
+      const start = idx >= 0 ? idx : 0;
+      return [0, 1, 2, 3].map((i) => SPECTRUM[(start + i) % SPECTRUM.length]);
+    };
+    const getLineColors = (): string[] => {
+      if (lineTheme === 'rainbow') return getRainbowColors();
+      if (lineTheme === 'monochrome') {
+        const hex = config.gridColor;
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return [
+          `rgba(${r},${g},${b},0.4)`,
+          `rgba(${r},${g},${b},0.6)`,
+          `rgba(${r},${g},${b},0.8)`,
+          `rgba(${r},${g},${b},1)`,
+        ];
+      }
+      return Array(4).fill(borderColor);
+    };
+    const lineColors = getLineColors();
+    const lineDashes = [false, true, false, false]; // line 2 is dashed
+    const lineWidths = [1.5, 1, 2, 1.5]; // baseline is thicker
+
+    const showLineNums = config.showLineNumbers || false;
+    const isUnderlineMode = (config.traceMode || 'faded') === 'underline';
 
     return renderSheet(pages, (pageRows, pageIndex) => (
             <>
-             <Box component="header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid', borderColor: 'success.main', pb: 1, mb: 3 }}>
-                 <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'success.dark', fontFamily: 'serif' }}>
+             <Box component="header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid', borderColor: 'grey.300', pb: 1, mb: 3 }}>
+                 <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333', fontFamily: 'serif' }}>
                     Name: <Box component="span" sx={{ textDecoration: 'underline', textDecorationStyle: 'dotted', color: 'grey.400', ml: 1 }}>__________</Box>
                  </Typography>
-                 <Box sx={{ width: '33%', display: 'flex', justifyContent: 'space-between', color: 'success.dark', fontFamily: 'serif', fontSize: '0.875rem' }}>
+                 <Box sx={{ width: '33%', display: 'flex', justifyContent: 'space-between', color: '#333', fontFamily: 'serif', fontSize: '0.875rem' }}>
                      <span>Class: <Box component="span" sx={{ textDecoration: 'underline', textDecorationStyle: 'dotted', color: 'grey.400' }}>______</Box></span>
                      <span>Date: <Box component="span" sx={{ textDecoration: 'underline', textDecorationStyle: 'dotted', color: 'grey.400' }}>______</Box></span>
                  </Box>
@@ -284,33 +317,62 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
                     if (config.fontFamily === 'font-english-print') englishFontStack = englishPrintStack;
                     else if (config.fontFamily === 'font-english-hand') englishFontStack = englishHandStack;
                     else if (config.fontFamily === 'font-sans') englishFontStack = sansStack;
-                    
+
                     return (
                         <Box key={idx} sx={{ width: '100%', position: 'relative', height: `${rowHeightPx}px` }}>
-                            {/* Absolute precise SVG mapping rendering pixels 1:1, never squeezing */}
                             <svg width="100%" height="100%" style={{ display: 'block' }}>
-                                {/* 4 Lines (Red line #ef5350 is specifically the baseline for English!) */}
-                                <line x1="0" y1={y1} x2="100%" y2={y1} stroke={borderColor} strokeWidth="1.5" />
-                                <line x1="0" y1={y2} x2="100%" y2={y2} stroke={borderColor} strokeWidth="1" strokeDasharray="3,3" opacity={0.6} />
-                                <line x1="0" y1={y3} x2="100%" y2={y3} stroke={colors.englishBaseline} strokeWidth="2" />
-                                <line x1="0" y1={y4} x2="100%" y2={y4} stroke={borderColor} strokeWidth="1.5" />
-
-                                {/* Precise Text Rendering */}
-                                {staffRow.items.map((item, tIdx) => (
-                                    <text
-                                        key={tIdx}
-                                        x={item.x}
-                                        y={y3} // Exact baseline position!
-                                        fill={item.isTrace ? config.traceTextColor : config.mainTextColor}
-                                        fillOpacity={item.isTrace ? config.traceOpacity : 1}
-                                        fontSize={`${fontSizePx}px`}
-                                        fontFamily={englishFontStack}
-                                        dominantBaseline="alphabetic"
-                                        style={{ pointerEvents: 'none', userSelect: 'none' }}
-                                    >
-                                        {item.text}
-                                    </text>
+                                {/* 4 Lines with themed colors */}
+                                {lineYs.map((y, li) => (
+                                    <line
+                                        key={li}
+                                        x1="0" y1={y} x2="100%" y2={y}
+                                        stroke={lineColors[li]}
+                                        strokeWidth={lineWidths[li]}
+                                        {...(lineDashes[li] ? { strokeDasharray: '3,3', opacity: 0.6 } : {})}
+                                    />
                                 ))}
+
+                                {/* Line numbers */}
+                                {showLineNums && lineYs.map((y, li) => {
+                                    const numFontSize = Math.max(7, rowHeightPx * 0.15);
+                                    return [
+                                        <text key={`l-${li}`} x={3} y={y + numFontSize + 1} fontSize={numFontSize} fill="#999" dominantBaseline="alphabetic">{li + 1}</text>,
+                                        <text key={`r-${li}`} x="99%" y={y + numFontSize + 1} fontSize={numFontSize} fill="#999" dominantBaseline="alphabetic" textAnchor="end">{li + 1}</text>,
+                                    ];
+                                })}
+
+                                {/* Text / Underline rendering */}
+                                {staffRow.items.map((item, tIdx) => {
+                                    if (item.isTrace && isUnderlineMode) {
+                                        return Array.from(item.text).map((_, ci) => {
+                                            const lx = item.x + ci * estCharWidth;
+                                            const lw = estCharWidth - 4; // small gap between letters
+                                            return (
+                                                <line
+                                                    key={`${tIdx}-${ci}`}
+                                                    x1={lx + 2} y1={y3 + 2}
+                                                    x2={lx + 2 + lw} y2={y3 + 2}
+                                                    stroke="#bbb" strokeWidth={1.5}
+                                                />
+                                            );
+                                        });
+                                    }
+                                    return (
+                                        <text
+                                            key={tIdx}
+                                            x={item.x}
+                                            y={y3}
+                                            fill={item.isTrace ? config.traceTextColor : config.mainTextColor}
+                                            fillOpacity={item.isTrace ? config.traceOpacity : 1}
+                                            fontSize={`${fontSizePx}px`}
+                                            fontFamily={englishFontStack}
+                                            dominantBaseline="alphabetic"
+                                            style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                        >
+                                            {item.text}
+                                        </text>
+                                    );
+                                })}
                             </svg>
                         </Box>
                     );
