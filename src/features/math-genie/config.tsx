@@ -89,7 +89,10 @@ async function generate(config: WorksheetConfig): Promise<MathProblem[]> {
       ? p.numberBondBlankIndex === 0 ? p.a
         : p.numberBondBlankIndex === 1 ? p.b
         : p.numberBondWhole!
-      : p.op === '+' ? p.a + p.b : p.a - p.b,
+      : p.op === '+' ? p.a + p.b
+      : p.op === '-' ? p.a - p.b
+      : p.op === '×' ? p.a * p.b
+      : p.b !== 0 ? p.a / p.b : 0,
     problemType: config.problemType,
     blankPosition: p.blankPosition,
     equationText: p.equationText,
@@ -151,16 +154,27 @@ function deriveWorksheetTitle(config: WorksheetConfig): string {
     const mode = config.multiOperationConfig?.mode;
     const opLabel = mode === MultiOperationMode.CHAIN_ADDITION ? '连加'
       : mode === MultiOperationMode.CHAIN_SUBTRACTION ? '连减'
+      : mode === MultiOperationMode.CHAIN_MULTIPLICATION ? '连乘'
+      : mode === MultiOperationMode.CHAIN_DIVISION ? '连除'
+      : mode === MultiOperationMode.MULT_DIV_MIXED_CHAIN ? '乘除混合运算'
+      : mode === MultiOperationMode.ALL_MIXED ? '加减乘除混合运算'
       : '加减混合运算';
     return `${opLabel}练习 ${rangeStr}`;
   }
 
   // Standard / fill-blank
-  const opLabel = config.operation === OperationType.ADDITION ? '加法'
-    : config.operation === OperationType.SUBTRACTION ? '减法'
-    : '加减混合';
+  const getOpLabel = () => {
+    switch (config.operation) {
+      case OperationType.ADDITION: return '加法';
+      case OperationType.SUBTRACTION: return '减法';
+      case OperationType.MULTIPLICATION: return '乘法';
+      case OperationType.DIVISION: return '除法';
+      case OperationType.MULT_DIV_MIXED: return '乘除混合';
+      default: return '加减混合';
+    }
+  };
   const typeSuffix = config.problemType === ProblemType.FILL_BLANK ? '填空' : '练习';
-  return `${opLabel}${typeSuffix} ${rangeStr}`;
+  return `${getOpLabel()}${typeSuffix} ${rangeStr}`;
 }
 
 const Preview: React.FC<{ config: WorksheetConfig; problems: MathProblem[]; pdfContainerRef?: React.RefObject<HTMLDivElement | null> }> = ({

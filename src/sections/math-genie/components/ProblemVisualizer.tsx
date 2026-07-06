@@ -248,7 +248,7 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
     </Box>
   );
 
-  const renderEquationBoxes = (operatorSymbol: '+' | '-') => (
+  const renderEquationBoxes = (operatorSymbol: '+' | '-' | '×' | '÷') => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
       <Box sx={{ width: 44, height: 44, border: `3px solid ${colors.fillBlankBox}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: colors.inkSecondary }}>
         {showAnswers ? num1 : ''}

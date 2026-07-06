@@ -6,12 +6,12 @@ import { generateFillBlankProblems } from './fill-blank';
 import { generateMultiOperationProblems } from './multi-op';
 import { generateZeroDrillProblems } from './special-practice/zero-drill';
 import { generateComparisonProblems } from './special-practice/comparison';
-import { THEME_EMOJIS, THEME_TITLES, isChineseTheme } from './shared/types';
 import { generateFactFamilyProblems } from './special-practice/fact-family';
 import { generateNumberBondProblems } from './special-practice/number-bond';
 import { generateWordProblems, generateMultiStepWordProblems } from './word-problem';
-import { getMixedTargetCounts, selectBalancedMixedProblems } from './shared/mixed-balance';
 import { generateProblemsForDifficulty, generateProblemsForCustomRange } from './standard';
+import { THEME_EMOJIS, THEME_TITLES, isChineseTheme, problemContainsZero } from './shared/types';
+import { getMixedTargetCounts, getMulDivMixedTargetCounts, selectBalancedMixedProblems } from './shared/mixed-balance';
 
 import type { RawMathProblem } from './shared/types';
 
@@ -105,6 +105,18 @@ async function generateMathProblems(
         })),
         titleSuggestion,
       };
+    }
+
+    // ×/÷ only supported in TEXT mode; fall back to ADDITION for EMOJI / WORD_PROBLEM
+    if (displayMode !== DisplayMode.TEXT) {
+      const mulDivOps: OperationType[] = [
+        OperationType.MULTIPLICATION,
+        OperationType.DIVISION,
+        OperationType.MULT_DIV_MIXED,
+      ];
+      if (mulDivOps.includes(operation)) {
+        operation = OperationType.ADDITION;
+      }
     }
 
     if (operation === OperationType.MULTI_OPERATIONS && multiOperationConfig) {
@@ -374,8 +386,8 @@ async function generateMathProblems(
       excludeZeroProblems
     );
 
-    if (operation === OperationType.MIXED) {
-      problems.push(...selectBalancedMixedProblems(allPossibleProblems, targetCount));
+    if (operation === OperationType.MIXED || operation === OperationType.MULT_DIV_MIXED) {
+      problems.push(...selectBalancedMixedProblems(allPossibleProblems, targetCount, operation));
     } else {
       const shuffled = allPossibleProblems.sort(() => Math.random() - 0.5);
 
@@ -393,6 +405,11 @@ async function generateMathProblems(
         const currentAdditions = problems.filter((p) => p.op === '+').length;
         fallbackOperation =
           currentAdditions < additionCount ? OperationType.ADDITION : OperationType.SUBTRACTION;
+      } else if (operation === OperationType.MULT_DIV_MIXED) {
+        const { multiplicationCount } = getMulDivMixedTargetCounts(count);
+        const currentMultiplications = problems.filter((p) => p.op === '×').length;
+        fallbackOperation =
+          currentMultiplications < multiplicationCount ? OperationType.MULTIPLICATION : OperationType.DIVISION;
       }
 
       const problem = generateRandomProblem(
@@ -425,19 +442,34 @@ function calculateMaxUniqueProblems(maxNumber: number, operation: OperationType)
   if (operation === OperationType.ADDITION) {
     let count = 0;
     for (let a = 0; a <= maxNumber; a++) {
-      for (let b = 0; b <= maxNumber - a; b++) {
-        count++;
-      }
+      for (let b = 0; b <= maxNumber - a; b++) count++;
     }
     return count;
   } else if (operation === OperationType.SUBTRACTION) {
     let count = 0;
     for (let a = 0; a <= maxNumber; a++) {
-      for (let b = 0; b <= a; b++) {
-        count++;
+      for (let b = 0; b <= a; b++) count++;
+    }
+    return count;
+  } else if (operation === OperationType.MULTIPLICATION) {
+    let count = 0;
+    for (let a = 0; a <= maxNumber; a++) {
+      for (let b = 0; b <= maxNumber; b++) {
+        if (a * b <= maxNumber) count++;
       }
     }
     return count;
+  } else if (operation === OperationType.DIVISION) {
+    let count = 0;
+    for (let b = 1; b <= maxNumber; b++) {
+      for (let c = 0; c <= Math.floor(maxNumber / b); c++) count++;
+    }
+    return count;
+  } else if (operation === OperationType.MULT_DIV_MIXED) {
+    return (
+      calculateMaxUniqueProblems(maxNumber, OperationType.MULTIPLICATION) +
+      calculateMaxUniqueProblems(maxNumber, OperationType.DIVISION)
+    );
   } else {
     return (
       calculateMaxUniqueProblems(maxNumber, OperationType.ADDITION) +
@@ -462,7 +494,6 @@ function generateAllPossibleProblems(
     if (customDifficulty) {
       for (let sum = Math.max(0, actualMin); sum <= actualMax; sum++) {
         for (let a = 0; a <= sum; a++) {
-          const b = sum - a;
           const problem = generateProblemsForCustomRange(
             1,
             { min: actualMin, max: actualMax },
@@ -513,6 +544,56 @@ function generateAllPossibleProblems(
     }
   }
 
+  if (operation === OperationType.MULTIPLICATION || operation === OperationType.MULT_DIV_MIXED) {
+    if (customDifficulty) {
+      const generated = generateProblemsForCustomRange(
+        Math.min(1000, (actualMax + 1) * (actualMax + 2)),
+        { min: actualMin, max: actualMax },
+        OperationType.MULTIPLICATION,
+        emojis,
+        undefined,
+        excludeZeroProblems
+      );
+      problems.push(...generated);
+    } else {
+      const generated = generateProblemsForDifficulty(
+        Math.min(1000, (maxNumber + 1) * (maxNumber + 1)),
+        maxNumber as DifficultyLevel,
+        OperationType.MULTIPLICATION,
+        emojis,
+        undefined,
+        undefined,
+        excludeZeroProblems
+      );
+      problems.push(...generated);
+    }
+  }
+
+  if (operation === OperationType.DIVISION || operation === OperationType.MULT_DIV_MIXED) {
+    if (customDifficulty) {
+      const generated = generateProblemsForCustomRange(
+        Math.min(1000, (actualMax + 1) * (actualMax + 1)),
+        { min: actualMin, max: actualMax },
+        OperationType.DIVISION,
+        emojis,
+        undefined,
+        excludeZeroProblems
+      );
+      problems.push(...generated);
+    } else {
+      const generated = generateProblemsForDifficulty(
+        Math.min(1000, (maxNumber + 1) * (maxNumber + 1)),
+        maxNumber as DifficultyLevel,
+        OperationType.DIVISION,
+        emojis,
+        undefined,
+        undefined,
+        excludeZeroProblems
+      );
+      problems.push(...generated);
+    }
+  }
+
   return problems;
 }
 
@@ -528,14 +609,27 @@ function generateRandomProblem(
 
   while (attempts < maxAttempts) {
     attempts++;
-    const op = operation === OperationType.MIXED ? (Math.random() > 0.5 ? '+' : '-') : operation === OperationType.ADDITION ? '+' : '-';
+    let op: '+' | '-' | '×' | '÷';
+    let genOp: OperationType;
+    if (operation === OperationType.MIXED) {
+      op = Math.random() > 0.5 ? '+' : '-';
+      genOp = op === '+' ? OperationType.ADDITION : OperationType.SUBTRACTION;
+    } else if (operation === OperationType.MULT_DIV_MIXED) {
+      op = Math.random() > 0.5 ? '×' : '÷';
+      genOp = op === '×' ? OperationType.MULTIPLICATION : OperationType.DIVISION;
+    } else if (operation === OperationType.ADDITION) {
+      op = '+'; genOp = OperationType.ADDITION;
+    } else if (operation === OperationType.SUBTRACTION) {
+      op = '-'; genOp = OperationType.SUBTRACTION;
+    } else if (operation === OperationType.MULTIPLICATION) {
+      op = '×'; genOp = OperationType.MULTIPLICATION;
+    } else {
+      op = '÷'; genOp = OperationType.DIVISION;
+    }
 
-    const candidate =
-      op === '+'
-        ? generateProblemsForDifficulty(1, maxNumber as DifficultyLevel, OperationType.ADDITION, emojis, undefined, customDifficulty, false)[0]
-        : generateProblemsForDifficulty(1, maxNumber as DifficultyLevel, OperationType.SUBTRACTION, emojis, undefined, customDifficulty, false)[0];
+    const candidate = generateProblemsForDifficulty(1, maxNumber as DifficultyLevel, genOp, emojis, undefined, customDifficulty, false)[0];
 
-    if (candidate && (!excludeZeroProblems || (candidate.a !== 0 && candidate.b !== 0 && (candidate.op === '+' ? candidate.a + candidate.b : candidate.a - candidate.b) !== 0))) {
+    if (candidate && (!excludeZeroProblems || !problemContainsZero(candidate))) {
       return candidate;
     }
   }

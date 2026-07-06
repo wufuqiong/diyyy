@@ -279,6 +279,17 @@ const WorksheetSettings: React.FC<Props> = ({
       updates.operation = OperationType.ADDITION;
       notify(t('mathGenie.multiOpNotInEmoji'));
     }
+    if (next !== DisplayMode.TEXT) {
+      const mulDivOps: OperationType[] = [
+        OperationType.MULTIPLICATION,
+        OperationType.DIVISION,
+        OperationType.MULT_DIV_MIXED,
+      ];
+      if (mulDivOps.includes(operation)) {
+        updates.operation = OperationType.ADDITION;
+        notify(t('mathGenie.mulDivNotInMode'));
+      }
+    }
     if (next === DisplayMode.WORD_PROBLEM) {
       if (activeProblemType === ProblemType.FILL_BLANK) updates.problemType = ProblemType.STANDARD;
       if (isSpecialSelected && !isComparisonSelected) {
@@ -628,6 +639,13 @@ const WorksheetSettings: React.FC<Props> = ({
                     <ToggleButton value={OperationType.ADDITION}>+</ToggleButton>
                     <ToggleButton value={OperationType.SUBTRACTION}>−</ToggleButton>
                     <ToggleButton value={OperationType.MIXED}>±</ToggleButton>
+                    {displayMode === DisplayMode.TEXT && (
+                      <>
+                        <ToggleButton value={OperationType.MULTIPLICATION}>×</ToggleButton>
+                        <ToggleButton value={OperationType.DIVISION}>÷</ToggleButton>
+                        <ToggleButton value={OperationType.MULT_DIV_MIXED}>×÷</ToggleButton>
+                      </>
+                    )}
                     <MaybeTooltip
                       title={multiOpUnavailableReason}
                       show={Boolean(multiOpUnavailableReason)}
@@ -735,6 +753,22 @@ const WorksheetSettings: React.FC<Props> = ({
                           <MenuItem value={MultiOperationMode.MIXED_OPERATIONS}>
                             {t('mathGenie.mixedOperations')}
                           </MenuItem>
+                          {displayMode === DisplayMode.TEXT && (
+                            [
+                              <MenuItem key="cm" value={MultiOperationMode.CHAIN_MULTIPLICATION}>
+                                {t('mathGenie.chainMultiplication')}
+                              </MenuItem>,
+                              <MenuItem key="cd" value={MultiOperationMode.CHAIN_DIVISION}>
+                                {t('mathGenie.chainDivision')}
+                              </MenuItem>,
+                              <MenuItem key="mxd" value={MultiOperationMode.MULT_DIV_MIXED_CHAIN}>
+                                {t('mathGenie.mulDivMixedChain')}
+                              </MenuItem>,
+                              <MenuItem key="am" value={MultiOperationMode.ALL_MIXED}>
+                                {t('mathGenie.allMixed')}
+                              </MenuItem>,
+                            ]
+                          )}
                         </Select>
                       </FormControl>
                     </SettingsField>

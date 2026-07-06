@@ -1,5 +1,5 @@
 export interface RawMathProblem {
-  op: '+' | '-';
+  op: '+' | '-' | '×' | '÷';
   a: number;
   b: number;
   emoji1: string;
@@ -9,7 +9,7 @@ export interface RawMathProblem {
   equationAnswerText?: string;
   isMultiOperation?: boolean;
   numbers?: number[];
-  operators?: ('+' | '-')[];
+  operators?: ('+' | '-' | '×' | '÷')[];
   emojis?: string[];
   // Number bond fields
   isNumberBond?: boolean;
@@ -96,12 +96,17 @@ export function isChineseTheme(theme: string): boolean {
   return /[\u4e00-\u9fff]/.test(theme);
 }
 
-export function evaluateMultiOperation(numbers: number[], operators: ('+' | '-')[]) {
+export function evaluateMultiOperation(numbers: number[], operators: ('+' | '-' | '×' | '÷')[]) {
   const intermediates: number[] = [numbers[0]];
   let current = numbers[0];
 
   for (let i = 1; i < numbers.length; i++) {
-    current = operators[i - 1] === '+' ? current + numbers[i] : current - numbers[i];
+    const op = operators[i - 1];
+    const num = numbers[i];
+    if (op === '+') current = current + num;
+    else if (op === '-') current = current - num;
+    else if (op === '×') current = current * num;
+    else current = num === 0 ? 0 : current / num;
     intermediates.push(current);
   }
 
@@ -114,6 +119,10 @@ export function problemContainsZero(problem: RawMathProblem): boolean {
     return problem.numbers.some((n) => n === 0) || intermediates.some((v) => v === 0) || finalResult === 0;
   }
 
-  const result = problem.op === '+' ? problem.a + problem.b : problem.a - problem.b;
+  let result: number;
+  if (problem.op === '+') result = problem.a + problem.b;
+  else if (problem.op === '-') result = problem.a - problem.b;
+  else if (problem.op === '×') result = problem.a * problem.b;
+  else result = problem.b === 0 ? 0 : problem.a / problem.b;
   return problem.a === 0 || problem.b === 0 || result === 0;
 }

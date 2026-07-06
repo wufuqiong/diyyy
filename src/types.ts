@@ -37,6 +37,9 @@ export enum OperationType {
   ADDITION = 'addition',
   SUBTRACTION = 'subtraction',
   MIXED = 'mixed',
+  MULTIPLICATION = 'multiplication',
+  DIVISION = 'division',
+  MULT_DIV_MIXED = 'mult_div_mixed',
   MULTI_OPERATIONS = 'multi_operations'
 }
 
@@ -65,9 +68,13 @@ export enum ComparisonSubType {
 }
 
 export enum MultiOperationMode {
-  CHAIN_ADDITION = 'chain_addition', // 连加: 2 + 3 + 4 = 9
-  CHAIN_SUBTRACTION = 'chain_subtraction', // 连减: 10 - 3 - 2 = 5
-  MIXED_OPERATIONS = 'mixed_operations' // 混合: 5 + 3 - 2 = 6
+  CHAIN_ADDITION = 'chain_addition',
+  CHAIN_SUBTRACTION = 'chain_subtraction',
+  MIXED_OPERATIONS = 'mixed_operations',
+  CHAIN_MULTIPLICATION = 'chain_multiplication',
+  CHAIN_DIVISION = 'chain_division',
+  MULT_DIV_MIXED_CHAIN = 'mult_div_mixed_chain',
+  ALL_MIXED = 'all_mixed'
 }
 
 export interface MultiOperationConfig {
@@ -77,7 +84,7 @@ export interface MultiOperationConfig {
 
 export interface MathProblem {
   id: string;
-  operation: '+' | '-';
+  operation: '+' | '-' | '×' | '÷';
   num1: number;
   num2: number;
   emoji1: string;
@@ -90,7 +97,7 @@ export interface MathProblem {
   // 多重运算相关字段
   isMultiOperation?: boolean; // 是否为多重运算
   numbers?: number[]; // 多重运算的所有数字
-  operators?: ('+' | '-')[]; // 多重运算的所有运算符
+  operators?: ('+' | '-' | '×' | '÷')[]; // 多重运算的所有运算符
   emojis?: string[]; // 多重运算的所有emoji
   // 数的分合（number bond）
   isNumberBond?: boolean;
@@ -150,7 +157,7 @@ export interface DifficultyRatios {
 
 export interface GenerationResponse {
   problems: Array<{
-    op: '+' | '-';
+    op: '+' | '-' | '×' | '÷';
     a: number;
     b: number;
     emoji1: string;
