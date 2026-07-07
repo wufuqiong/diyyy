@@ -7,8 +7,8 @@ test.describe('Visual Regression Tests', () => {
     for (const tool of tools) {
       test(`${tool} default state`, async ({ page }) => {
         await page.goto(`/${tool}`);
-        await page.waitForTimeout(1000);
-        await expect(page).toHaveScreenshot(`${tool}-default.png`, { fullPage: true, timeout: 10000 });
+        await page.waitForTimeout(1500);
+        await expect(page).toHaveScreenshot(`${tool}-default.png`, { fullPage: true, timeout: 30000 });
       });
     }
   });

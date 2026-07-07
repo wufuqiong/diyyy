@@ -47,28 +47,10 @@ export function generateMultiOperationProblems(
     if (mode === MultiOperationMode.CHAIN_ADDITION) {
       numbers = [];
       operators = [];
-
-      const minTargetSum = numberCount * minNumber;
-      const maxTargetSum = Math.min(Math.floor((maxNumber * numberCount) / 2), maxNumber);
-      if (minTargetSum > maxTargetSum) continue;
-
-      const targetSum = getRandomInt(minTargetSum, maxTargetSum);
-      let remaining = targetSum;
-      let invalid = false;
-
-      for (let i = 0; i < numberCount - 1; i++) {
-        const maxForThisNumber = Math.min(remaining - (numberCount - i - 1) * minNumber, maxNumber);
-        const minForThisNumber = Math.max(minNumber, remaining - (numberCount - i - 1) * maxNumber);
-        if (minForThisNumber > maxForThisNumber) { invalid = true; break; }
-        const num = getRandomInt(minForThisNumber, maxForThisNumber);
-        numbers.push(num);
-        operators.push('+');
-        remaining -= num;
+      for (let i = 0; i < numberCount; i++) {
+        numbers.push(getRandomInt(minNumber, maxNumber));
+        if (i < numberCount - 1) operators.push('+');
       }
-
-      if (invalid) continue;
-      if (remaining < minNumber || remaining > maxNumber) continue;
-      numbers.push(remaining);
     } else if (mode === MultiOperationMode.CHAIN_SUBTRACTION) {
       numbers = [];
       operators = [];

@@ -12,6 +12,7 @@ import {
   OperationType,
   DifficultyLevel,
   ComparisonSubType,
+  MulDivLevel,
   MultiOperationMode,
   SpecialPracticeType,
 } from 'src/types';
@@ -62,10 +63,12 @@ async function generate(config: WorksheetConfig): Promise<MathProblem[]> {
     config.difficultyRatios,
     config.problemType || ProblemType.STANDARD,
     config.specialPracticeType || SpecialPracticeType.NONE,
-    config.operation === OperationType.MULTI_OPERATIONS ? config.multiOperationConfig : undefined,
+    config.problemType === ProblemType.MULTI_STEP ? config.multiOperationConfig : undefined,
     config.excludeZeroProblems || false,
     config.displayMode,
     config.comparisonConfig,
+    config.mulDivLevel,
+    config.excludeCarry,
   );
 
   const shouldUseVerticalFactFamilyOrder =
@@ -110,6 +113,10 @@ async function generate(config: WorksheetConfig): Promise<MathProblem[]> {
     numberBondBlankIndex: p.numberBondBlankIndex,
     isComparison: p.isComparison || false,
     comparisonData: p.comparisonData,
+    isColumnArithmetic: (p as any).isColumnArithmetic || false,
+    columnTop: (p as any).columnTop,
+    columnBottom: (p as any).columnBottom,
+    columnOp: (p as any).columnOp,
   }));
 }
 
@@ -124,10 +131,37 @@ function deriveWorksheetTitle(config: WorksheetConfig): string {
     return `零的魔法练习 ${rangeStr}`;
   }
   if (config.specialPracticeType === SpecialPracticeType.FACT_FAMILY) {
-    return `加减一家人 ${rangeStr}`;
+    const isFFMulDiv = config.operation === OperationType.MULTIPLICATION
+      || config.operation === OperationType.DIVISION
+      || config.operation === OperationType.MULT_DIV_MIXED;
+    const ffDiff = isFFMulDiv && config.mulDivLevel
+      ? (config.mulDivLevel === MulDivLevel.ONE_DIGIT ? '1位数'
+        : config.mulDivLevel === MulDivLevel.ONE_BY_TWO ? '1位数×2位数'
+        : config.mulDivLevel === MulDivLevel.TWO_DIGIT ? '2位数'
+        : '3位数')
+      : rangeStr;
+    return isFFMulDiv ? `乘除一家人 ${ffDiff}` : `加减一家人 ${ffDiff}`;
   }
   if (config.specialPracticeType === SpecialPracticeType.NUMBER_BOND) {
     return `数字分解小乐园 ${rangeStr}`;
+  }
+  if (config.specialPracticeType === SpecialPracticeType.COLUMN_ARITHMETIC) {
+    const opLabel = config.operation === OperationType.ADDITION ? '加法'
+      : config.operation === OperationType.SUBTRACTION ? '减法'
+      : config.operation === OperationType.MULTIPLICATION ? '乘法'
+      : config.operation === OperationType.DIVISION ? '除法'
+      : config.operation === OperationType.MULT_DIV_MIXED ? '乘除法'
+      : '加减法';
+    const isMulDiv2 = config.operation === OperationType.MULTIPLICATION
+      || config.operation === OperationType.DIVISION
+      || config.operation === OperationType.MULT_DIV_MIXED;
+    const diffLabel2 = isMulDiv2 && config.mulDivLevel
+      ? (config.mulDivLevel === MulDivLevel.ONE_DIGIT ? '1位数'
+        : config.mulDivLevel === MulDivLevel.ONE_BY_TWO ? '1位数×2位数'
+        : config.mulDivLevel === MulDivLevel.TWO_DIGIT ? '2位数'
+        : '3位数')
+      : rangeStr;
+    return `${diffLabel2}${opLabel}列竖式`;
   }
   if (config.specialPracticeType === SpecialPracticeType.COMPARISON && config.comparisonConfig) {
     const subLabel = config.comparisonConfig.subType === ComparisonSubType.MAGNITUDE ? '比大小' : '比多少';
@@ -136,7 +170,7 @@ function deriveWorksheetTitle(config: WorksheetConfig): string {
 
   // Word problem display mode
   if (config.displayMode === DisplayMode.WORD_PROBLEM) {
-    if (config.operation === OperationType.MULTI_OPERATIONS) {
+    if (config.problemType === ProblemType.MULTI_STEP) {
       const mode = config.multiOperationConfig?.mode;
       const msLabel = mode === MultiOperationMode.CHAIN_ADDITION ? '连加'
         : mode === MultiOperationMode.CHAIN_SUBTRACTION ? '连减'
@@ -150,7 +184,7 @@ function deriveWorksheetTitle(config: WorksheetConfig): string {
   }
 
   // Multi operations
-  if (config.operation === OperationType.MULTI_OPERATIONS) {
+  if (config.problemType === ProblemType.MULTI_STEP) {
     const mode = config.multiOperationConfig?.mode;
     const opLabel = mode === MultiOperationMode.CHAIN_ADDITION ? '连加'
       : mode === MultiOperationMode.CHAIN_SUBTRACTION ? '连减'
@@ -170,11 +204,25 @@ function deriveWorksheetTitle(config: WorksheetConfig): string {
       case OperationType.MULTIPLICATION: return '乘法';
       case OperationType.DIVISION: return '除法';
       case OperationType.MULT_DIV_MIXED: return '乘除混合';
+      case OperationType.ALL: return '四则运算';
       default: return '加减混合';
     }
   };
-  const typeSuffix = config.problemType === ProblemType.FILL_BLANK ? '填空' : '练习';
-  return `${getOpLabel()}${typeSuffix} ${rangeStr}`;
+  const isMulDivOp = config.operation === OperationType.MULTIPLICATION
+    || config.operation === OperationType.DIVISION
+    || config.operation === OperationType.MULT_DIV_MIXED
+    || config.operation === OperationType.ALL;
+  const diffLabel = isMulDivOp && config.mulDivLevel
+    ? (config.mulDivLevel === MulDivLevel.ONE_DIGIT ? '1位数'
+      : config.mulDivLevel === MulDivLevel.ONE_BY_TWO ? '1位数×2位数'
+      : config.mulDivLevel === MulDivLevel.TWO_DIGIT ? '2位数'
+      : '3位数')
+    : rangeStr;
+  const pt = config.problemType as ProblemType;
+  const typeSuffix = pt === ProblemType.FILL_BLANK ? '填空'
+    : pt === ProblemType.MULTI_STEP ? '多步'
+    : '练习';
+  return `${getOpLabel()}${typeSuffix} ${diffLabel}`;
 }
 
 const Preview: React.FC<{ config: WorksheetConfig; problems: MathProblem[]; pdfContainerRef?: React.RefObject<HTMLDivElement | null> }> = ({
@@ -227,11 +275,13 @@ export const mathGenieTool: WorksheetTool<WorksheetConfig, MathProblem> = {
     route: '/math-genie',
   },
   deriveContentColumns: (config) => {
+    if (config.specialPracticeType === SpecialPracticeType.COLUMN_ARITHMETIC) return 3;
     if (config.specialPracticeType === SpecialPracticeType.COMPARISON) {
       return config.displayMode === DisplayMode.EMOJI ? 2 : config.textColumns || 1;
     }
     if (config.displayMode === DisplayMode.WORD_PROBLEM) return 1;
     if (config.displayMode === DisplayMode.EMOJI) return 2;
+    if (config.problemType === ProblemType.MULTI_STEP) return 1;
     return config.textColumns || 2;
   },
 };

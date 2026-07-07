@@ -40,6 +40,7 @@ export enum OperationType {
   MULTIPLICATION = 'multiplication',
   DIVISION = 'division',
   MULT_DIV_MIXED = 'mult_div_mixed',
+  ALL = 'all',
   MULTI_OPERATIONS = 'multi_operations'
 }
 
@@ -52,6 +53,7 @@ export enum DisplayMode {
 export enum ProblemType {
   STANDARD = 'standard', // 7 + 3 = 10
   FILL_BLANK = 'fill_blank', // 7 + _ = 10, _ + 3 = 10, 8 - _ = 4, _ - 10 = 2
+  MULTI_STEP = 'multi_step', // 2 + 3 + 4 = 9
 }
 
 export enum SpecialPracticeType {
@@ -60,6 +62,7 @@ export enum SpecialPracticeType {
   FACT_FAMILY = 'fact_family',
   NUMBER_BOND = 'number_bond',
   COMPARISON = 'comparison',
+  COLUMN_ARITHMETIC = 'column_arithmetic',
 }
 
 export enum ComparisonSubType {
@@ -112,6 +115,11 @@ export interface MathProblem {
   // 比较题
   isComparison?: boolean;
   comparisonData?: ComparisonData;
+  // 列竖式
+  isColumnArithmetic?: boolean;
+  columnTop?: number;
+  columnBottom?: number;
+  columnOp?: string;
 }
 
 export interface ComparisonData {
@@ -121,6 +129,13 @@ export interface ComparisonData {
   relation: '>' | '<' | '=';
   difference: number;
   wordProblemText?: string;
+}
+
+export enum MulDivLevel {
+  ONE_DIGIT = 'one_digit',
+  ONE_BY_TWO = 'one_by_two',
+  TWO_DIGIT = 'two_digit',
+  THREE_DIGIT = 'three_digit',
 }
 
 export interface WorksheetConfig {
@@ -135,6 +150,8 @@ export interface WorksheetConfig {
   problemsPerPage?: number; // 每页题数（8–30），与 columns 解耦
   customDifficulty?: CustomDifficultyRange;
   difficultyRatios?: DifficultyRatios;
+  mulDivLevel?: MulDivLevel;
+  excludeCarry?: boolean; // 列竖式加减法：仅生成进位/退位题
   problemType?: ProblemType; // 题目类型
   specialPracticeType?: SpecialPracticeType; // 专项练习类型
   multiOperationConfig?: MultiOperationConfig; // 多重运算配置

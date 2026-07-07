@@ -1,9 +1,9 @@
 import type { ProblemType,
+  OperationType,
   MultiOperationConfig} from 'src/types';
 
 import {
   DisplayMode,
-  OperationType,
   DifficultyLevel,
   SpecialPracticeType,
 } from 'src/types';
@@ -93,8 +93,9 @@ function getMinCellHeightText(
   multiOperationConfig?: MultiOperationConfig,
 ): number {
   if (specialPracticeType === SpecialPracticeType.NUMBER_BOND) return 47;
+  if (specialPracticeType === SpecialPracticeType.COLUMN_ARITHMETIC) return 32;
   if (specialPracticeType === SpecialPracticeType.COMPARISON) return 22;
-  if (operation === OperationType.MULTI_OPERATIONS && multiOperationConfig) {
+  if (multiOperationConfig) {
     if (multiOperationConfig.numberCount >= 5) return 18;
     return 20;
   }

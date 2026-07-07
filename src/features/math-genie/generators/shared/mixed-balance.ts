@@ -63,6 +63,31 @@ export function selectBalancedMixedProblems(
     return selected.sort(() => Math.random() - 0.5);
   }
 
+  if (operation === 'all') {
+    const additions = allProblems.filter((p) => p.op === '+').sort(() => Math.random() - 0.5);
+    const subtractions = allProblems.filter((p) => p.op === '-').sort(() => Math.random() - 0.5);
+    const multiplications = allProblems.filter((p) => p.op === '×').sort(() => Math.random() - 0.5);
+    const divisions = allProblems.filter((p) => p.op === '÷').sort(() => Math.random() - 0.5);
+    const each = Math.floor(targetCount / 4);
+    const extra = targetCount - each * 4;
+    const selected: RawMathProblem[] = [
+      ...additions.slice(0, each + (extra > 0 ? 1 : 0)),
+      ...subtractions.slice(0, each + (extra > 1 ? 1 : 0)),
+      ...multiplications.slice(0, each + (extra > 2 ? 1 : 0)),
+      ...divisions.slice(0, each),
+    ];
+    if (selected.length < targetCount) {
+      const remaining = [
+        ...additions.slice(each + (extra > 0 ? 1 : 0)),
+        ...subtractions.slice(each + (extra > 1 ? 1 : 0)),
+        ...multiplications.slice(each + (extra > 2 ? 1 : 0)),
+        ...divisions.slice(each),
+      ].sort(() => Math.random() - 0.5);
+      selected.push(...remaining.slice(0, targetCount - selected.length));
+    }
+    return selected.sort(() => Math.random() - 0.5);
+  }
+
   const additions = allProblems.filter((problem) => problem.op === '+').sort(() => Math.random() - 0.5);
   const subtractions = allProblems.filter((problem) => problem.op === '-').sort(() => Math.random() - 0.5);
   const { additionCount, subtractionCount } = getMixedTargetCounts(targetCount);

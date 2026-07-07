@@ -1,6 +1,6 @@
 import type { DifficultyRatios, MultiOperationConfig, CustomDifficultyRange } from 'src/types';
 
-import { ProblemType, DisplayMode, OperationType, DifficultyLevel, ComparisonSubType, MultiOperationMode, SpecialPracticeType } from 'src/types';
+import { ProblemType, DisplayMode, MulDivLevel, OperationType, DifficultyLevel, ComparisonSubType, MultiOperationMode, SpecialPracticeType } from 'src/types';
 
 import { generateFillBlankProblems } from './fill-blank';
 import { generateMultiOperationProblems } from './multi-op';
@@ -9,6 +9,7 @@ import { generateComparisonProblems } from './special-practice/comparison';
 import { generateFactFamilyProblems } from './special-practice/fact-family';
 import { generateNumberBondProblems } from './special-practice/number-bond';
 import { generateWordProblems, generateMultiStepWordProblems } from './word-problem';
+import { generateColumnArithmeticProblems } from './special-practice/column-arithmetic';
 import { generateProblemsForDifficulty, generateProblemsForCustomRange } from './standard';
 import { THEME_EMOJIS, THEME_TITLES, isChineseTheme, problemContainsZero } from './shared/types';
 import { getMixedTargetCounts, getMulDivMixedTargetCounts, selectBalancedMixedProblems } from './shared/mixed-balance';
@@ -17,6 +18,18 @@ import type { RawMathProblem } from './shared/types';
 
 export { generateMathProblems };
 export type { RawMathProblem };
+
+function operationToMultiMode(op: OperationType): MultiOperationMode {
+  switch (op) {
+    case OperationType.ADDITION: return MultiOperationMode.CHAIN_ADDITION;
+    case OperationType.SUBTRACTION: return MultiOperationMode.CHAIN_SUBTRACTION;
+    case OperationType.MULTIPLICATION: return MultiOperationMode.CHAIN_MULTIPLICATION;
+    case OperationType.DIVISION: return MultiOperationMode.CHAIN_DIVISION;
+    case OperationType.MULT_DIV_MIXED: return MultiOperationMode.MULT_DIV_MIXED_CHAIN;
+    case OperationType.ALL: return MultiOperationMode.ALL_MIXED;
+    default: return MultiOperationMode.MIXED_OPERATIONS;
+  }
+}
 
 async function generateMathProblems(
   theme: string,
@@ -31,6 +44,8 @@ async function generateMathProblems(
   excludeZeroProblems: boolean = false,
   displayMode: DisplayMode = DisplayMode.TEXT,
   comparisonConfig?: { subType: ComparisonSubType },
+  mulDivLevel: MulDivLevel = MulDivLevel.ONE_DIGIT,
+  excludeCarry: boolean = false,
 ): Promise<{ problems: RawMathProblem[]; titleSuggestion: string }> {
   try {
     const activeCustomDifficulty = difficulty === DifficultyLevel.CUSTOM ? customDifficulty : undefined;
@@ -46,10 +61,11 @@ async function generateMathProblems(
       const titleSuggestion = isChineseTheme(theme) ? '应用题练习' : 'Word Problems';
 
       // Multi-step word problems (连加/连减/加减混合)
-      if (operation === OperationType.MULTI_OPERATIONS && multiOperationConfig) {
-        const msMode = multiOperationConfig.mode === MultiOperationMode.CHAIN_ADDITION
+      if (problemType === ProblemType.MULTI_STEP && multiOperationConfig) {
+        const mode = operationToMultiMode(operation);
+        const msMode = mode === MultiOperationMode.CHAIN_ADDITION
           ? 'chain_addition' as const
-          : multiOperationConfig.mode === MultiOperationMode.CHAIN_SUBTRACTION
+          : mode === MultiOperationMode.CHAIN_SUBTRACTION
           ? 'chain_subtraction' as const
           : 'mixed' as const;
 
@@ -119,7 +135,7 @@ async function generateMathProblems(
       }
     }
 
-    if (operation === OperationType.MULTI_OPERATIONS && multiOperationConfig) {
+    if (problemType === ProblemType.MULTI_STEP && multiOperationConfig) {
       const themeKey = theme.toLowerCase();
       const emojis = THEME_EMOJIS[themeKey] || ['⭐', '🌟', '✨', '💫', '🪐', '🌠', '🔭', '🛸'];
 
@@ -129,7 +145,7 @@ async function generateMathProblems(
       const multiProblems = generateMultiOperationProblems(
         count,
         difficulty,
-        multiOperationConfig.mode,
+        operationToMultiMode(operation),
         multiOperationConfig.numberCount,
         emojis,
         activeCustomDifficulty,
@@ -160,7 +176,7 @@ async function generateMathProblems(
       const zeroProblems = generateZeroDrillProblems(
         count,
         difficulty,
-        operation === OperationType.MULTI_OPERATIONS ? OperationType.MIXED : operation,
+        problemType === ProblemType.MULTI_STEP ? OperationType.MIXED : operation,
         emojis,
         activeCustomDifficulty,
         usedProblems,
@@ -168,6 +184,22 @@ async function generateMathProblems(
         excludeZeroProblems
       );
       return { problems: zeroProblems, titleSuggestion };
+    }
+
+    if (specialPracticeType === SpecialPracticeType.COLUMN_ARITHMETIC) {
+      const usedCol = new Set<string>();
+      const colProblems = generateColumnArithmeticProblems(
+        count,
+        difficulty,
+        problemType === ProblemType.MULTI_STEP ? OperationType.MIXED : operation,
+        emojis,
+        activeCustomDifficulty,
+        usedCol,
+        excludeZeroProblems,
+        mulDivLevel,
+        excludeCarry
+      );
+      return { problems: colProblems, titleSuggestion };
     }
 
     if (specialPracticeType === SpecialPracticeType.FACT_FAMILY) {
@@ -179,7 +211,8 @@ async function generateMathProblems(
         activeCustomDifficulty,
         usedFamilies,
         problemType,
-        excludeZeroProblems
+        excludeZeroProblems,
+        operation
       );
       return { problems: familyProblems, titleSuggestion };
     }
@@ -386,7 +419,7 @@ async function generateMathProblems(
       excludeZeroProblems
     );
 
-    if (operation === OperationType.MIXED || operation === OperationType.MULT_DIV_MIXED) {
+    if (operation === OperationType.MIXED || operation === OperationType.MULT_DIV_MIXED || operation === OperationType.ALL) {
       problems.push(...selectBalancedMixedProblems(allPossibleProblems, targetCount, operation));
     } else {
       const shuffled = allPossibleProblems.sort(() => Math.random() - 0.5);
@@ -410,6 +443,8 @@ async function generateMathProblems(
         const currentMultiplications = problems.filter((p) => p.op === '×').length;
         fallbackOperation =
           currentMultiplications < multiplicationCount ? OperationType.MULTIPLICATION : OperationType.DIVISION;
+      } else if (operation === OperationType.ALL) {
+        fallbackOperation = [OperationType.ADDITION, OperationType.SUBTRACTION, OperationType.MULTIPLICATION, OperationType.DIVISION][Math.floor(Math.random() * 4)];
       }
 
       const problem = generateRandomProblem(
@@ -470,6 +505,13 @@ function calculateMaxUniqueProblems(maxNumber: number, operation: OperationType)
       calculateMaxUniqueProblems(maxNumber, OperationType.MULTIPLICATION) +
       calculateMaxUniqueProblems(maxNumber, OperationType.DIVISION)
     );
+  } else if (operation === OperationType.ALL) {
+    return (
+      calculateMaxUniqueProblems(maxNumber, OperationType.ADDITION) +
+      calculateMaxUniqueProblems(maxNumber, OperationType.SUBTRACTION) +
+      calculateMaxUniqueProblems(maxNumber, OperationType.MULTIPLICATION) +
+      calculateMaxUniqueProblems(maxNumber, OperationType.DIVISION)
+    );
   } else {
     return (
       calculateMaxUniqueProblems(maxNumber, OperationType.ADDITION) +
@@ -490,7 +532,7 @@ function generateAllPossibleProblems(
   const actualMax = customDifficulty ? customDifficulty.max : maxNumber;
   const actualMin = customDifficulty ? customDifficulty.min : 1;
 
-  if (operation === OperationType.ADDITION || operation === OperationType.MIXED) {
+  if (operation === OperationType.ADDITION || operation === OperationType.MIXED || operation === OperationType.ALL) {
     if (customDifficulty) {
       for (let sum = Math.max(0, actualMin); sum <= actualMax; sum++) {
         for (let a = 0; a <= sum; a++) {
@@ -519,7 +561,7 @@ function generateAllPossibleProblems(
     }
   }
 
-  if (operation === OperationType.SUBTRACTION || operation === OperationType.MIXED) {
+  if (operation === OperationType.SUBTRACTION || operation === OperationType.MIXED || operation === OperationType.ALL) {
     if (customDifficulty) {
       const generated = generateProblemsForCustomRange(
         Math.min(1000, (actualMax + 1) * (actualMax + 2) / 2),
@@ -544,7 +586,7 @@ function generateAllPossibleProblems(
     }
   }
 
-  if (operation === OperationType.MULTIPLICATION || operation === OperationType.MULT_DIV_MIXED) {
+  if (operation === OperationType.MULTIPLICATION || operation === OperationType.MULT_DIV_MIXED || operation === OperationType.ALL) {
     if (customDifficulty) {
       const generated = generateProblemsForCustomRange(
         Math.min(1000, (actualMax + 1) * (actualMax + 2)),
@@ -569,7 +611,7 @@ function generateAllPossibleProblems(
     }
   }
 
-  if (operation === OperationType.DIVISION || operation === OperationType.MULT_DIV_MIXED) {
+  if (operation === OperationType.DIVISION || operation === OperationType.MULT_DIV_MIXED || operation === OperationType.ALL) {
     if (customDifficulty) {
       const generated = generateProblemsForCustomRange(
         Math.min(1000, (actualMax + 1) * (actualMax + 1)),
@@ -623,6 +665,15 @@ function generateRandomProblem(
       op = '-'; genOp = OperationType.SUBTRACTION;
     } else if (operation === OperationType.MULTIPLICATION) {
       op = '×'; genOp = OperationType.MULTIPLICATION;
+    } else if (operation === OperationType.ALL) {
+      const allOps: Array<{ op: '+' | '-' | '×' | '÷'; genOp: OperationType }> = [
+        { op: '+', genOp: OperationType.ADDITION },
+        { op: '-', genOp: OperationType.SUBTRACTION },
+        { op: '×', genOp: OperationType.MULTIPLICATION },
+        { op: '÷', genOp: OperationType.DIVISION },
+      ];
+      const pick = allOps[Math.floor(Math.random() * 4)];
+      op = pick.op; genOp = pick.genOp;
     } else {
       op = '÷'; genOp = OperationType.DIVISION;
     }

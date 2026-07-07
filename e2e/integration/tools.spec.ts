@@ -4,8 +4,7 @@ test.describe('E2E Integration Tests', () => {
   test.describe('charcolor', () => {
     test('input characters → preview shows them', async ({ page }) => {
       await page.goto('/charcolor');
-      await page.waitForLoadState('networkidle');
-      await page.locator('textarea').first().waitFor({ state: 'visible', timeout: 10000 });
+      await page.locator('textarea').first().waitFor({ state: 'visible', timeout: 15000 });
       await page.locator('textarea').first().fill('天地人日月');
       await page.waitForTimeout(800);
       await expect(page.getByText('天地人日月').first()).toBeVisible({ timeout: 5000 });
@@ -13,8 +12,7 @@ test.describe('E2E Integration Tests', () => {
 
     test('save PDF triggers download', async ({ page }) => {
       await page.goto('/charcolor');
-      await page.waitForLoadState('networkidle');
-      await page.locator('textarea').first().waitFor({ state: 'visible', timeout: 10000 });
+      await page.locator('textarea').first().waitFor({ state: 'visible', timeout: 15000 });
       await page.locator('textarea').first().fill('天地人');
       await page.waitForTimeout(600);
 

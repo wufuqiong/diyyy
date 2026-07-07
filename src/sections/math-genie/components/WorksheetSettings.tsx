@@ -12,16 +12,12 @@ import {
   Alert,
   Stack,
   Button,
-  Select,
   Slider,
   Switch,
   Tooltip,
-  MenuItem,
   Snackbar,
   TextField,
   Typography,
-  InputLabel,
-  FormControl,
   Autocomplete,
   ToggleButton,
   FormControlLabel,
@@ -33,6 +29,7 @@ import { derivePageLayout, calculateOptimalProblemsPerPage } from 'src/features/
 import {
   DisplayMode,
   ProblemType,
+  MulDivLevel,
   OperationType,
   DifficultyLevel,
   ComparisonSubType,
@@ -131,6 +128,7 @@ const WorksheetSettings: React.FC<Props> = ({
     multiOperationConfig,
     autoPreview = true,
     comparisonConfig,
+    mulDivLevel = MulDivLevel.ONE_DIGIT,
   } = config;
 
   const { t } = useTranslation();
@@ -139,14 +137,17 @@ const WorksheetSettings: React.FC<Props> = ({
   const isSpecialSelected = specialPracticeType !== SpecialPracticeType.NONE;
   const isComparisonSelected = specialPracticeType === SpecialPracticeType.COMPARISON;
   const isNumberBond = specialPracticeType === SpecialPracticeType.NUMBER_BOND;
+  const isColumnArithmetic = specialPracticeType === SpecialPracticeType.COLUMN_ARITHMETIC;
+  const isMulDiv = operation === OperationType.MULTIPLICATION
+    || operation === OperationType.DIVISION
+    || operation === OperationType.MULT_DIV_MIXED;
   const hideArithmeticControls = isComparisonSelected || isNumberBond;
   const isEmoji = displayMode === DisplayMode.EMOJI;
   const isWordProblem = displayMode === DisplayMode.WORD_PROBLEM;
-  const isMultiOp = operation === OperationType.MULTI_OPERATIONS;
+  const isMultiOp = activeProblemType === ProblemType.MULTI_STEP;
   const useMixMode = !!difficultyRatios;
 
   const [snack, setSnack] = useState<{ open: boolean; msg: string }>({ open: false, msg: '' });
-  const [showMultiOpPanel, setShowMultiOpPanel] = useState(false);
   const [emojiLimitConfirm, setEmojiLimitConfirm] = useState<{ open: boolean; pendingDisplayMode?: DisplayMode }>({ open: false });
   const notify = (msg: string) => setSnack({ open: true, msg });
 
@@ -210,7 +211,7 @@ const WorksheetSettings: React.FC<Props> = ({
       maxNum = customDifficulty.max;
     }
 
-    if (operation === OperationType.MULTI_OPERATIONS) {
+    if (activeProblemType === ProblemType.MULTI_STEP) {
       if (multiOperationConfig) {
         const { numberCount, mode } = multiOperationConfig;
         if (mode === MultiOperationMode.CHAIN_ADDITION) {
@@ -304,36 +305,21 @@ const WorksheetSettings: React.FC<Props> = ({
 
   const handleOperation = (next: OperationType | null) => {
     if (!next || next === operation) return;
-    const updates: Partial<WorksheetConfig> = { operation: next };
-    if (next === OperationType.MULTI_OPERATIONS) {
-      setShowMultiOpPanel(true);
-      const fixes: string[] = [];
-      if (isEmoji) {
-        updates.displayMode = DisplayMode.TEXT;
-        fixes.push('Display = Text');
-      }
-      if (activeProblemType === ProblemType.FILL_BLANK) {
-        updates.problemType = ProblemType.STANDARD;
-        fixes.push('Problem = Standard');
-      }
-      if (isSpecialSelected) {
-        updates.specialPracticeType = SpecialPracticeType.NONE;
-        fixes.push('Special = None');
-      }
-      if (fixes.length) notify(t('mathGenie.multiOpEnabled', { fixes: fixes.join(', ') }));
-    } else {
-      setShowMultiOpPanel(false);
-    }
-    onChange({ ...config, ...updates });
+    onChange({ ...config, operation: next });
   };
 
   const handleProblemType = (next: ProblemType | null) => {
     if (!next || next === activeProblemType) return;
     const updates: Partial<WorksheetConfig> = { problemType: next };
-    if (next === ProblemType.FILL_BLANK && isMultiOp) {
-      updates.operation = OperationType.ADDITION;
-      setShowMultiOpPanel(true); // keep panel visible during FILL_BLANK
-      notify(t('mathGenie.fillBlankNotCompatible'));
+    if (next === ProblemType.MULTI_STEP) {
+      if (isEmoji) updates.displayMode = DisplayMode.TEXT;
+      if (isSpecialSelected) updates.specialPracticeType = SpecialPracticeType.NONE;
+      updates.multiOperationConfig = {
+        mode: config.multiOperationConfig?.mode ?? MultiOperationMode.CHAIN_ADDITION,
+        numberCount: config.multiOperationConfig?.numberCount ?? 3,
+      };
+    } else if (activeProblemType === ProblemType.MULTI_STEP) {
+      updates.multiOperationConfig = undefined;
     }
     onChange({ ...config, ...updates });
   };
@@ -349,6 +335,10 @@ const WorksheetSettings: React.FC<Props> = ({
       updates.comparisonConfig = { subType: ComparisonSubType.MAGNITUDE };
       updates.displayMode = DisplayMode.TEXT;
       if (isMultiOp) updates.operation = OperationType.ADDITION;
+    } else if (next === SpecialPracticeType.COLUMN_ARITHMETIC) {
+      updates.displayMode = DisplayMode.TEXT;
+      updates.textColumns = 3;
+      if (isMultiOp) updates.problemType = ProblemType.STANDARD;
     } else if (next === SpecialPracticeType.NUMBER_BOND && displayMode !== DisplayMode.TEXT) {
       updates.displayMode = DisplayMode.TEXT;
     } else {
@@ -468,25 +458,41 @@ const WorksheetSettings: React.FC<Props> = ({
       )}
 
       <SettingCard label={t('mathGenie.sectionDifficulty')} toolColor={candyColors.blue}>
-        <SettingsField>
-          <ToggleButtonGroup
-            value={difficulty} exclusive fullWidth size="small"
-            onChange={(_, v) => handleDifficulty(v)}
-          >
-            <ToggleButton value={DifficultyLevel.EASY}>1–5</ToggleButton>
-            <ToggleButton value={DifficultyLevel.MEDIUM}>1–10</ToggleButton>
-            <ToggleButton value={DifficultyLevel.HARD}>1–20</ToggleButton>
-            <ToggleButton value={DifficultyLevel.CUSTOM}>{t('mathGenie.custom')}</ToggleButton>
-          </ToggleButtonGroup>
-        </SettingsField>
-        {difficulty === DifficultyLevel.CUSTOM && (
-          <SettingsField caption={t('mathGenie.customRangeHint', { min: customDifficulty?.min ?? 1, max: customDifficulty?.max ?? 20 })}>
-            <Slider
-              value={[customDifficulty?.min ?? 1, customDifficulty?.max ?? 20]}
-              onChange={handleCustomRange} min={1} max={100} step={1}
-              valueLabelDisplay="auto" disableSwap
-            />
+        {isMulDiv ? (
+          <SettingsField>
+            <ToggleButtonGroup
+              value={mulDivLevel} exclusive fullWidth size="small"
+              onChange={(_, v) => v && onChange({ ...config, mulDivLevel: v })}
+            >
+              <ToggleButton value={MulDivLevel.ONE_DIGIT}>{t('mathGenie.oneDigit')}</ToggleButton>
+              <ToggleButton value={MulDivLevel.ONE_BY_TWO}>{t('mathGenie.oneByTwo')}</ToggleButton>
+              <ToggleButton value={MulDivLevel.TWO_DIGIT}>{t('mathGenie.twoDigit')}</ToggleButton>
+              <ToggleButton value={MulDivLevel.THREE_DIGIT}>{t('mathGenie.threeDigit')}</ToggleButton>
+            </ToggleButtonGroup>
           </SettingsField>
+        ) : (
+          <>
+            <SettingsField>
+              <ToggleButtonGroup
+                value={difficulty} exclusive fullWidth size="small"
+                onChange={(_, v) => handleDifficulty(v)}
+              >
+                <ToggleButton value={DifficultyLevel.EASY}>1–5</ToggleButton>
+                <ToggleButton value={DifficultyLevel.MEDIUM}>1–10</ToggleButton>
+                <ToggleButton value={DifficultyLevel.HARD}>1–20</ToggleButton>
+                <ToggleButton value={DifficultyLevel.CUSTOM}>{t('mathGenie.custom')}</ToggleButton>
+              </ToggleButtonGroup>
+            </SettingsField>
+            {difficulty === DifficultyLevel.CUSTOM && (
+              <SettingsField caption={t('mathGenie.customRangeHint', { min: customDifficulty?.min ?? 1, max: customDifficulty?.max ?? 20 })}>
+                <Slider
+                  value={[customDifficulty?.min ?? 1, customDifficulty?.max ?? 20]}
+                  onChange={handleCustomRange} min={1} max={100} step={1}
+                  valueLabelDisplay="auto" disableSwap
+                />
+              </SettingsField>
+            )}
+          </>
         )}
       </SettingCard>
 
@@ -500,8 +506,8 @@ const WorksheetSettings: React.FC<Props> = ({
                   onChange={(_, v) => handleDisplayMode(v)}
                 >
                   <ToggleButton value={DisplayMode.TEXT}>📝 {t('mathGenie.textMode')}</ToggleButton>
-                  <ToggleButton value={DisplayMode.EMOJI} disabled={isNumberBond}>🎨 {t('mathGenie.emojiMode')}</ToggleButton>
-                  <ToggleButton value={DisplayMode.WORD_PROBLEM} disabled={isNumberBond}>📖 {t('mathGenie.wordProblem')}</ToggleButton>
+                  <ToggleButton value={DisplayMode.EMOJI} disabled={isNumberBond || isColumnArithmetic}>🎨 {t('mathGenie.emojiMode')}</ToggleButton>
+                  <ToggleButton value={DisplayMode.WORD_PROBLEM} disabled={isNumberBond || isColumnArithmetic}>📖 {t('mathGenie.wordProblem')}</ToggleButton>
                 </ToggleButtonGroup>
               </SettingsField>
 
@@ -644,19 +650,9 @@ const WorksheetSettings: React.FC<Props> = ({
                         <ToggleButton value={OperationType.MULTIPLICATION}>×</ToggleButton>
                         <ToggleButton value={OperationType.DIVISION}>÷</ToggleButton>
                         <ToggleButton value={OperationType.MULT_DIV_MIXED}>×÷</ToggleButton>
+                        <ToggleButton value={OperationType.ALL}>all</ToggleButton>
                       </>
                     )}
-                    <MaybeTooltip
-                      title={multiOpUnavailableReason}
-                      show={Boolean(multiOpUnavailableReason)}
-                    >
-                      <ToggleButton
-                        value={OperationType.MULTI_OPERATIONS}
-                        disabled={Boolean(multiOpUnavailableReason)}
-                      >
-                        {t('mathGenie.multi')}
-                      </ToggleButton>
-                    </MaybeTooltip>
                   </ToggleButtonGroup>
                 </SettingsField>
               )}
@@ -676,9 +672,48 @@ const WorksheetSettings: React.FC<Props> = ({
                     onChange={(_, v) => handleProblemType(v)}
                   >
                     <ToggleButton value={ProblemType.STANDARD}>7 + 3 = 10</ToggleButton>
-                    <ToggleButton value={ProblemType.FILL_BLANK}>7 + _ = 10</ToggleButton>
+                    <ToggleButton value={ProblemType.FILL_BLANK} disabled={isColumnArithmetic}>7 + _ = 10</ToggleButton>
+                    <ToggleButton value={ProblemType.MULTI_STEP} disabled={isColumnArithmetic || Boolean(multiOpUnavailableReason)}>
+                      {t('mathGenie.multiStep')}
+                    </ToggleButton>
                   </ToggleButtonGroup>
                 </SettingsField>
+              )}
+
+              {isMultiOp && multiOperationConfig && (
+                <Box
+                  sx={{
+                    p: 1.5,
+                    bgcolor: 'grey.50',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'grey.200',
+                  }}
+                >
+                  <SettingsField
+                    label={`${t('mathGenie.operands')}: ${multiOperationConfig.numberCount}`}
+                    caption={t('mathGenie.moreOperands')}
+                  >
+                    <Slider
+                      value={multiOperationConfig.numberCount}
+                      onChange={(_, v) =>
+                        onChange({
+                          ...config,
+                          multiOperationConfig: {
+                            ...multiOperationConfig,
+                            numberCount: v as number,
+                          },
+                        })
+                      }
+                      min={3}
+                      max={6}
+                      step={1}
+                      marks
+                      valueLabelDisplay="auto"
+                      disabled={!isMultiOp}
+                    />
+                  </SettingsField>
+                </Box>
               )}
 
               <SettingsField label={t('mathGenie.specialPractice')}>
@@ -709,95 +744,16 @@ const WorksheetSettings: React.FC<Props> = ({
                   <Tooltip title={t('mathGenie.numberBondTooltip')} arrow placement="top">
                     <ToggleButton value={SpecialPracticeType.NUMBER_BOND}>{t('mathGenie.numberBond')}</ToggleButton>
                   </Tooltip>
-                  <Tooltip title={t('mathGenie.comparisonPracticeTooltip')} arrow placement="top">
-                    <ToggleButton value={SpecialPracticeType.COMPARISON}>
-                      {t('mathGenie.comparisonPractice')}
-                    </ToggleButton>
-                  </Tooltip>
+                  {displayMode === DisplayMode.TEXT && (
+                    <Tooltip title={t('mathGenie.columnArithmeticTooltip')} arrow placement="top">
+                      <ToggleButton value={SpecialPracticeType.COLUMN_ARITHMETIC}>
+                        {t('mathGenie.columnArithmetic')}
+                      </ToggleButton>
+                    </Tooltip>
+                  )}
                 </ToggleButtonGroup>
               </SettingsField>
 
-              {showMultiOpPanel && multiOperationConfig && (
-                <Box
-                  sx={{
-                    p: 1.5,
-                    bgcolor: 'grey.50',
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'grey.200',
-                  }}
-                >
-                  <Stack spacing={2}>
-                    <SettingsField>
-                      <FormControl fullWidth size="small" disabled={!isMultiOp}>
-                        <InputLabel>{t('mathGenie.mode')}</InputLabel>
-                        <Select
-                          value={multiOperationConfig.mode}
-                          label={t('mathGenie.mode')}
-                          onChange={(e) =>
-                            onChange({
-                              ...config,
-                              multiOperationConfig: {
-                                ...multiOperationConfig,
-                                mode: e.target.value as MultiOperationMode,
-                              },
-                            })
-                          }
-                        >
-                          <MenuItem value={MultiOperationMode.CHAIN_ADDITION}>
-                            {t('mathGenie.chainAddition')}
-                          </MenuItem>
-                          <MenuItem value={MultiOperationMode.CHAIN_SUBTRACTION}>
-                            {t('mathGenie.chainSubtraction')}
-                          </MenuItem>
-                          <MenuItem value={MultiOperationMode.MIXED_OPERATIONS}>
-                            {t('mathGenie.mixedOperations')}
-                          </MenuItem>
-                          {displayMode === DisplayMode.TEXT && (
-                            [
-                              <MenuItem key="cm" value={MultiOperationMode.CHAIN_MULTIPLICATION}>
-                                {t('mathGenie.chainMultiplication')}
-                              </MenuItem>,
-                              <MenuItem key="cd" value={MultiOperationMode.CHAIN_DIVISION}>
-                                {t('mathGenie.chainDivision')}
-                              </MenuItem>,
-                              <MenuItem key="mxd" value={MultiOperationMode.MULT_DIV_MIXED_CHAIN}>
-                                {t('mathGenie.mulDivMixedChain')}
-                              </MenuItem>,
-                              <MenuItem key="am" value={MultiOperationMode.ALL_MIXED}>
-                                {t('mathGenie.allMixed')}
-                              </MenuItem>,
-                            ]
-                          )}
-                        </Select>
-                      </FormControl>
-                    </SettingsField>
-                    <SettingsField
-                      label={`${t('mathGenie.operands')}: ${multiOperationConfig.numberCount}`}
-                      caption={t('mathGenie.moreOperands')}
-                    >
-                      <Slider
-                        value={multiOperationConfig.numberCount}
-                        onChange={(_, v) =>
-                          onChange({
-                            ...config,
-                            multiOperationConfig: {
-                              ...multiOperationConfig,
-                              numberCount: v as number,
-                            },
-                          })
-                        }
-                        min={3}
-                        max={6}
-                        step={1}
-                        marks
-                        valueLabelDisplay="auto"
-                        disabled={!isMultiOp}
-                      />
-                    </SettingsField>
-                  </Stack>
-                </Box>
-              )}
           </SettingCard>
           )}
 
@@ -819,6 +775,20 @@ const WorksheetSettings: React.FC<Props> = ({
                 {t('mathGenie.excludeZerosHint')}
               </Typography>
 
+              {isColumnArithmetic && !isMulDiv && (
+                <FormControlLabel
+                  sx={{ ml: 0 }}
+                  control={
+                    <Switch
+                      checked={config.excludeCarry || false}
+                      onChange={(e) => onChange({ ...config, excludeCarry: e.target.checked })}
+                      color="primary"
+                      size="small"
+                    />
+                  }
+                  label={<Typography variant="body2">{t('mathGenie.excludeCarry')}</Typography>}
+                />
+              )}
             </Stack>
           </SettingCard>
 

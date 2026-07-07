@@ -16,7 +16,7 @@ interface Props {
 }
 
 const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAnswers, displayMode, pageFontSize }) => {
-  const { operation, num1, num2, emoji1, emoji2, answer, problemType, blankPosition, isMultiOperation, numbers, operators, emojis, isNumberBond, numberBondWhole, numberBondParts, numberBondBlankIndex, isWordProblem, wordProblemText, wordProblemOperation, wordProblemMeasure, isComparison, comparisonData } = problem;
+  const { operation, num1, num2, emoji1, emoji2, answer, problemType, blankPosition, isMultiOperation, numbers, operators, emojis, isNumberBond, numberBondWhole, numberBondParts, numberBondBlankIndex, isWordProblem, wordProblemText, wordProblemOperation, wordProblemMeasure, isComparison, comparisonData, isColumnArithmetic, columnTop, columnBottom, columnOp } = problem;
 
   // Compute max digit length across all relevant numbers
   const maxDigits = (vals: number[]) => Math.max(...vals.map((v) => String(v).length));
@@ -41,9 +41,9 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
 
   const fontSize = getFontSize();
   const fontSizeNum = parseFloat(fontSize);
-  const blankSize = Math.max(28, Math.round(fontSizeNum * 24));
-  const numMinW = Math.round(fontSizeNum * 24);
-  const opMinW = Math.round(fontSizeNum * 14);
+  const blankSize = Math.max(24, Math.round(fontSizeNum * 20));
+  const numMinW = Math.round(fontSizeNum * 20);
+  const opMinW = Math.round(fontSizeNum * 12);
 
   const answerH = Math.round(fontSizeNum * 20);
 
@@ -69,6 +69,10 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
 
   if (isComparison && comparisonData) {
     return <ComparisonRenderer data={comparisonData} showAnswers={showAnswers} index={index} displayMode={displayMode} />;
+  }
+
+  if (isColumnArithmetic && columnTop !== undefined && columnBottom !== undefined && columnOp) {
+    return <ColumnArithmeticRenderer top={columnTop} bottom={columnBottom} op={columnOp} answer={answer} showAnswers={showAnswers} />;
   }
 
   const blankSquareSx = {
@@ -248,26 +252,37 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
     </Box>
   );
 
-  const renderEquationBoxes = (operatorSymbol: '+' | '-' | '×' | '÷') => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <Box sx={{ width: 44, height: 44, border: `3px solid ${colors.fillBlankBox}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: colors.inkSecondary }}>
-        {showAnswers ? num1 : ''}
+  const renderEquationBoxes = (operatorSymbol: '+' | '-' | '×' | '÷') => {
+    const digitW = (n: number) => Math.max(22, Math.round(String(n).length * fontSizeNum * 8 + 6));
+    const n1w = digitW(num1);
+    const n2w = digitW(num2);
+    const aw = digitW(answer);
+    const opW = Math.max(18, Math.round(n1w * 0.7));
+    const eqW = Math.round(fontSizeNum * 10);
+    const eqH = Math.max(3, Math.round(fontSizeNum * 3));
+    const boxH = Math.round(fontSizeNum * 18);
+    const bFont = Math.round(fontSizeNum * 13);
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+        <Box sx={{ width: n1w, height: boxH, border: `2px solid ${colors.fillBlankBox}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: bFont, fontWeight: 'bold', color: colors.inkSecondary, borderRadius: 0.5 }}>
+          {showAnswers ? num1 : ''}
+        </Box>
+        <Box sx={{ width: opW, height: opW, border: `2px solid ${colors.emojiCircle}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: bFont, fontWeight: 'bold', color: colors.inkSecondary, flexShrink: 0 }}>
+          {showAnswers ? operatorSymbol : ''}
+        </Box>
+        <Box sx={{ width: n2w, height: boxH, border: `2px solid ${colors.fillBlankBox}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: bFont, fontWeight: 'bold', color: colors.inkSecondary, borderRadius: 0.5 }}>
+          {showAnswers ? num2 : ''}
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px', mx: 0.2 }}>
+          <Box sx={{ width: eqW, height: eqH, backgroundColor: colors.factFamilyBar, border: `2px solid ${colors.ink}`, borderRadius: '3px' }} />
+          <Box sx={{ width: eqW, height: eqH, backgroundColor: colors.factFamilyBar, border: `2px solid ${colors.ink}`, borderRadius: '3px' }} />
+        </Box>
+        <Box sx={{ width: aw, height: boxH, border: `2px solid ${colors.fillBlankBox}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: bFont, fontWeight: 'bold', color: colors.inkSecondary, borderRadius: 0.5 }}>
+          {showAnswers ? answer : ''}
+        </Box>
       </Box>
-      <Box sx={{ width: 44, height: 44, border: `3px solid ${colors.emojiCircle}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: colors.inkSecondary }}>
-        {showAnswers ? operatorSymbol : ''}
-      </Box>
-      <Box sx={{ width: 44, height: 44, border: `3px solid ${colors.fillBlankBox}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: colors.inkSecondary }}>
-        {showAnswers ? num2 : ''}
-      </Box>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', mx: 0.5 }}>
-        <Box sx={{ width: 24, height: 8, backgroundColor: colors.factFamilyBar, border: `2px solid ${colors.ink}`, borderRadius: '4px' }} />
-        <Box sx={{ width: 24, height: 8, backgroundColor: colors.factFamilyBar, border: `2px solid ${colors.ink}`, borderRadius: '4px' }} />
-      </Box>
-      <Box sx={{ width: 44, height: 44, border: `3px solid ${colors.fillBlankBox}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold', color: colors.inkSecondary }}>
-        {showAnswers ? answer : ''}
-      </Box>
-    </Box>
-  );
+    );
+  };
 
   // EMOJI mode display
   if (displayMode === DisplayMode.EMOJI) {
@@ -404,7 +419,7 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
       }}
     >
       {problemType === ProblemType.FILL_BLANK ? (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: digitCount > 1 ? 1 : 2, justifyContent: 'center', flexWrap: 'nowrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center', flexWrap: 'nowrap' }}>
           {blankPosition === 'first' ? (
             <>
               {showAnswers ? (
@@ -733,6 +748,138 @@ const DifferenceComparison: React.FC<{ data: import('src/types').ComparisonData;
         </Box>
       </Box>
     </ComparisonCard>
+  );
+};
+
+const COLUMN_FONT_SIZE = 26;
+const COLUMN_LINE_H = 36;
+const COLUMN_DIGIT_W = 36;
+const COLUMN_GAP = 6;
+
+const DigitBox: React.FC<{ ch: string; color?: string }> = ({ ch, color = '#333' }) => (
+  <Box sx={{ width: COLUMN_DIGIT_W, height: COLUMN_LINE_H, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <Typography sx={{ fontSize: COLUMN_FONT_SIZE, fontWeight: 600, color, lineHeight: 1 }}>{ch}</Typography>
+  </Box>
+);
+
+const DigitRow: React.FC<{ digits: string; padLeft?: number; color?: string }> = ({ digits, padLeft = 0, color }) => (
+  <Box sx={{ display: 'flex', gap: `${COLUMN_GAP}px`, justifyContent: 'flex-end' }}>
+    {padLeft > 0 && <Box sx={{ width: COLUMN_DIGIT_W * padLeft + COLUMN_GAP * padLeft }} />}
+    {digits.split('').map((ch, i) => (
+      <DigitBox key={i} ch={ch} color={color} />
+    ))}
+  </Box>
+);
+
+const ColumnArithmeticRenderer: React.FC<{
+  top: number;
+  bottom: number;
+  op: string;
+  answer: number;
+  showAnswers: boolean;
+}> = ({ top, bottom, op, answer, showAnswers }) => {
+  const topStr = String(top);
+  const botStr = String(bottom);
+  const ansStr = String(answer);
+  const isDiv = op === '÷';
+
+  if (isDiv) {
+    // Long division:  4 ) 24  with overline above dividend
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {/* Answer row: quotient above overline, aligned over dividend */}
+        <Box sx={{ display: 'flex', gap: `${COLUMN_GAP}px`, pl: `${COLUMN_DIGIT_W * botStr.length + COLUMN_GAP * botStr.length + 16}px` }}>
+          {showAnswers ? (
+            ansStr.split('').map((ch, i) => <DigitBox key={i} ch={ch} color={colors.inkSecondary} />)
+          ) : (
+            Array.from({ length: ansStr.length }).map((_, i) => (
+              <Box key={i} sx={{ width: COLUMN_DIGIT_W, height: COLUMN_LINE_H, border: '1.5px solid #ccc', borderRadius: 0.5 }} />
+            ))
+          )}
+        </Box>
+
+        {/* Division bracket row */}
+        <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+          {/* Divisor */}
+          <Box sx={{ display: 'flex', gap: `${COLUMN_GAP}px`, mb: '3px' }}>
+            {botStr.split('').map((ch, i) => (
+              <DigitBox key={i} ch={ch} />
+            ))}
+          </Box>
+
+          {/* Bracket symbol: large ) */}
+          <Typography sx={{ fontSize: 40, fontWeight: 700, color: '#333', lineHeight: 1, mx: '2px' }}>
+            )
+          </Typography>
+
+          {/* Dividend with overline on top */}
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            {/* Overline */}
+            <Box sx={{
+              height: 2, bgcolor: '#333',
+              width: COLUMN_DIGIT_W * topStr.length + COLUMN_GAP * (topStr.length - 1),
+            }} />
+            {/* Dividend digits */}
+            <Box sx={{ display: 'flex', gap: `${COLUMN_GAP}px`, mt: 0.5 }}>
+              {topStr.split('').map((ch, i) => (
+                <DigitBox key={i} ch={ch} />
+              ))}
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+
+  // + / - / × layout: numbers stacked vertically, operator on the left
+  // Alignment: pad shorter numbers so all operands are right-aligned
+  const colDigits = Math.max(topStr.length, botStr.length);
+  const topPad = colDigits - topStr.length;
+  const botPad = colDigits - botStr.length;
+  const ruleWidth = COLUMN_DIGIT_W * (colDigits + 1) + COLUMN_GAP * colDigits; // +1 for operator column
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      {/* Operator + numbers */}
+      <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+        {/* Operator column */}
+        <Typography sx={{ fontSize: COLUMN_FONT_SIZE, fontWeight: 700, color: '#555', width: COLUMN_DIGIT_W, textAlign: 'center', lineHeight: 1, mr: `${COLUMN_GAP}px` }}>
+          {op}
+        </Typography>
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          {/* Top number */}
+          <DigitRow digits={topStr} padLeft={topPad} />
+
+          {/* Bottom number */}
+          <DigitRow digits={botStr} padLeft={botPad} />
+        </Box>
+      </Box>
+
+      {/* Horizontal rule: spans operator + digit area */}
+      <Box sx={{ width: ruleWidth, height: 2, bgcolor: '#333', my: 0.5 }} />
+
+      {/* Answer row: individual boxes per digit */}
+      <Box sx={{ display: 'flex', gap: `${COLUMN_GAP}px`, justifyContent: 'flex-end', width: ruleWidth }}>
+        {showAnswers ? (
+          ansStr.split('').map((ch, i) => (
+            <DigitBox key={i} ch={ch} color={colors.inkSecondary} />
+          ))
+        ) : (
+          Array.from({ length: ansStr.length }).map((_, i) => (
+            <Box
+              key={i}
+              sx={{
+                width: COLUMN_DIGIT_W,
+                height: COLUMN_LINE_H,
+                border: '1.5px solid #ccc',
+                borderRadius: 0.5,
+              }}
+            />
+          ))
+        )}
+      </Box>
+    </Box>
   );
 };
 
