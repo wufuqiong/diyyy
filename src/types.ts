@@ -231,7 +231,7 @@ export interface SheetConfig {
   // English 4-line
   englishLineTheme?: 'rainbow' | 'monochrome' | 'same';
   showLineNumbers?: boolean;
-  traceMode?: 'faded' | 'underline';
+  traceMode?: 'faded' | 'underline' | 'blank';
 }
 
 export interface CharData {

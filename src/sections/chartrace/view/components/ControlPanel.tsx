@@ -456,6 +456,11 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
                 {t('common.shuffle')}
               </Button>
             </Box>
+            <Typography variant="caption" color="text.secondary">
+              {isEnglishLines
+                ? t('charTrace.settings.inputHintEnglish')
+                : t('charTrace.settings.inputHintChinese')}
+            </Typography>
           </Stack>
         </SettingsField>
       </SettingCard>
@@ -650,6 +655,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
               >
                 <MenuItem value="faded">{t('charTrace.settings.traceModeFaded')}</MenuItem>
                 <MenuItem value="underline">{t('charTrace.settings.traceModeUnderline')}</MenuItem>
+                <MenuItem value="blank">{t('charTrace.settings.traceModeBlank')}</MenuItem>
               </Select>
             </FormControl>
           </SettingsField>

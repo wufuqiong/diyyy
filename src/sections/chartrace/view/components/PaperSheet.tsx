@@ -194,12 +194,15 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
   // === RENDER MODE: ENGLISH LINES ===
   if (isEnglishMode) {
     // Parsing logic:
-    // 1. If contains commas/newlines, split by them (words)
-    // 2. Else if contains spaces, split by spaces (words)
-    // 3. Else, split by characters (individual letters like a, b, c)
+    // 1. If contains newlines → sentences (commas kept as punctuation)
+    // 2. Else if contains commas → phrases
+    // 3. Else if contains spaces → words
+    // 4. Else → individual letters
     let parsedItems: string[] = [];
-    if (config.text.match(/[\n,，]/)) {
-        parsedItems = config.text.split(/[\n,，]/).map(w => w.trim()).filter(w => w !== '');
+    if (config.text.includes('\n')) {
+        parsedItems = config.text.split('\n').map(w => w.trim()).filter(w => w !== '');
+    } else if (config.text.match(/[,，]/)) {
+        parsedItems = config.text.split(/[,，]/).map(w => w.trim()).filter(w => w !== '');
     } else if (config.text.includes(' ')) {
         parsedItems = config.text.split(' ').map(w => w.trim()).filter(w => w !== '');
     } else {
@@ -298,6 +301,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
 
     const showLineNums = config.showLineNumbers || false;
     const isUnderlineMode = (config.traceMode || 'faded') === 'underline';
+    const isBlankMode = config.traceMode === 'blank';
 
     return renderSheet(pages, (pageRows, pageIndex) => (
             <>
@@ -343,6 +347,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
 
                                 {/* Text / Underline rendering */}
                                 {staffRow.items.map((item, tIdx) => {
+                                    if (item.isTrace && isBlankMode) return null;
                                     if (item.isTrace && isUnderlineMode) {
                                         return Array.from(item.text).map((_, ci) => {
                                             const lx = item.x + ci * estCharWidth;

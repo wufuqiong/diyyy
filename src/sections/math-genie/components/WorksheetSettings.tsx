@@ -1,4 +1,4 @@
-import type { WorksheetConfig, DifficultyRatios } from 'src/types';
+import type { WorksheetConfig, DifficultyRatios, MultiOperationConfig } from 'src/types';
 
 import { useTranslation } from 'react-i18next';
 import React, { useMemo, useState, useEffect } from 'react';
@@ -72,6 +72,28 @@ const DEFAULT_CONFIG: WorksheetConfig = {
   excludeZeroProblems: false,
   autoPreview: true,
 };
+
+function calculateMaxUnique(
+  maxNum: number,
+  operation: OperationType,
+  problemType: ProblemType,
+  multiOpConfig?: MultiOperationConfig,
+): number {
+  const minNum = 1;
+  if (problemType === ProblemType.MULTI_STEP && multiOpConfig) {
+    return Math.max(200, (maxNum - minNum + 1) * multiOpConfig.numberCount * 4);
+  }
+  let total = 0;
+  const isAdd = operation === OperationType.ADDITION || operation === OperationType.MIXED || operation === OperationType.ALL;
+  const isSub = operation === OperationType.SUBTRACTION || operation === OperationType.MIXED || operation === OperationType.ALL;
+  const isMul = operation === OperationType.MULTIPLICATION || operation === OperationType.MULT_DIV_MIXED || operation === OperationType.ALL;
+  const isDiv = operation === OperationType.DIVISION || operation === OperationType.MULT_DIV_MIXED || operation === OperationType.ALL;
+  if (isAdd) for (let a = minNum; a < maxNum; a++) for (let b = minNum; b <= maxNum - a; b++) total++;
+  if (isSub) for (let a = 2; a <= maxNum; a++) for (let b = minNum; b < a; b++) total++;
+  if (isMul) for (let a = 1; a <= maxNum; a++) for (let b = 1; a * b <= maxNum; b++) total++;
+  if (isDiv) for (let b = 1; b <= maxNum; b++) for (let c = 0; c <= Math.floor(maxNum / b); c++) total++;
+  return Math.max(1, total);
+}
 
 const THEME_PRESETS = [
   'Animals 🐶',
@@ -244,6 +266,21 @@ const WorksheetSettings: React.FC<Props> = ({
 
   const requestedCount = count * perPage;
   const isExceedingMax = requestedCount > maxPossibleProblems;
+
+  // Suggest a viable maxNumber when the current range can't produce enough problems
+  const suggestedMax = useMemo(() => {
+    if (!isExceedingMax && maxPossibleProblems >= 4) return null;
+    const minViable = Math.max(4, requestedCount);
+    for (let m = Math.max(difficulty as number, 2); m <= 100; m++) {
+      const countAtM = calculateMaxUnique(m, operation, activeProblemType, multiOperationConfig);
+      if (countAtM >= minViable) return m;
+    }
+    return null;
+  }, [isExceedingMax, maxPossibleProblems, requestedCount, difficulty, operation, activeProblemType, multiOperationConfig]);
+
+  const suggestedDiff = suggestedMax && difficulty !== DifficultyLevel.CUSTOM
+    ? (suggestedMax <= 5 ? DifficultyLevel.EASY : suggestedMax <= 10 ? DifficultyLevel.MEDIUM : DifficultyLevel.HARD)
+    : null;
 
   const ratioTotal = difficultyRatios
     ? difficultyRatios.easy + difficultyRatios.medium + difficultyRatios.hard + difficultyRatios.custom
@@ -538,7 +575,26 @@ const WorksheetSettings: React.FC<Props> = ({
                     {t('mathGenie.totalProblems', { count: requestedCount, pages: count, perPage })}
                     {isExceedingMax && (
                       <Box component="span" sx={{ color: 'warning.main', display: 'block' }}>
-                        ⚠️ Max unique: {maxPossibleProblems}. Some will repeat.
+                        {maxPossibleProblems <= 1
+                          ? '⚠️ 当前范围无法生成题目。'
+                          : `⚠️ 仅有 ${maxPossibleProblems} 道独立题，超出将重复。`}
+                        {suggestedMax && (
+                          <Box component="span" sx={{ display: 'block', mt: 0.5 }}>
+                            {t('mathGenie.suggestRange', { max: suggestedMax })}
+                            {difficulty !== DifficultyLevel.CUSTOM && suggestedDiff && (
+                              <Button size="small" sx={{ ml: 1, textTransform: 'none', minWidth: 'auto' }}
+                                onClick={() => onChange({ ...config, difficulty: suggestedDiff })}>
+                                {t('mathGenie.switchTo')} 1–{suggestedMax}
+                              </Button>
+                            )}
+                            {difficulty === DifficultyLevel.CUSTOM && (
+                              <Button size="small" sx={{ ml: 1, textTransform: 'none', minWidth: 'auto' }}
+                                onClick={() => onChange({ ...config, customDifficulty: { min: 1, max: suggestedMax } })}>
+                                {t('mathGenie.switchTo')} 1–{suggestedMax}
+                              </Button>
+                            )}
+                          </Box>
+                        )}
                       </Box>
                     )}
                   </>
