@@ -1,4 +1,4 @@
-import { getTemplateConfig, templateRegistry } from '../registry';
+import { templateRegistry, getTemplateConfig } from '../registry';
 
 const EXPECTED_COUNTS: Record<string, number> = {
   charcolor: 1,
@@ -32,7 +32,7 @@ describe('templateRegistry', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('every template has titleKey and descKey', () => {
+  it('every template has titleKey and descKey with templates prefix', () => {
     Object.values(templateRegistry)
       .flat()
       .forEach((t) => {

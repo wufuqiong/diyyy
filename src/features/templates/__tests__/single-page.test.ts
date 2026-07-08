@@ -1,15 +1,12 @@
-import { templateRegistry } from '../registry';
-
-import { charcolorTool } from 'src/features/charcolor/config';
-import { chartraceTool } from 'src/features/chartrace/config';
-import { wordSearchTool } from 'src/features/word-search';
-import { hundredChartTool } from 'src/features/hundred-chart';
 import { mathGenieTool } from 'src/features/math-genie';
-
-// charmaze needs miemie data — import the actual generator
 import miemieDetails from 'src/data/miemie-details.json';
+import { wordSearchTool } from 'src/features/word-search';
 import { loadMiemieLessons } from 'src/shared/data/lessons';
+import { charcolorTool } from 'src/features/charcolor/config';
+import { hundredChartTool } from 'src/features/hundred-chart';
 import { generateMazePages } from 'src/features/charmaze/utils';
+
+import { templateRegistry } from '../registry';
 
 const miemieWordData = loadMiemieLessons(miemieDetails as any, 'word');
 
@@ -24,7 +21,7 @@ async function getPageCount(toolId: string, config: any): Promise<number> {
       return result.length;
     }
     case 'chartrace': {
-      // chartrace returns [] — PaperSheet reads from config, always 1 physical page
+      // PaperSheet renders from config, always 1 physical page
       return 1;
     }
     case 'math-genie': {
@@ -34,9 +31,7 @@ async function getPageCount(toolId: string, config: any): Promise<number> {
     }
     case 'hundred-chart': {
       const result = hundredChartTool.generate(config);
-      // Filter out answer-key sheets
-      const pages = result.filter((s: any) => !s.isAnswerKey);
-      return pages.length;
+      return result.filter((s: any) => !s.isAnswerKey).length;
     }
     case 'word-search': {
       const result = wordSearchTool.generate(config);

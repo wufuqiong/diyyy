@@ -1,25 +1,21 @@
 import React from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 import { usePersistedConfig } from '../use-persisted-config';
 
 const STORAGE_KEY = 'diyyy:test-key';
 
-/** Helper: render a tiny component that uses the hook and returns the value. */
 function renderHook<T>(
   key: string,
   defaultValue: T,
   version = 1,
   options?: { onRestore?: () => void; forceInitial?: boolean },
 ) {
-  let result: T;
   function TestComp() {
     const [value] = usePersistedConfig(key, defaultValue, version, options);
-    result = value;
     return React.createElement('span', { 'data-testid': 'val' }, JSON.stringify(value));
   }
   render(React.createElement(TestComp));
-  // Read back from the DOM since we can't easily capture the state ref
   const el = screen.getByTestId('val');
   return JSON.parse(el.textContent || 'null') as T;
 }
@@ -59,7 +55,6 @@ describe('usePersistedConfig', () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ v: 1, d: { a: 99 } }));
       renderHook('test-key', { a: 42 }, 1, { forceInitial: true });
 
-      // Read back from localStorage
       const raw = localStorage.getItem(STORAGE_KEY);
       expect(raw).toBeTruthy();
       const stored = JSON.parse(raw!);

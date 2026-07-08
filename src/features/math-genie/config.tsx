@@ -9,10 +9,10 @@ import CalculateIcon from '@mui/icons-material/Calculate';
 import {
   DisplayMode,
   ProblemType,
+  MulDivLevel,
   OperationType,
   DifficultyLevel,
   ComparisonSubType,
-  MulDivLevel,
   MultiOperationMode,
   SpecialPracticeType,
 } from 'src/types';
