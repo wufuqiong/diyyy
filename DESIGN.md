@@ -102,7 +102,7 @@ Generates arithmetic worksheets with configurable operations, difficulty, displa
 |-------|------|---------|-------------|
 | `theme` | string | `'Animals 🐶'` | Emoji theme for visual mode |
 | `difficulty` | `DifficultyLevel` | `EASY` (1–5) | Number range preset |
-| `operation` | `OperationType` | `ADDITION` | +, −, ±, multi |
+| `operation` | `OperationType` | `ADDITION` | +, −, ±, ×, ÷, ×÷, all |
 | `count` | number | 1 | Number of pages |
 | `textColumns` | 2 \| 3 | 2 | Text mode column count |
 | `problemsPerPage` | number | auto | Auto-calculated per config |
@@ -111,21 +111,24 @@ Generates arithmetic worksheets with configurable operations, difficulty, displa
 | `displayMode` | `DisplayMode` | `TEXT` | emoji / text / word-problem |
 | `customDifficulty` | `{min, max}` | `{1, 15}` | Custom number range |
 | `difficultyRatios` | object | undefined | Mix-mode percentages |
-| `problemType` | `ProblemType` | `STANDARD` | standard / fill-blank |
-| `specialPracticeType` | `SpecialPracticeType` | `NONE` | zero / fact-family / number-bond / comparison |
-| `multiOperationConfig` | object | `{chain_add, 3}` | Multi-op mode + operand count |
+| `problemType` | `ProblemType` | `STANDARD` | standard / fill-blank / multi-step |
+| `specialPracticeType` | `SpecialPracticeType` | `NONE` | zero / fact-family / number-bond / comparison / column-arithmetic |
+| `multiOperationConfig` | object | `{mode, numberCount: 3}` | Multi-op operand count (mode derived from operation) |
+| `mulDivLevel` | `MulDivLevel` | `ONE_DIGIT` | ×/÷ digit range: 1-digit / 1×2-digit / 2-digit / 3-digit |
 | `excludeZeroProblems` | boolean | false | Filter out zero-involving problems |
-| `excludeComparisonProblems` | boolean | false | Filter comparison word problems |
+| `excludeCarry` | boolean | false | Column arithmetic: exclude carry/borrow problems |
+| `carryOnly` | boolean | false | (removed, replaced by excludeCarry) |
 | `autoPreview` | boolean | true | Auto-generate on config change |
 
 ### Key Enums
 
 - `DifficultyLevel`: EASY=5, MEDIUM=10, HARD=20, CUSTOM=-1
-- `OperationType`: ADDITION, SUBTRACTION, MIXED, MULTI_OPERATIONS
+- `OperationType`: ADDITION, SUBTRACTION, MIXED, MULTIPLICATION, DIVISION, MULT_DIV_MIXED, ALL, MULTI_OPERATIONS
 - `DisplayMode`: EMOJI, TEXT, WORD_PROBLEM
-- `ProblemType`: STANDARD (`7+3=10`), FILL_BLANK (`7+_=10`)
-- `SpecialPracticeType`: NONE, ZERO_DRILL, FACT_FAMILY, NUMBER_BOND, WORD_PROBLEM_COMPARISON
-- `MultiOperationMode`: CHAIN_ADDITION, CHAIN_SUBTRACTION, MIXED_OPERATIONS
+- `ProblemType`: STANDARD (`7+3=10`), FILL_BLANK (`7+_=10`), MULTI_STEP (`2+3+4=9`)
+- `SpecialPracticeType`: NONE, ZERO_DRILL, FACT_FAMILY, NUMBER_BOND, COMPARISON, COLUMN_ARITHMETIC
+- `MultiOperationMode`: CHAIN_ADDITION, CHAIN_SUBTRACTION, MIXED_OPERATIONS, CHAIN_MULTIPLICATION, CHAIN_DIVISION, MULT_DIV_MIXED_CHAIN, ALL_MIXED
+- `MulDivLevel`: ONE_DIGIT, ONE_BY_TWO, TWO_DIGIT, THREE_DIGIT
 
 ### Problem Generation Flow
 
@@ -145,15 +148,18 @@ Generates arithmetic worksheets with configurable operations, difficulty, displa
 | File | Purpose |
 |------|---------|
 | `generators/index.ts` | Orchestrator: dispatch, dedup, fill |
-| `generators/standard.ts` | Basic a ± b problems |
-| `generators/fill-blank.ts` | Problems with one blank position |
-| `generators/multi-op.ts` | Chain add/sub, mixed operations |
+| `generators/standard.ts` | Basic a ± b problems (also ×/÷) |
+| `generators/fill-blank.ts` | Problems with one blank position (also ×/÷) |
+| `generators/multi-op.ts` | Chain add/sub/mul/div, all-four mixed |
 | `generators/word-problem.ts` | Contextual word problems from templates |
 | `generators/special-practice/zero-drill.ts` | Zero-involving problems |
-| `generators/special-practice/fact-family.ts` | Groups of 4 related equations |
+| `generators/special-practice/fact-family.ts` | Groups of 4 related equations (+/− and ×/÷) |
 | `generators/special-practice/number-bond.ts` | Whole/part number bond problems |
+| `generators/special-practice/comparison.ts` | Comparison (比大小 / 比多少) generator |
+| `generators/special-practice/comparison-word-problem.ts` | Comparison word problem text |
+| `generators/special-practice/column-arithmetic.ts` | Vertical format column arithmetic |
 | `generators/shared/types.ts` | RawMathProblem type, helpers |
-| `generators/shared/mixed-balance.ts` | Balanced +/- counts in mixed mode |
+| `generators/shared/mixed-balance.ts` | Balanced counts in mixed mode (add/sub, mul/div, all-four) |
 | `generators/shared/problem-key.ts` | Column-major reordering |
 
 ### UI Components
@@ -169,10 +175,49 @@ Generates arithmetic worksheets with configurable operations, difficulty, displa
 
 `calculateOptimalProblemsPerPage()` in `shared/layout.ts` computes the max problems fitting on one A4 page based on:
 - **Text mode** (standard/fill-blank/fact-family): min 20mm row height → 20 problems (2 cols) / 30 (3 cols, clamped)
-- **Text mode** (multi-op 5-6): min 18mm → 22 problems (2 cols)
+- **Text mode** (multi-op): min 18-20mm depending on operand count → auto rows
 - **Text mode** (number bond): min 47mm (SVG content) → 8 problems (2 cols)
+- **Text mode** (column arithmetic): min 32mm → 12 problems (3 cols) / 10 problems (2 cols)
+- **Text mode** (comparison): min 22mm → auto rows
 - **Emoji mode**: based on max number in range (35/45/55mm thresholds) → 6-12 problems
 - **Word problem mode**: fixed 48mm rows → 4 problems
+
+### ×/÷ Operations (Text mode only)
+
+Multiplication, division, and mixed ×/÷ are available in text mode. When selected:
+- **Difficulty section** switches from numeric range to `MulDivLevel` (1-digit / 1×2-digit / 2-digit / 3-digit)
+- Division always produces exact results (no remainder) via b×c=a construction
+- Multi-step ×/÷ chains use left-to-right evaluation
+- `all` operation mixes all four operators
+
+### Multi-Step Mode
+
+Moved from `OperationType` to `ProblemType.MULTI_STEP`. When selected:
+- Content renders in 1 column (full width) for chain readability
+- Multi-op mode is derived from current operation (e.g., `+` → chain addition, `×÷` → mixed ×/÷ chain)
+- Sub-panel shows only operand count slider (mode dropdown removed)
+
+### Column Arithmetic (列竖式)
+
+New `SpecialPracticeType.COLUMN_ARITHMETIC` renders problems in vertical format:
+- Supports all operations with appropriate digit lengths per difficulty
+- For ×/÷: uses `MulDivLevel` for digit granularity
+- Rules toggle: `excludeCarry` (excludes carry/borrow for +/-)
+- Only standard problem type (fill-blank and multi-step disabled)
+- Content renders in 3 columns by default (18 problems/page)
+- Digit boxes are centered, answer shows individual per-digit boxes
+
+### Suggested Range Warning
+
+When requested problem count exceeds unique problems for the current range, settings show:
+- "当前范围无法生成题目" when max=0 or 1
+- "仅有 N 道独立题, 超出将重复" with a button to switch to the minimum viable range (1-N)
+
+### Fact Family (×/÷ mode)
+
+When ×/÷/×÷ is selected, generates multiplication/division families:
+- `a × b = c`, `b × a = c`, `c ÷ a = b`, `c ÷ b = a`
+- Equal factors (e.g., 2×2=4) allowed for small ranges (minimum product ≥ 4)
 
 ---
 
@@ -263,7 +308,8 @@ Chinese character tracing worksheets. Supports multiple grid types and custom st
 | `gridType` | `GridType` | TIAN (田字格), MI (米字格), SQUARE, ENGLISH_LINES, NONE |
 | `gridColor`, `gridOpacity`, `gridSize` | visual | Grid appearance |
 | `fontFamily` | string | Font for characters |
-| `mainTextColor`, `traceTextColor` | string | Colors |
+| `mainTextColor` | string | Fixed to black (#333), not user-configurable |
+| `traceTextColor` | string | Follows theme color (same as gridColor) |
 | `traceOpacity` | number | Opacity of trace guides |
 | `rowsPerPage`, `colsPerRow` | number | Layout |
 | `traceCount` | number | Number of trace copies per character |
@@ -271,6 +317,9 @@ Chinese character tracing worksheets. Supports multiple grid types and custom st
 | `showPinyin` | boolean | Display pinyin above characters |
 | `showStrokeCount` | boolean | Display stroke count |
 | `showStrokeOrder` | boolean | Show stroke order diagrams |
+| `englishLineTheme` | `'rainbow' \| 'monochrome' \| 'same'` | English 4-line color theme (rainbow shifts with theme color) |
+| `showLineNumbers` | boolean | Show 1-4 labels on English staff lines |
+| `traceMode` | `'faded' \| 'underline' \| 'blank'` | Trace display: faded text / underline placeholder / blank staff |
 
 ### Generation
 
@@ -281,7 +330,7 @@ The `generate` function returns an empty array — the `SheetConfig` drives rend
 | Component | Purpose |
 |-----------|---------|
 | `CharTraceView` | Mounts Workbench (autoGenerate disabled) |
-| `ControlPanel` | Lesson content loader (level + multi-select lessons + load buttons), grid type/size/color, font, colors, layout, pinyin toggle, presets — uses `SettingCard` with green theme |
+| `ControlPanel` | Three setting cards: Content Source (level/lesson loaders, text input with shuffle/clear), Grid & Text (grid type, rows/cols, trace count, font, trace opacity), Page Setup (theme color picker, title, pinyin, line numbers). English 4-line settings card appears when gridType is ENGLISH_LINES: line color theme (rainbow/monochrome/same), line numbers toggle, trace mode (faded/underline/blank). Uses `SettingCard` with green theme |
 | `PaperSheet` | Renders A4 tracing worksheets with grids, trace copies, annotations |
 | `GridBox` | Individual grid cell rendering |
 
@@ -352,9 +401,10 @@ English word-search worksheets: target words are hidden in a letter grid (horizo
 | `difficulty` | `WordSearchDifficulty` | `MEDIUM` | easy/medium/hard (allowed directions) |
 | `title` | string | `'Word Search'` | Sheet title (rendered as bubble letters) |
 | `showAnswerKey` | boolean | false | Append a separate answer-key page |
-| `listColumns` | 1 \| 2 \| 3 | 3 | Word-list column count |
+| `listColumns` | 1 \| 2 \| 3 \| 4 \| 5 | adaptive | Word-list column count (default calculated per word lengths) |
 | `letterCase` | `'upper' \| 'lower'` | `'lower'` | Grid + list letter case (kept consistent) |
 | `selectedTheme` | string? | undefined | Active preset theme id |
+| `themeColor` | string? | `#FF7AAE` | Border/title accent color (8 candy color options) |
 
 ### Key Enums / Maps
 
@@ -396,22 +446,25 @@ Placement rule: crossings sharing the **same** letter are allowed; differing let
 
 **ControlPanel behavior**
 
-- **Raw-text input:** the textarea is backed by a local `text` state so separators (space / comma / newline) are preserved while typing; `config.words` is derived via `parseWords` (`split(/[\s,]+/)`). A `useEffect` re-syncs the textarea only when `config.words` changes externally (theme load / reset).
-- **Caps:** `MAX_WORDS = 30`, `MAX_WORD_LEN = 18` enforced in `parseWords` to bound worst-case layout.
-- **Theme library:** selecting a theme replaces the word list (still editable); chips show parsed words; caption shows count + capacity hint.
-- **Grid Size / Difficulty:** `ToggleButtonGroup` with `HelpTooltip` (anchors `field-grid-size`, `field-difficulty`); switching does not clear words.
-- **Display options:** title, list columns (1/2/3), letter case, show-answer-key switch.
+- **Raw-text input:** textarea with shuffle/clear/random-page/restore buttons below. `config.words` derived via `parseWords`. Chips display removed.
+- **Random page button:** picks `WORDS_PER_PAGE[gridSize]` random words from selected theme.
+- **Restore button:** reloads all words from current theme (disabled when unchanged).
+- **Caps:** `MAX_WORDS = 30`, `MAX_WORD_LEN = 18` enforced in `parseWords`.
+- **Theme library:** selecting a theme replaces the word list.
+- **Grid Size / Difficulty:** `ToggleButtonGroup`; switching does not clear words.
+- **Display options:** title, theme color (ColorPicker with 8 candy colors), letter case, show-answer-key switch.
+- **List columns:** removed from UI (adaptive default calculated by generator; WordList auto-increases columns on overflow).
 
 **PreviewSheet behavior**
 
-- **Theme color:** all accents use the system **primary** palette (`theme.palette.primary.main`, list card uses `primary.lighter`).
-- **Bubble-letter title** rendered per character in rounded primary-bordered badges.
-- **Grid:** borderless letters inside a rounded primary-bordered card; cell/font size derived from grid columns.
-- **Instruction** between grid and list: bold "Find below words" plus a dynamic direction hint built from `DIFFICULTY_DIRECTIONS` (e.g. easy → "horizontally and vertically"; hard appends "(including backwards)").
-- **Word list:** rounded card, no bullets, distributed row-first; font size scales with grid size via `LIST_FONT_SIZE` (small 24 / medium 21 / large 18); long words wrap (`overflowWrap: 'anywhere'`).
-- **Answer key page:** same grid with each placed word's cells highlighted as colored circles.
-- **One-page auto-fit:** a `PageFit` wrapper fills exactly one A4 page (`height: 297mm`, `overflow: hidden`), measures content via `ResizeObserver`, and applies a uniform `transform: scale()` = `min(1, availW/naturalW, availH/naturalH)` so content always fits a single page — identical for on-screen preview and print (`scrollWidth/Height` are transform-independent, avoiding observer loops).
-- **Unplaced warning:** MUI `Alert` (`wordSearch.unplacedWordsWarning`) on the question page when words could not be placed. **Empty state** prompts to enter words or pick a theme.
+- **Theme color:** all accents use configurable `themeColor` (default pink `#FF7AAE`). Word list background auto-computes a soft variant.
+- **Bubble-letter title** rendered with theme color borders.
+- **Grid:** borderless letters in rounded card with theme color border.
+- **Instruction:** bold "Find below words" + dynamic direction hint.
+- **Word list:** flat CSS grid. Long words (≥9 chars) span 2 columns. Columns auto-increase on vertical overflow (up to 5).
+- **Answer key page:** same grid with colored circle highlights.
+- **Auto-fit:** `useFitScale` with ResizeObserver for single-page preview.
+- **Unplaced warning:** MUI `Alert` when words can't fit. **Empty state** prompts input.
 
 ### Help Doc
 
@@ -506,7 +559,7 @@ Content mode is auto-detected from text delimiters:
 | Contains `,` or `，` | PHRASES | Comma-separated segments as phrase rows |
 | Contains `\n` | SENTENCES | One sentence per line, `traceCount` forced to 1 |
 
-Load buttons (word/phrase/sentence) set the content mode and load corresponding data from selected lessons. English mode (gridType=ENGLISH_LINES): 3-tier fallback — `\n/,` split → space split → per-character split.
+Load buttons (word/phrase/sentence) set the content mode and load corresponding data from selected lessons. English mode (gridType=ENGLISH_LINES): priority parsing — newlines (sentences, commas kept) → commas (phrases) → spaces (words) → per-character. Input hint shown below textarea adapts to mode.
 
 ### charcolor `userInput` field
 
@@ -628,6 +681,19 @@ _From UX Audit Round 1 & 2 task lists._
 | R4-05 | Word Search | BubbleTitle auto-shrinks for long titles |
 | R4-06 | All tools | Print Paper height fix (minHeight→height+overflow:hidden) |
 | R4-07 | Math Genie | Compare magnitude worksheet instruction hint |
+| R5-01 | Math Genie | ×/÷/×÷/all operations in text mode with MulDivLevel digit ranges |
+| R5-02 | Math Genie | Multi-step moved from operation to ProblemType.MULTI_STEP |
+| R5-03 | Math Genie | Column arithmetic (列竖式) special practice with vertical format |
+| R5-04 | Math Genie | Fact family ×/÷ mode (乘除一家人) |
+| R5-05 | Math Genie | Suggested range warning with one-click switch |
+| R5-06 | Chartrace | Settings restructured: Grid & Text merged, theme color in Page Setup |
+| R5-07 | Chartrace | English 4-line: line color themes (rainbow/monochrome/same), line numbers, trace modes |
+| R5-08 | Chartrace | English mode: newline priority over comma in parsing |
+| R5-09 | Chartrace | Input hints below textarea |
+| R5-10 | Word Search | Theme color picker, adaptive column count, shuffle/clear/random/restore buttons |
+| R5-11 | Word Search | Word list long-word spanning and overflow auto-adjust |
+| R5-12 | Math Genie | Fill-blank adaptive font sizing for 3-column layout |
+| R5-13 | E2E Tests | Removed `waitForLoadState('networkidle')` (HMR incompatibility); increased visual regression timeout |
 
 ---
 
@@ -650,3 +716,176 @@ _From UX Audit Round 1 & 2 task lists._
 | 19–24 | 阅读 5–10 (小小的船, 影子, 两件宝, 比尾巴, 乌鸦喝水, 雨点儿) | 65 |
 
 Full reference table: `docs/生字表-人教版语文-一年级上.md`
+
+---
+
+## Template Gallery (模板画廊)
+
+### Overview
+
+Dashboard 首页的模板画廊，为每个工具提供"开箱即用"的典型案例卡片。用户点击卡片后带着预设参数跳转到对应工具页面，微调即可导出成品。
+
+### Goals
+
+1. 降低新用户上手门槛——点卡片即可看到成品，无需从零配置
+2. 不增加页面层级——Gallery 直接嵌入 Dashboard，横向滚动
+3. 覆盖全部六个工具，每个工具提供若干格式典型案例
+4. 卡片外观像真实 A4 纸，标题概括格式而非主题
+
+---
+
+### 1. Layout
+
+Dashboard 在 Welcome 区域下方渲染 TemplateGallery。按 `rowGroups` 分组，同组工具列共享一个横向滚动区：
+
+```
+Desktop（desktop：同行 / mobile：堆叠）
+┌──────────────────────┬──────────────────────────┐
+│ 🎨 识字涂色            │ 🗺️ 识字迷宫               │  ← 各自标题对齐首张卡片
+│ ┌────┐               │ ┌────┐ ┌────┐ ┌────┐    │
+│ │A4纸│               │ │A4纸│ │A4纸│ │A4纸│ →  │  ← 主题色边框
+│ └────┘               │ └────┘ └────┘ └────┘    │
+├──────────────────────┴──────────────────────────┤
+│ 📐 描红写字                                      │
+│ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ →  │
+├─────────────────────────────────────────────────┤
+│ 🔢 算术天地                                      │
+│ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ →  │
+├──────────────────────┬──────────────────────────┤
+│ 🔲 百数板              │ 🔍 单词搜索               │
+│ ┌────┐ ┌────┐ ┌────┐ │ ┌────┐ ┌────┐           │
+│ └────┘ └────┘ └────┘ │ └────┘ └────┘           │
+└──────────────────────┴──────────────────────────┘
+```
+
+**分组规则（`rowGroups`）：**
+- Row 1: 识字涂色 + 识字迷宫
+- Row 2: 描红写字（单独）
+- Row 3: 算术天地（单独）
+- Row 4: 百数板 + 单词搜索
+
+**卡片尺寸：** 固定 180×255px（A4 比 ≈1:1.414），mobile 140×198px。
+
+---
+
+### 2. 卡片外观
+
+- **无圆角、无动画**——直角边，白色背景，模拟真实打印纸
+- **主题色边框**——`2px solid toolColor` 区分工具来源
+- **标题在卡片下方**，居中，概括格式（如"田字格 · 单字描红"）
+- A4 纸内的 paperPadding 通过 CSS 强制清零，内容撑满纸面
+
+---
+
+### 3. 缩略图渲染
+
+Preview 组件直接渲染在卡片内（180×255px），`useFitScale` 自动将 A4 内容缩放适配：
+
+```
+Card (180×255) → Preview → useFitScale 测得 180px → scale=180/794≈0.23
+```
+
+- 无外层 `transform: scale()`，避免与 useFitScale 双重缩放
+- CSS 隐藏分页栏（`.MuiPagination-root`）、天蓝色背景、paperPadding
+- 300ms 延迟显示避免初始 scale=1→scale=0.23 的闪烁
+- 模块级 `Map` 缓存 generate() 结果，重复进入 dashboard 直接读缓存
+- `React.memo` 防止父组件重渲染时卡片无谓更新
+
+---
+
+### 4. 模板数据
+
+每个模板保证只生成 1 页：
+
+| 工具 | 数量 | 限制方式 |
+|------|------|---------|
+| charcolor | 1 | 5 字 = 1 页 |
+| charmaze | 3 | 句子从 2 句减为 1 句 |
+| chartrace | 8 | 拼音/字母从全量减为 10 条，其余 text 长度适配 |
+| math-genie | 11 | count=1 |
+| hundred-chart | 3 | versionCount=1, includeAnswerKey=false |
+| word-search | 2 | 单词数 ≤ 网格容量，showAnswerKey=false |
+
+**模板定义文件：**
+```
+src/features/charcolor/templates.ts    # 1
+src/features/charmaze/templates.ts     # 3
+src/features/chartrace/templates.ts    # 8
+src/features/math-genie/templates.ts   # 11
+src/features/hundred-chart/templates.ts # 3
+src/features/word-search/templates.ts  # 2
+```
+
+**Template 类型：**
+```typescript
+interface Template<Config = any> {
+  id: string;       // e.g. 'chartrace-chars-tiandiren'
+  titleKey: string; // i18n key，概括格式（非主题）
+  descKey: string;
+  config: Config;   // 预设参数，text/userInput 已 bake 实际内容
+  scale: number;    // 保留字段，当前未使用
+}
+```
+
+---
+
+### 5. 导航与配置注入
+
+点击卡片 → `/{route}?template={id}`，直接跳转。
+
+**Workbench 改造：**
+- 新增 `initialConfig` prop
+- `usePersistedConfig` 新增 `forceInitial` 选项
+- 当 `?template=` 存在时：`forceInitial=true` → 跳过 localStorage → 用模板配置初始化 → 写入 localStorage
+- 无 template 参数时：保持原有逻辑（localStorage > defaultConfig）
+- 6 个 view 组件通过 `useSearchParams` 读取 `?template=` 并传给 Workbench
+
+---
+
+### 6. i18n
+
+标题格式示例：
+
+| 工具 | zh-CN | en |
+|------|-------|----|
+| charcolor | 识字涂色 · 经典色系 | Char Color · Classic |
+| charmaze | 单字迷宫 · 8×8 | Word Maze · 8×8 |
+| chartrace | 田字格 · 单字描红 | Tian Grid · Char Tracing |
+| chartrace | 四线格 · 拼音描红 | 4-Line · Pinyin |
+| math-genie | 加法练习 · 文本模式 | Addition · Text Mode |
+| math-genie | 列竖式 · 乘法 | Column Math · × |
+| hundred-chart | 百数板 · 随机填空 | 100 Chart · Random |
+| word-search | 单词搜索 · 10×10 简单 | Word Search · 10×10 Easy |
+
+---
+
+### 7. 文件清单
+
+```
+新增:
+src/features/templates/types.ts
+src/features/templates/registry.ts
+src/features/{charcolor,charmaze,chartrace,math-genie,hundred-chart,word-search}/templates.ts
+src/sections/dashboard/TemplateCard.tsx
+src/sections/dashboard/TemplateGallery.tsx
+
+修改:
+src/pages/dashboard.tsx                      # 移除 ToolCard Grid，引入 TemplateGallery
+src/shared/worksheet/Workbench.tsx           # initialConfig prop + forceInitial
+src/shared/worksheet/use-persisted-config.ts # forceInitial 选项
+src/sections/{tool}/view/*-view.tsx (6个)    # 读取 ?template= 参数
+src/i18n/locales/{zh-CN,en}.json            # templates 翻译 key
+```
+
+---
+
+### 8. 决策记录
+
+| # | 决策 | 结论 |
+|---|------|------|
+| 展示层级 | 按工具分组 + 横向滚动，同组工具共享一列 | rowGroups 控制 |
+| 卡片外观 | 直角 A4 纸 + 主题色边框 | 无圆角、无动画 |
+| 缩略图渲染 | Preview 直接在卡片内渲染，useFitScale 自动适配 | 无外层 transform |
+| 性能 | 模块级 Map 缓存 + React.memo | 重复访问零计算 |
+| 单页约束 | 所有模板限制内容量确保 1 页 | 无分页栏、无缩放循环 |
+| 参数传递 | URL search params + forceInitial | 模板配置覆盖 localStorage |

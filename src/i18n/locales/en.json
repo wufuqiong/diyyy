@@ -455,6 +455,132 @@
       "hard": "Hard"
     }
   },
+  "templates": {
+    "charcolor": {
+      "woShiZhongguoren": {
+        "title": "Char Color · Classic",
+        "desc": "Classic colors, 5 words/page"
+      }
+    },
+    "charmaze": {
+      "singleWo": {
+        "title": "Word Maze · 8×8",
+        "desc": "8×8 grid, word mode"
+      },
+      "phraseWoshizhongguoren": {
+        "title": "Phrase Maze · 10×10",
+        "desc": "10×10 grid, 5 words/page"
+      },
+      "sentenceYuwenyuandi1": {
+        "title": "Sentence Maze · 10×10",
+        "desc": "10×10 grid, sentence mode"
+      }
+    },
+    "chartrace": {
+      "charsTiandiren": {
+        "title": "Tian Grid · Char Tracing",
+        "desc": "Tian grid, KaiTi, 5 traces"
+      },
+      "phrasesRiyueshanchuan": {
+        "title": "Tian Grid · Phrase Tracing",
+        "desc": "Tian grid, phrase mode"
+      },
+      "sentencesJiangnan": {
+        "title": "Tian Grid · Sentence Tracing",
+        "desc": "Tian grid, sentence mode"
+      },
+      "pinyinAll": {
+        "title": "4-Line · Pinyin",
+        "desc": "Fredoka font, rainbow lines, red"
+      },
+      "alphabet": {
+        "title": "4-Line · Alphabet",
+        "desc": "Fredoka font, rainbow lines, orange"
+      },
+      "englishNumbers": {
+        "title": "4-Line · Numbers",
+        "desc": "Fredoka font, blue, repeat 3×"
+      },
+      "englishColors": {
+        "title": "4-Line · Underline",
+        "desc": "Fredoka font, purple, line numbers"
+      },
+      "englishSentences": {
+        "title": "4-Line · Sentences",
+        "desc": "Fredoka font, purple, blank"
+      }
+    },
+    "mathGenie": {
+      "add110": {
+        "title": "Addition · Text Mode",
+        "desc": "Text mode, 2 columns"
+      },
+      "mix15Emoji": {
+        "title": "Mixed ± · Emoji Mode",
+        "desc": "Emoji mode, fruit theme"
+      },
+      "mix110Word": {
+        "title": "Mixed ± · Word Problems",
+        "desc": "Word problem mode"
+      },
+      "fillMix120": {
+        "title": "Mixed ± · Fill Blank",
+        "desc": "Fill-in-the-blank, 2 columns"
+      },
+      "numberBond110": {
+        "title": "Number Bonds",
+        "desc": "Number decomposition"
+      },
+      "multiOpMix120": {
+        "title": "Multi-Step Operations",
+        "desc": "Chain addition/subtraction"
+      },
+      "column120": {
+        "title": "Column Math · ±",
+        "desc": "Vertical +/- arithmetic, 3 cols"
+      },
+      "column1x2Mul": {
+        "title": "Column Math · ×",
+        "desc": "Vertical multiplication, 3 cols"
+      },
+      "compare110": {
+        "title": "Compare · Text",
+        "desc": "Text mode magnitude"
+      },
+      "compare110Animals": {
+        "title": "Compare · Emoji",
+        "desc": "Animal emoji mode"
+      },
+      "compare110Fruits": {
+        "title": "Difference · Emoji",
+        "desc": "Fruit emoji mode"
+      }
+    },
+    "hundredChart": {
+      "random20": {
+        "title": "100 Chart · Random",
+        "desc": "20 random blank cells"
+      },
+      "step5Offset1": {
+        "title": "100 Chart · Pattern",
+        "desc": "Step 5, offset 1"
+      },
+      "crossDefault": {
+        "title": "Cross Puzzle",
+        "desc": "Cross puzzle, default difficulty"
+      }
+    },
+    "wordSearch": {
+      "sports": {
+        "title": "Word Search · 10×10 Easy",
+        "desc": "10×10 grid, easy"
+      },
+      "days": {
+        "title": "Word Search · 14×14 Medium",
+        "desc": "14×14 grid, with answer key"
+      }
+    }
+  },
   "language": {
     "zh-CN": "中文",
     "en": "English"

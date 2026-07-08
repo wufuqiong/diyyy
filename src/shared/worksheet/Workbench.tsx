@@ -26,6 +26,8 @@ interface WorkbenchProps<Config, Problem> {
   debounceMs?: number;
   /** Control auto-generation. Default true. Pass a function to derive from config. */
   autoGenerate?: boolean | ((config: Config) => boolean);
+  /** Initial config override (e.g. from template). Only used when localStorage has no saved config. */
+  initialConfig?: Config;
 }
 
 export function Workbench<Config = any, Problem = any>({
@@ -33,12 +35,13 @@ export function Workbench<Config = any, Problem = any>({
   configVersion = 1,
   debounceMs = 0,
   autoGenerate = true,
+  initialConfig,
 }: WorkbenchProps<Config, Problem>) {
   const [config, setConfig] = usePersistedConfig<Config>(
     `${tool.id}.config`,
-    tool.defaultConfig,
+    initialConfig ?? tool.defaultConfig,
     configVersion,
-    { onRestore: () => setShowRestoredSnackbar(true) }
+    { onRestore: () => setShowRestoredSnackbar(true), forceInitial: !!initialConfig }
   );
 
   const [problems, setProblems] = useState<Problem[]>([]);

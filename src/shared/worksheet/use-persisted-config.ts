@@ -53,7 +53,7 @@ export function usePersistedConfig<T>(
   key: string,
   defaultValue: T,
   version = 1,
-  options?: { onRestore?: () => void }
+  options?: { onRestore?: () => void; forceInitial?: boolean }
 ): [T, Dispatch<SetStateAction<T>>] {
   const versionRef = useRef(version);
   const keyRef = useRef(key);
@@ -63,6 +63,10 @@ export function usePersistedConfig<T>(
   const didRestore = useRef(false);
 
   const [value, setValue] = useState<T>(() => {
+    if (options?.forceInitial) {
+      writeStorage(key, version, defaultValue);
+      return defaultValue;
+    }
     const stored = readStorage<T>(key, version);
     if (stored !== undefined) {
       didRestore.current = true;

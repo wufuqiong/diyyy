@@ -455,6 +455,132 @@
       "hard": "困难（+反向）"
     }
   },
+  "templates": {
+    "charcolor": {
+      "woShiZhongguoren": {
+        "title": "识字涂色 · 经典色系",
+        "desc": "经典色系，5字/页"
+      }
+    },
+    "charmaze": {
+      "singleWo": {
+        "title": "单字迷宫 · 8×8",
+        "desc": "8×8网格，单字练习"
+      },
+      "phraseWoshizhongguoren": {
+        "title": "词语迷宫 · 10×10",
+        "desc": "10×10网格，5字/页"
+      },
+      "sentenceYuwenyuandi1": {
+        "title": "句子迷宫 · 10×10",
+        "desc": "10×10网格，句子模式"
+      }
+    },
+    "chartrace": {
+      "charsTiandiren": {
+        "title": "田字格 · 单字描红",
+        "desc": "田字格，KaiTi字体，5遍描红"
+      },
+      "phrasesRiyueshanchuan": {
+        "title": "田字格 · 词语描红",
+        "desc": "田字格，词语模式"
+      },
+      "sentencesJiangnan": {
+        "title": "田字格 · 句子描红",
+        "desc": "田字格，句子模式"
+      },
+      "pinyinAll": {
+        "title": "四线格 · 拼音描红",
+        "desc": "Fredoka字体，彩虹线，红色"
+      },
+      "alphabet": {
+        "title": "四线格 · 字母描红",
+        "desc": "Fredoka字体，彩虹线，橙色"
+      },
+      "englishNumbers": {
+        "title": "四线格 · 英文数字",
+        "desc": "Fredoka字体，蓝色，重复3次"
+      },
+      "englishColors": {
+        "title": "四线格 · 下划线占位",
+        "desc": "Fredoka字体，紫色，显示行号"
+      },
+      "englishSentences": {
+        "title": "四线格 · 英文句子",
+        "desc": "Fredoka字体，紫色，空格占位"
+      }
+    },
+    "mathGenie": {
+      "add110": {
+        "title": "加法练习 · 文本模式",
+        "desc": "文本模式，2列"
+      },
+      "mix15Emoji": {
+        "title": "加减混合 · 图案模式",
+        "desc": "图案模式，水果主题"
+      },
+      "mix110Word": {
+        "title": "加减混合 · 应用题",
+        "desc": "应用题模式"
+      },
+      "fillMix120": {
+        "title": "加减混合 · 填空型",
+        "desc": "填空模式，2列"
+      },
+      "numberBond110": {
+        "title": "数的分合",
+        "desc": "数字分解练习"
+      },
+      "multiOpMix120": {
+        "title": "多步运算",
+        "desc": "连加/连减混合"
+      },
+      "column120": {
+        "title": "列竖式 · 加减法",
+        "desc": "加减法竖式，3列"
+      },
+      "column1x2Mul": {
+        "title": "列竖式 · 乘法",
+        "desc": "竖式乘法，3列"
+      },
+      "compare110": {
+        "title": "比大小 · 文本",
+        "desc": "文本模式比较"
+      },
+      "compare110Animals": {
+        "title": "比大小 · 图案",
+        "desc": "动物图案模式"
+      },
+      "compare110Fruits": {
+        "title": "比多少 · 图案",
+        "desc": "水果图案模式"
+      }
+    },
+    "hundredChart": {
+      "random20": {
+        "title": "百数板 · 随机填空",
+        "desc": "随机留空20格"
+      },
+      "step5Offset1": {
+        "title": "百数板 · 规律填空",
+        "desc": "间隔5，偏移1"
+      },
+      "crossDefault": {
+        "title": "拼图填空",
+        "desc": "十字拼图，默认难度"
+      }
+    },
+    "wordSearch": {
+      "sports": {
+        "title": "单词搜索 · 10×10 简单",
+        "desc": "10×10网格，简单难度"
+      },
+      "days": {
+        "title": "单词搜索 · 14×14 中等",
+        "desc": "14×14网格，含答案页"
+      }
+    }
+  },
   "language": {
     "zh-CN": "中文",
     "en": "English"
