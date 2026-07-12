@@ -614,6 +614,20 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
             onChange={(_, val) => handleChange('traceOpacity', val as number)}
           />
         </SettingsField>
+
+        {isSentenceMode && (
+          <SettingsField label={t('charTrace.settings.traceModeLabel')}>
+            <FormControl fullWidth size="small">
+              <Select
+                value={config.traceMode || 'faded'}
+                onChange={(e) => handleChange('traceMode', e.target.value)}
+              >
+                <MenuItem value="faded">{t('charTrace.settings.traceModeFaded')}</MenuItem>
+                <MenuItem value="blank">{t('charTrace.settings.traceModeBlank')}</MenuItem>
+              </Select>
+            </FormControl>
+          </SettingsField>
+        )}
       </SettingCard>
 
       {/* ============= ENGLISH 4-LINE ============= */}

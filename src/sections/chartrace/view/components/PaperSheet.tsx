@@ -406,6 +406,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
     const pinyinHeightMm = config.showPinyin ? cellHeightMm / 2 : 0;
     const practiceRowHeightMm = cellHeightMm + pinyinHeightMm;
     const blockGapMm = 8;
+    const isBlankMode = config.traceMode === 'blank';
 
     const sentenceBlocks: SentenceBlock[] = sentences.map((sentence) => {
       const charDataList = Array.from(sentence)
@@ -496,7 +497,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
                                   key={colIndex}
                                   sx={{ position: 'relative', bgcolor: 'white', overflow: 'hidden', width: cellWidthPercent, ...cellStyle }}
                                 >
-                                  {renderPinyinStaff(cell.pinyin, cell.isTrace)}
+                                  {renderPinyinStaff(isBlankMode && cell.isTrace ? '' : cell.pinyin, cell.isTrace)}
                                 </Box>
                               ))}
                             </Box>
@@ -508,7 +509,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
                                 key={colIndex}
                                 sx={{ aspectRatio: '1/1', position: 'relative', bgcolor: 'white', width: cellWidthPercent, ...cellStyle }}
                               >
-                                {renderSentenceCell(cell.char, cell.isTrace)}
+                                {renderSentenceCell(isBlankMode && cell.isTrace ? undefined : cell.char, cell.isTrace)}
                               </Box>
                             ))}
                           </Box>

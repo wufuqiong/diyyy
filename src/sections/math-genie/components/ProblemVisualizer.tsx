@@ -41,7 +41,7 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
 
   const fontSize = getFontSize();
   const fontSizeNum = parseFloat(fontSize);
-  const blankSize = Math.max(24, Math.round(fontSizeNum * 20));
+  const blankSize = Math.max(32, Math.round(fontSizeNum * 30));
   const numMinW = Math.round(fontSizeNum * 20);
   const opMinW = Math.round(fontSizeNum * 12);
 
@@ -545,10 +545,10 @@ const NumberBondNode: React.FC<{
   const part0IsBlank = blankIndex === 0 && !showAnswers;
   const part1IsBlank = blankIndex === 1 && !showAnswers;
 
-  const wholeValue = showAnswers || !wholeIsBlank ? String(whole) : '?';
+  const wholeValue = showAnswers || !wholeIsBlank ? String(whole) : '';
   const partValues = [
-    showAnswers || !part0IsBlank ? String(parts[0]) : '?',
-    showAnswers || !part1IsBlank ? String(parts[1]) : '?',
+    showAnswers || !part0IsBlank ? String(parts[0]) : '',
+    showAnswers || !part1IsBlank ? String(parts[1]) : '',
   ];
 
   const CIRCLE_R = 24;
