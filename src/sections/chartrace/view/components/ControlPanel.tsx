@@ -45,21 +45,20 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, setConfig, o
   const hasChineseInText = /[\u4e00-\u9fa5]/.test(config.text);
 
   const getContentModeFromText = (text: string, fallback: TraceContentMode) => {
-    if (text.includes('\n')) return TraceContentMode.SENTENCES;
+    if (text.includes('\n') || text.includes('。')) return TraceContentMode.SENTENCES;
     if (text.includes(',') || text.includes('，')) return TraceContentMode.PHRASES;
     if (text.trim() === '') return fallback;
     return fallback === TraceContentMode.SENTENCES ? TraceContentMode.SENTENCES : TraceContentMode.CHARACTERS;
   };
 
   const getShufflePayload = (text: string) => {
-    if (text.includes('\n')) {
-      return {
-        items: text
-          .split('\n')
-          .map((item) => item.trim())
-          .filter(Boolean),
-        joiner: '\n',
-      };
+    if (text.includes('\n') || text.includes('。')) {
+      const items = text
+        .split('\n')
+        .flatMap((line) => line.split('。'))
+        .map((item) => item.trim())
+        .filter(Boolean);
+      return { items, joiner: '\n' };
     }
 
     if (text.includes(',') || text.includes('，')) {

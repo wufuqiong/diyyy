@@ -17,8 +17,8 @@ async function getPageCount(toolId: string, config: any): Promise<number> {
       return (result as any[]).length;
     }
     case 'charmaze': {
-      const result = generateMazePages(config, miemieWordData);
-      return result.length;
+      const { pages } = generateMazePages(config, miemieWordData);
+      return pages.length;
     }
     case 'chartrace': {
       // PaperSheet renders from config, always 1 physical page

@@ -10,6 +10,7 @@ import {
 } from '@mui/icons-material';
 import {
   Box,
+  Alert,
   Stack,
   Button,
   Select,
@@ -27,6 +28,7 @@ import { shuffleArray } from 'src/utils/array-tools';
 
 import { candyColors } from 'src/theme/tokens';
 import miemieDetailsJson from 'src/data/miemie-details.json';
+import { getSkippedSentences } from 'src/features/charmaze/config';
 import { parseSelectedMode, TABLE_SIZE_PRESETS } from 'src/features/charmaze/types';
 
 import { SettingCard } from 'src/sections/_shared/SettingCard';
@@ -67,8 +69,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   const modeIndex = { word: 0, phrase: 1, sentence: 2 };
   const modeFromIndex = ['word', 'phrase', 'sentence'] as const;
 
-  const handleLoadContent = (type: 'word' | 'phrase' | 'sentence') => {
-    const targetLessons = selectedLessons;
+  const handleLoadContent = (type: 'word' | 'phrase' | 'sentence', lessons?: MiemieLesson[]) => {
+    const targetLessons = lessons ?? selectedLessons;
     if (targetLessons.length === 0) return;
 
     let content = '';
@@ -95,33 +97,64 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     }
   };
 
+  const loadContentByMode = (
+    lessons: MiemieLesson[],
+    w: boolean,
+    p: boolean,
+    s: boolean,
+  ) => {
+    const availableCounts = [w, p, s].filter(Boolean).length;
+    if (availableCounts === 0) return;
+
+    if (availableCounts === 1) {
+      if (w) handleLoadContent('word', lessons);
+      else if (p) handleLoadContent('phrase', lessons);
+      else if (s) handleLoadContent('sentence', lessons);
+    } else {
+      const currentType = modeFromIndex[selectedMode];
+      if (currentType === 'word' && w) handleLoadContent('word', lessons);
+      else if (currentType === 'phrase' && p) handleLoadContent('phrase', lessons);
+      else if (currentType === 'sentence' && s) handleLoadContent('sentence', lessons);
+      else if (w) handleLoadContent('word', lessons);
+      else if (p) handleLoadContent('phrase', lessons);
+      else handleLoadContent('sentence', lessons);
+    }
+  };
+
   const handleLessonChange = (values: string[]) => {
     if (values.includes('__all__')) {
       setSelectedLessonIndexes([]);
+      // Load content from all lessons in current level
+      const allLessons = currentLessons.filter(
+        (l) => Array.isArray(l.word) || Array.isArray(l.phrase) || Array.isArray(l.sentence)
+      );
+      if (allLessons.length > 0) {
+        const w = allLessons.some((l) => Array.isArray(l.word) && l.word.length > 0);
+        const p = allLessons.some((l) => Array.isArray(l.phrase) && l.phrase.length > 0);
+        const s = allLessons.some((l) => Array.isArray(l.sentence) && l.sentence.length > 0);
+        loadContentByMode(allLessons, w, p, s);
+      }
       return;
     }
 
     setSelectedLessonIndexes(values);
 
-    if (values.length !== 1) return;
+    const selectedLessonObjs = values
+      .map((i) => currentLessons[Number(i)])
+      .filter(Boolean);
 
-    const lesson = currentLessons[Number(values[0])];
-    if (lesson) {
-      const w = Array.isArray(lesson.word) && lesson.word.length > 0;
-      const p = Array.isArray(lesson.phrase) && lesson.phrase.length > 0;
-      const s = Array.isArray(lesson.sentence) && lesson.sentence.length > 0;
+    if (selectedLessonObjs.length === 0) return;
 
-      const availableCounts = [w, p, s].filter(Boolean).length;
-      if (availableCounts === 1) {
-        if (w) handleLoadContent('word');
-        else if (p) handleLoadContent('phrase');
-        else if (s) handleLoadContent('sentence');
-      }
-    }
+    // Determine which content types are available across all selected lessons
+    const w = selectedLessonObjs.some((l) => Array.isArray(l.word) && l.word.length > 0);
+    const p = selectedLessonObjs.some((l) => Array.isArray(l.phrase) && l.phrase.length > 0);
+    const s = selectedLessonObjs.some((l) => Array.isArray(l.sentence) && l.sentence.length > 0);
+
+    loadContentByMode(selectedLessonObjs, w, p, s);
   };
 
   const getShuffleInputItems = () => {
-    const splitPattern = mode === 'SENTENCE' ? /[\n]+/ : /[\s,;，；、]+/;
+    const splitPattern = mode === 'SENTENCE' ? /[\n。]+/ : /[\s,;，；、]+/;
     return userInput
       .split(splitPattern)
       .map((item) => item.trim())
@@ -296,6 +329,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 {t('common.shuffle')}
               </Button>
             </Box>
+
+            {mode === 'SENTENCE' && getSkippedSentences().length > 0 && (
+              <Alert severity="warning" sx={{ mt: 1 }}>
+                {t('charMaze.settings.skippedSentences', { sentences: getSkippedSentences().join('、') })}
+              </Alert>
+            )}
           </Stack>
         </SettingsField>
       </SettingCard>

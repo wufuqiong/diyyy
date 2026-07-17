@@ -29,8 +29,16 @@ const defaultConfig: CharMazeConfig = {
   selectedBook: '',
 };
 
+let lastSkippedSentences: string[] = [];
+
 function generate(config: CharMazeConfig): MazePageData[] {
-  return generateMazePages(config, miemieWordData);
+  const result = generateMazePages(config, miemieWordData);
+  lastSkippedSentences = result.skippedSentences;
+  return result.pages;
+}
+
+export function getSkippedSentences(): string[] {
+  return lastSkippedSentences;
 }
 
 const Preview: React.FC<{ config: CharMazeConfig; problems: MazePageData[]; pdfContainerRef?: React.RefObject<HTMLDivElement | null> }> = ({ problems, pdfContainerRef }) => (

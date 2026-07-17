@@ -401,7 +401,11 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
       heightMm: number;
     };
 
-    const sentences = config.text.split('\n').map((sentence) => sentence.trim()).filter((sentence) => sentence !== '');
+    const sentences = config.text
+      .split('\n')
+      .flatMap((line) => line.split('。'))
+      .map((s) => s.trim())
+      .filter((s) => s !== '');
     const cellHeightMm = A4_CONTENT_WIDTH_MM / config.colsPerRow;
     const pinyinHeightMm = config.showPinyin ? cellHeightMm / 2 : 0;
     const practiceRowHeightMm = cellHeightMm + pinyinHeightMm;
@@ -520,6 +524,33 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
                 </Box>
               ))}
             </Box>
+
+            {/* Fill remaining row budget with blank practice rows */}
+            {(() => {
+              const usedRows = pageBlocks.reduce((sum, b) => sum + b.rowUnits, 0);
+              const remaining = rowBudgetPerPage - usedRows;
+              if (remaining <= 0) return null;
+              return Array.from({ length: remaining }, (_v, ri) => (
+                <Box key={`pad-${ri}`} sx={{ width: '100%' }}>
+                  {config.showPinyin && (
+                    <Box sx={{ display: 'flex', width: '100%', ...wrapperStyle }}>
+                      {Array.from({ length: config.colsPerRow }, (_x, ci) => (
+                        <Box key={ci} sx={{ position: 'relative', bgcolor: 'white', overflow: 'hidden', width: cellWidthPercent, ...cellStyle }}>
+                          {renderPinyinStaff('', true)}
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+                  <Box sx={{ display: 'flex', width: '100%', ...wrapperStyle }}>
+                    {Array.from({ length: config.colsPerRow }, (_y, ci) => (
+                      <Box key={ci} sx={{ aspectRatio: '1/1', position: 'relative', bgcolor: 'white', width: cellWidthPercent, ...cellStyle }}>
+                        {renderSentenceCell(undefined, true)}
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              ));
+            })()}
 
             <Box component="footer" sx={{ mt: 'auto', borderTop: 1, borderColor: 'grey.100', pt: 1, textAlign: 'center', color: 'grey.400', fontSize: '0.75rem' }} className="font-kaiti">
               Page {pageIndex + 1}

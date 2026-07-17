@@ -78,21 +78,22 @@ export function generateMaze(
 export function generateMazePages(
   config: CharMazeConfig,
   miemieWordData: MiemieData
-): MazePageData[] {
+): { pages: MazePageData[]; skippedSentences: string[] } {
   const { userInput, selectedMode, wordsPerPage, selectedTableSize } = config;
 
   if (!userInput.trim()) {
-    return [];
+    return { pages: [], skippedSentences: [] };
   }
 
   const rows = TABLE_SIZE_PRESETS[selectedTableSize].rows;
   const cols = TABLE_SIZE_PRESETS[selectedTableSize].cols;
   const mode = parseSelectedMode(selectedMode);
   const newPages: MazePageData[] = [];
+  const skippedSentences: string[] = [];
 
   let inputChars: string[] = [];
   if (userInput.trim() !== '') {
-    const splitPattern = mode === 'SENTENCE' ? /[\n]+/ : /[\s,;，；、]+/;
+    const splitPattern = mode === 'SENTENCE' ? /[\n。]+/ : /[\s,;，；、]+/;
     const tokens = userInput
       .split(splitPattern)
       .map((token) => {
@@ -110,7 +111,7 @@ export function generateMazePages(
   }
 
   if (inputChars.length === 0) {
-    return [];
+    return { pages: [], skippedSentences: [] };
   }
 
   // Precompute the filler character pool once for all pages (avoid per-page rebuild).
@@ -146,16 +147,23 @@ export function generateMazePages(
       }
     }
   } else if (mode === 'SENTENCE') {
-    const count = Math.min(inputChars.length, MAX_PAGES);
-    for (let i = 0; i < count; i++) {
+    const maxPathLen = rows + cols - 1; // sentence maze only moves right+down
+    for (let i = 0; i < inputChars.length && newPages.length < MAX_PAGES; i++) {
       const sentence = inputChars[i];
       const chars = sentence.split('').filter((char) => char.trim() !== '');
-      if (chars.length > 0) {
+      if (chars.length === 0) continue;
+      if (chars.length > maxPathLen) {
+        skippedSentences.push(sentence);
+        continue;
+      }
+      try {
         const pageChars = generateMaze(chars, rows, cols, mode, miemieWordData, shuffledFiller());
         newPages.push({ refChars: [sentence], chars: pageChars, rows, cols, mode });
+      } catch {
+        skippedSentences.push(sentence);
       }
     }
   }
 
-  return newPages;
+  return { pages: newPages, skippedSentences };
 }

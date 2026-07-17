@@ -351,19 +351,19 @@ describe('generateMazePages', () => {
     it('returns an empty array when userInput is empty string', async () => {
       const { generateMazePages } = await import('src/features/charmaze/utils');
       const config = makeConfig({ userInput: '' });
-      expect(generateMazePages(config, mockMiemieData)).toEqual([]);
+      expect(generateMazePages(config, mockMiemieData)).toEqual({ pages: [], skippedSentences: [] });
     });
 
     it('returns an empty array when userInput is whitespace only', async () => {
       const { generateMazePages } = await import('src/features/charmaze/utils');
       const config = makeConfig({ userInput: '   \n  ' });
-      expect(generateMazePages(config, mockMiemieData)).toEqual([]);
+      expect(generateMazePages(config, mockMiemieData)).toEqual({ pages: [], skippedSentences: [] });
     });
 
     it('returns an empty array when userInput contains no Chinese characters', async () => {
       const { generateMazePages } = await import('src/features/charmaze/utils');
       const config = makeConfig({ userInput: 'abc, 123, xyz' });
-      expect(generateMazePages(config, mockMiemieData)).toEqual([]);
+      expect(generateMazePages(config, mockMiemieData)).toEqual({ pages: [], skippedSentences: [] });
     });
   });
 
@@ -371,7 +371,7 @@ describe('generateMazePages', () => {
     it('produces one page per Chinese character', async () => {
       const { generateMazePages } = await import('src/features/charmaze/utils');
       const config = makeConfig({ userInput: '山,水,火', selectedMode: 0 });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages).toHaveLength(3);
       expect(pages[0].mode).toBe('WORD');
       expect(pages[1].mode).toBe('WORD');
@@ -381,7 +381,7 @@ describe('generateMazePages', () => {
     it('each page refChars is a single character', async () => {
       const { generateMazePages } = await import('src/features/charmaze/utils');
       const config = makeConfig({ userInput: '山,水,火,木', selectedMode: 0 });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       for (const page of pages) {
         expect(page.refChars).toHaveLength(1);
         expect(page.refChars[0]).toBeTruthy();
@@ -392,7 +392,7 @@ describe('generateMazePages', () => {
       const { generateMazePages } = await import('src/features/charmaze/utils');
       // "山水火" without any separator — should split into 山, 水, 火
       const config = makeConfig({ userInput: '山水火', selectedMode: 0 });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages).toHaveLength(3);
       expect(pages[0].refChars).toEqual(['山']);
       expect(pages[1].refChars).toEqual(['水']);
@@ -407,7 +407,7 @@ describe('generateMazePages', () => {
         selectedMode: 0,
         selectedTableSize: 1, // 9x9
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       for (const page of pages) {
         expect(page.rows).toBe(9);
         expect(page.cols).toBe(9);
@@ -423,7 +423,7 @@ describe('generateMazePages', () => {
         selectedMode: 0,
         wordsPerPage: 3,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       // WORD mode: each char is a page, regardless of wordsPerPage
       expect(pages).toHaveLength(5);
     });
@@ -434,7 +434,7 @@ describe('generateMazePages', () => {
         i < 10 ? '山水火木金土日月星天'[i] : '山'
       ).join(',');
       const config = makeConfig({ userInput: manyChars, selectedMode: 0 });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages.length).toBe(50);
     });
   });
@@ -448,7 +448,7 @@ describe('generateMazePages', () => {
         selectedMode: 1,
         wordsPerPage: 3,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages).toHaveLength(2);
       expect(pages[0].refChars).toHaveLength(3);
       expect(pages[1].refChars).toHaveLength(3);
@@ -461,7 +461,7 @@ describe('generateMazePages', () => {
         selectedMode: 1,
         wordsPerPage: 3,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       // 5 words, 3/page -> ceil(5/3) = 2 pages
       expect(pages).toHaveLength(2);
       expect(pages[0].refChars).toHaveLength(3);
@@ -475,7 +475,7 @@ describe('generateMazePages', () => {
         selectedMode: 1,
         wordsPerPage: 2,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages[0].refChars).toEqual(['山水', '火木']);
     });
 
@@ -485,7 +485,7 @@ describe('generateMazePages', () => {
         userInput: '山水,火木,金土,日月',
         selectedMode: 1,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       for (const page of pages) {
         expect(page.mode).toBe('PHRASE');
       }
@@ -500,7 +500,7 @@ describe('generateMazePages', () => {
         selectedMode: 1,
         wordsPerPage: 1,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages.length).toBe(50);
     });
   });
@@ -512,7 +512,7 @@ describe('generateMazePages', () => {
         userInput: '山水火木\n金土日月\n星天山水',
         selectedMode: 2,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages).toHaveLength(3);
       expect(pages[0].mode).toBe('SENTENCE');
       expect(pages[1].mode).toBe('SENTENCE');
@@ -525,7 +525,7 @@ describe('generateMazePages', () => {
         userInput: '山水火木\n\n金土日月',
         selectedMode: 2,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages).toHaveLength(2);
     });
 
@@ -536,7 +536,7 @@ describe('generateMazePages', () => {
         selectedMode: 2,
         wordsPerPage: 2,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages).toHaveLength(2);
     });
 
@@ -544,7 +544,7 @@ describe('generateMazePages', () => {
       const { generateMazePages } = await import('src/features/charmaze/utils');
       const manySentences = Array.from({ length: 60 }, (_, i) => '山水').join('\n');
       const config = makeConfig({ userInput: manySentences, selectedMode: 2 });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages.length).toBe(50);
     });
 
@@ -554,7 +554,7 @@ describe('generateMazePages', () => {
         userInput: '山水火木',
         selectedMode: 2,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages[0].refChars).toEqual(['山水火木']);
     });
   });
@@ -567,7 +567,7 @@ describe('generateMazePages', () => {
         selectedMode: 0,
         selectedTableSize: 0,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages[0].rows).toBe(8);
       expect(pages[0].cols).toBe(8);
     });
@@ -579,7 +579,7 @@ describe('generateMazePages', () => {
         selectedMode: 0,
         selectedTableSize: 3,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages[0].rows).toBe(12);
       expect(pages[0].cols).toBe(12);
     });
@@ -593,7 +593,7 @@ describe('generateMazePages', () => {
         selectedMode: 1,
         wordsPerPage: 3,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages).toHaveLength(1);
       // Spaces inside tokens are stripped (Chinese-only extraction), so
       // tokens become ['山水', '火木', '金土']
@@ -608,7 +608,7 @@ describe('generateMazePages', () => {
         userInput: '山水火,木金土\n日月星',
         selectedMode: 2,
       });
-      const pages = generateMazePages(config, mockMiemieData);
+      const { pages } = generateMazePages(config, mockMiemieData);
       expect(pages).toHaveLength(2);
       // Commas are filtered by the Chinese-only regex, so '山水火,木金土' -> '山水火木金土'
     });
