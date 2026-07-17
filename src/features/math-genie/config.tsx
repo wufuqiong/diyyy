@@ -25,7 +25,7 @@ import WorksheetSettings from '../../sections/math-genie/components/WorksheetSet
 
 const defaultConfig: WorksheetConfig = {
   theme: 'Animals 🐶',
-  difficulty: DifficultyLevel.EASY,
+  difficulty: DifficultyLevel.CUSTOM,
   operation: OperationType.ADDITION,
   count: 1,
   textColumns: 2,
@@ -38,9 +38,10 @@ const defaultConfig: WorksheetConfig = {
     problemType: ProblemType.STANDARD,
     specialPracticeType: SpecialPracticeType.NONE,
     operation: OperationType.ADDITION,
-    difficulty: DifficultyLevel.EASY,
+    difficulty: DifficultyLevel.CUSTOM,
+    customDifficulty: { min: 1, max: 10 },
   }),
-  customDifficulty: { min: 1, max: 15 },
+  customDifficulty: { min: 1, max: 10 },
   problemType: ProblemType.STANDARD,
   specialPracticeType: SpecialPracticeType.NONE,
   multiOperationConfig: { mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 3 },

@@ -37,8 +37,16 @@ function hasBorrow(a: number, b: number): boolean {
 /** +/- digit ranges: top has one more digit than bottom */
 function getDigits(max: number): { topMin: number; topMax: number; botMin: number; botMax: number } {
   const len = String(max).length;
-  const td = Math.min(len, 3);
-  const bd = Math.max(1, td - 1);
+  let td = Math.min(len, 3);
+  let bd = Math.max(1, td - 1);
+
+  // If the top-digit range is too narrow (e.g. max=100 gives only [100,100]),
+  // drop one digit level so the top number has a meaningful range.
+  if (td > 1 && Math.min(Math.pow(10, td) - 1, max) - Math.pow(10, td - 1) < 9) {
+    td--;
+    bd = Math.max(1, td - 1);
+  }
+
   return {
     topMin: Math.pow(10, td - 1),
     topMax: Math.min(Math.pow(10, td) - 1, max),

@@ -49,7 +49,7 @@ interface Props {
 
 const DEFAULT_CONFIG: WorksheetConfig = {
   theme: 'Animals 🐶',
-  difficulty: DifficultyLevel.EASY,
+  difficulty: DifficultyLevel.CUSTOM,
   operation: OperationType.ADDITION,
   count: 1,
   textColumns: 2,
@@ -59,12 +59,13 @@ const DEFAULT_CONFIG: WorksheetConfig = {
     problemType: ProblemType.STANDARD,
     specialPracticeType: SpecialPracticeType.NONE,
     operation: OperationType.ADDITION,
-    difficulty: DifficultyLevel.EASY,
+    difficulty: DifficultyLevel.CUSTOM,
+    customDifficulty: { min: 1, max: 10 },
   }),
   title: 'Fun Math Time!',
   showAnswers: false,
   displayMode: DisplayMode.TEXT,
-  customDifficulty: { min: 1, max: 15 },
+  customDifficulty: { min: 1, max: 10 },
   difficultyRatios: undefined,
   problemType: ProblemType.STANDARD,
   specialPracticeType: SpecialPracticeType.NONE,
@@ -93,6 +94,20 @@ function calculateMaxUnique(
   if (isMul) for (let a = 1; a <= maxNum; a++) for (let b = 1; a * b <= maxNum; b++) total++;
   if (isDiv) for (let b = 1; b <= maxNum; b++) for (let c = 0; c <= Math.floor(maxNum / b); c++) total++;
   return Math.max(1, total);
+}
+
+type RangeTier = '1-10' | '10-100' | '100-10000';
+
+const RANGE_TIERS: Record<RangeTier, { label: string; min: number; max: number; step: number }> = {
+  '1-10': { label: '1–10', min: 1, max: 10, step: 1 },
+  '10-100': { label: '10–100', min: 10, max: 100, step: 5 },
+  '100-10000': { label: '100–10000', min: 100, max: 10000, step: 100 },
+};
+
+function getTierFromRange(_min: number, max: number): RangeTier {
+  if (max <= 10) return '1-10';
+  if (max <= 100) return '10-100';
+  return '100-10000';
 }
 
 const THEME_PRESETS = [
@@ -173,6 +188,13 @@ const WorksheetSettings: React.FC<Props> = ({
   const [emojiLimitConfirm, setEmojiLimitConfirm] = useState<{ open: boolean; pendingDisplayMode?: DisplayMode }>({ open: false });
   const notify = (msg: string) => setSnack({ open: true, msg });
 
+  const [rangeTier, setRangeTier] = useState<RangeTier>(() =>
+    getTierFromRange(customDifficulty?.min ?? 1, customDifficulty?.max ?? 10));
+  // Keep tier in sync when external changes modify customDifficulty
+  useEffect(() => {
+    setRangeTier(getTierFromRange(customDifficulty?.min ?? 1, customDifficulty?.max ?? 10));
+  }, [customDifficulty?.min, customDifficulty?.max]);
+
   // ---------- Derived ----------
 
   const layout = derivePageLayout({ columns: textColumns, problemsPerPage: configProblemsPerPage });
@@ -226,12 +248,8 @@ const WorksheetSettings: React.FC<Props> = ({
   }, [displayMode, textColumns, layout.problemsPerPage, perPage, t]);
 
   const maxPossibleProblems = useMemo(() => {
-    let minNum = 1;
-    let maxNum = difficulty as number;
-    if (difficulty === DifficultyLevel.CUSTOM && customDifficulty) {
-      minNum = customDifficulty.min;
-      maxNum = customDifficulty.max;
-    }
+    const minNum = customDifficulty?.min ?? 1;
+    const maxNum = customDifficulty?.max ?? 10;
 
     if (activeProblemType === ProblemType.MULTI_STEP) {
       if (multiOperationConfig) {
@@ -262,7 +280,7 @@ const WorksheetSettings: React.FC<Props> = ({
       }
     }
     return add + sub;
-  }, [difficulty, operation, multiOperationConfig, customDifficulty]);
+  }, [operation, multiOperationConfig, customDifficulty]);
 
   const requestedCount = count * perPage;
   const isExceedingMax = requestedCount > maxPossibleProblems;
@@ -271,16 +289,14 @@ const WorksheetSettings: React.FC<Props> = ({
   const suggestedMax = useMemo(() => {
     if (!isExceedingMax && maxPossibleProblems >= 4) return null;
     const minViable = Math.max(4, requestedCount);
-    for (let m = Math.max(difficulty as number, 2); m <= 100; m++) {
+    const start = Math.max((customDifficulty?.max ?? 10) + 1, 2);
+    const upper = Math.min((customDifficulty?.max ?? 100) * 3, 2000);
+    for (let m = start; m <= upper; m += m < 100 ? 1 : 10) {
       const countAtM = calculateMaxUnique(m, operation, activeProblemType, multiOperationConfig);
       if (countAtM >= minViable) return m;
     }
     return null;
-  }, [isExceedingMax, maxPossibleProblems, requestedCount, difficulty, operation, activeProblemType, multiOperationConfig]);
-
-  const suggestedDiff = suggestedMax && difficulty !== DifficultyLevel.CUSTOM
-    ? (suggestedMax <= 5 ? DifficultyLevel.EASY : suggestedMax <= 10 ? DifficultyLevel.MEDIUM : DifficultyLevel.HARD)
-    : null;
+  }, [isExceedingMax, maxPossibleProblems, requestedCount, customDifficulty, operation, activeProblemType, multiOperationConfig]);
 
   const ratioTotal = difficultyRatios
     ? difficultyRatios.easy + difficultyRatios.medium + difficultyRatios.hard + difficultyRatios.custom
@@ -340,9 +356,22 @@ const WorksheetSettings: React.FC<Props> = ({
     onChange({ ...config, ...updates });
   };
 
+  const deriveMultiMode = (op: OperationType): MultiOperationMode =>
+    op === OperationType.ADDITION ? MultiOperationMode.CHAIN_ADDITION
+    : op === OperationType.SUBTRACTION ? MultiOperationMode.CHAIN_SUBTRACTION
+    : op === OperationType.MULTIPLICATION ? MultiOperationMode.CHAIN_MULTIPLICATION
+    : op === OperationType.DIVISION ? MultiOperationMode.CHAIN_DIVISION
+    : op === OperationType.MULT_DIV_MIXED ? MultiOperationMode.MULT_DIV_MIXED_CHAIN
+    : op === OperationType.ALL ? MultiOperationMode.ALL_MIXED
+    : MultiOperationMode.MIXED_OPERATIONS;
+
   const handleOperation = (next: OperationType | null) => {
     if (!next || next === operation) return;
-    onChange({ ...config, operation: next });
+    const updates: Partial<WorksheetConfig> = { operation: next };
+    if (isMultiOp) {
+      updates.multiOperationConfig = { ...config.multiOperationConfig!, mode: deriveMultiMode(next) };
+    }
+    onChange({ ...config, ...updates });
   };
 
   const handleProblemType = (next: ProblemType | null) => {
@@ -352,7 +381,7 @@ const WorksheetSettings: React.FC<Props> = ({
       if (isEmoji) updates.displayMode = DisplayMode.TEXT;
       if (isSpecialSelected) updates.specialPracticeType = SpecialPracticeType.NONE;
       updates.multiOperationConfig = {
-        mode: config.multiOperationConfig?.mode ?? MultiOperationMode.CHAIN_ADDITION,
+        mode: deriveMultiMode(config.operation),
         numberCount: config.multiOperationConfig?.numberCount ?? 3,
       };
     } else if (activeProblemType === ProblemType.MULTI_STEP) {
@@ -390,13 +419,13 @@ const WorksheetSettings: React.FC<Props> = ({
     onChange({ ...config, ...updates });
   };
 
-  const handleDifficulty = (next: DifficultyLevel | null) => {
-    if (next === null) return;
-    const updates: Partial<WorksheetConfig> = { difficulty: next };
-    if (useMixMode) {
-      updates.difficultyRatios = undefined;
-    }
-    onChange({ ...config, ...updates });
+  const handleRangeTier = (tier: RangeTier) => {
+    const tierCfg = RANGE_TIERS[tier];
+    onChange({
+      ...config,
+      difficulty: DifficultyLevel.CUSTOM,
+      customDifficulty: { min: tierCfg.min, max: tierCfg.max },
+    });
   };
 
   const handleMixModeTab = (_: React.SyntheticEvent, newValue: 'single' | 'mix') => {
@@ -430,7 +459,7 @@ const WorksheetSettings: React.FC<Props> = ({
     if (!Array.isArray(val)) return;
     const [min, max] = val;
     if (max <= min) return;
-    onChange({ ...config, customDifficulty: { min, max } });
+    onChange({ ...config, difficulty: DifficultyLevel.CUSTOM, customDifficulty: { min, max } });
   };
 
   const handleRatio = (k: keyof DifficultyRatios, v: number) => {
@@ -511,24 +540,27 @@ const WorksheetSettings: React.FC<Props> = ({
           <>
             <SettingsField>
               <ToggleButtonGroup
-                value={difficulty} exclusive fullWidth size="small"
-                onChange={(_, v) => handleDifficulty(v)}
+                value={rangeTier} exclusive fullWidth size="small"
+                onChange={(_, v) => v && handleRangeTier(v)}
               >
-                <ToggleButton value={DifficultyLevel.EASY}>1–5</ToggleButton>
-                <ToggleButton value={DifficultyLevel.MEDIUM}>1–10</ToggleButton>
-                <ToggleButton value={DifficultyLevel.HARD}>1–20</ToggleButton>
-                <ToggleButton value={DifficultyLevel.CUSTOM}>{t('mathGenie.custom')}</ToggleButton>
+                <ToggleButton value="1-10">1–10</ToggleButton>
+                <ToggleButton value="10-100">10–100</ToggleButton>
+                <ToggleButton value="100-10000">100–10000</ToggleButton>
               </ToggleButtonGroup>
             </SettingsField>
-            {difficulty === DifficultyLevel.CUSTOM && (
-              <SettingsField caption={t('mathGenie.customRangeHint', { min: customDifficulty?.min ?? 1, max: customDifficulty?.max ?? 20 })}>
-                <Slider
-                  value={[customDifficulty?.min ?? 1, customDifficulty?.max ?? 20]}
-                  onChange={handleCustomRange} min={1} max={100} step={1}
-                  valueLabelDisplay="auto" disableSwap
-                />
-              </SettingsField>
-            )}
+            <SettingsField caption={t('mathGenie.customRangeHint', { min: customDifficulty?.min ?? 1, max: customDifficulty?.max ?? 10 })}>
+              <Slider
+                value={[
+                  Math.max(RANGE_TIERS[rangeTier].min, customDifficulty?.min ?? 1),
+                  Math.min(RANGE_TIERS[rangeTier].max, customDifficulty?.max ?? 10),
+                ]}
+                onChange={handleCustomRange}
+                min={RANGE_TIERS[rangeTier].min}
+                max={RANGE_TIERS[rangeTier].max}
+                step={RANGE_TIERS[rangeTier].step}
+                valueLabelDisplay="auto" disableSwap
+              />
+            </SettingsField>
           </>
         )}
       </SettingCard>
@@ -581,18 +613,10 @@ const WorksheetSettings: React.FC<Props> = ({
                         {suggestedMax && (
                           <Box component="span" sx={{ display: 'block', mt: 0.5 }}>
                             {t('mathGenie.suggestRange', { max: suggestedMax })}
-                            {difficulty !== DifficultyLevel.CUSTOM && suggestedDiff && (
-                              <Button size="small" sx={{ ml: 1, textTransform: 'none', minWidth: 'auto' }}
-                                onClick={() => onChange({ ...config, difficulty: suggestedDiff })}>
-                                {t('mathGenie.switchTo')} 1–{suggestedMax}
-                              </Button>
-                            )}
-                            {difficulty === DifficultyLevel.CUSTOM && (
-                              <Button size="small" sx={{ ml: 1, textTransform: 'none', minWidth: 'auto' }}
-                                onClick={() => onChange({ ...config, customDifficulty: { min: 1, max: suggestedMax } })}>
-                                {t('mathGenie.switchTo')} 1–{suggestedMax}
-                              </Button>
-                            )}
+                            <Button size="small" sx={{ ml: 1, textTransform: 'none', minWidth: 'auto' }}
+                              onClick={() => onChange({ ...config, difficulty: DifficultyLevel.CUSTOM, customDifficulty: { min: 1, max: suggestedMax } })}>
+                              {t('mathGenie.switchTo')} 1–{suggestedMax}
+                            </Button>
                           </Box>
                         )}
                       </Box>
