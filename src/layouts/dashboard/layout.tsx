@@ -7,6 +7,8 @@ import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
+import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import BugReportOutlinedIcon from '@mui/icons-material/BugReportOutlined';
 
 import { candyColors } from 'src/theme/tokens';
 import { TitleSlotMount, ToolbarSlotMount } from 'src/shared/worksheet/ToolbarSlot';
@@ -76,6 +78,53 @@ export function DashboardLayout({
     </Box>
   );
 
+  const footerBtnSx = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 0.5,
+    py: 0.6,
+    px: 1.25,
+    borderRadius: '10px',
+    border: '1.5px dashed',
+    borderColor: 'divider',
+    textDecoration: 'none',
+    color: 'text.secondary',
+    fontFamily: '"Quicksand", "Noto Sans SC", sans-serif',
+    fontWeight: 600,
+    fontSize: '0.7rem',
+    flex: 1,
+    transition: 'all 0.15s',
+    '&:hover': {
+      borderColor: 'primary.main',
+      color: 'primary.main',
+      bgcolor: 'primary.lighter',
+    },
+  } as const;
+
+  const renderSidebarBottomArea = () => (
+    <Box sx={{ px: 1.5, pb: 1.5, display: 'flex', gap: 0.75 }}>
+      <Box
+        component="a"
+        href="https://github.com/wufuqiong/diyyy/issues/new"
+        target="_blank"
+        rel="noopener noreferrer"
+        sx={footerBtnSx}
+      >
+        <BugReportOutlinedIcon sx={{ fontSize: 16 }} />
+        Feedback
+      </Box>
+      <Box
+        component="a"
+        href="mailto:wufuqiong@gmail.com"
+        sx={footerBtnSx}
+      >
+        <MailOutlineIcon sx={{ fontSize: 16 }} />
+        Contact
+      </Box>
+    </Box>
+  );
+
   const renderHeader = () => {
     const headerSlotProps: HeaderSectionProps['slotProps'] = {
       container: {
@@ -100,7 +149,7 @@ export function DashboardLayout({
             data={navData}
             open={open}
             onClose={onClose}
-            slots={{ topArea: renderSidebarTopArea() }}
+            slots={{ topArea: renderSidebarTopArea(), bottomArea: renderSidebarBottomArea() }}
           />
           <TitleSlotMount />
         </>
@@ -151,6 +200,7 @@ export function DashboardLayout({
           layoutQuery={layoutQuery}
           slots={{
             topArea: renderSidebarTopArea(),
+            bottomArea: renderSidebarBottomArea(),
           }}
         />
       }
