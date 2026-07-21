@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) and other AI coding agents when working with code in this repository.
 
 ## Commands
 
@@ -48,11 +48,18 @@ View components are thin wrappers that render `<Workbench tool={tool} />`.
 
 `PrintFrame` wraps preview content in a paper-like container with `@media print` rules that strip margins/backgrounds/shadows and force page breaks.
 
+### Template Gallery
+
+Dashboard features a Template Gallery (`src/sections/dashboard/TemplateGallery.tsx`) with 28 preset templates across 6 tools. Cards render live Preview thumbnails at A4 ratio. Key behaviors:
+- `usePersistedConfig` with `forceInitial` option overrides localStorage when navigating via `?template=` param
+- Module-level `Map` caches `generate()` results for instant revisit
+- 300ms settle delay prevents useFitScale flash
+
 ### Layout system
 
 `DashboardLayout` (`src/layouts/dashboard/`) composes:
 - **Header** — sticky AppBar with blur, hamburger menu (mobile), and `LanguageSwitcher`
-- **Sidebar** — `NavDesktop` (fixed left) or `NavMobile` (drawer), both rendering `NavContent` from `nav-config-dashboard.tsx`
+- **Sidebar** — `NavDesktop` (fixed left) or `NavMobile` (drawer), both rendering `NavContent` from `nav-config-dashboard.tsx`. Footer area has Feedback + Contact buttons.
 - **Main** — `<Outlet />` (page content)
 
 Built on layout primitives from `minimal-shared` and `src/layouts/core/`.
@@ -97,8 +104,6 @@ Before implementing:
 - No error handling for impossible scenarios.
 - If you write 200 lines and it could be 50, rewrite it.
 
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
-
 ### 3. Surgical Changes
 
 **Touch only what you must. Clean up only your own mess.**
@@ -112,8 +117,6 @@ When editing existing code:
 When your changes create orphans:
 - Remove imports/variables/functions that YOUR changes made unused.
 - Don't remove pre-existing dead code unless asked.
-
-The test: Every changed line should trace directly to the user's request.
 
 ### 4. Goal-Driven Execution
 
@@ -130,5 +133,3 @@ For multi-step tasks, state a brief plan:
 2. [Step] → verify: [check]
 3. [Step] → verify: [check]
 ```
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.

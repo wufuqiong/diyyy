@@ -336,6 +336,41 @@ describe('Math Genie Generators', () => {
     });
   });
 
+  describe('COLUMN_ARITHMETIC 10–100 range', () => {
+    it.each([
+      OperationType.ADDITION,
+      OperationType.SUBTRACTION,
+      OperationType.MIXED,
+    ])('keeps at least one add/sub operand two-digit for %s', async (operation) => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      const { problems } = await generateMathProblems(
+        'Animals 🐶', DifficultyLevel.CUSTOM, operation, 40,
+        { min: 10, max: 100 }, undefined, ProblemType.STANDARD,
+        SpecialPracticeType.COLUMN_ARITHMETIC, undefined, false, DisplayMode.TEXT
+      );
+
+      expect(problems).toHaveLength(40);
+      problems.forEach((problem) => {
+        expect(problem.op).toMatch(/^[+-]$/);
+        expect(problem.a >= 10 || problem.b >= 10).toBe(true);
+      });
+    });
+
+    it.each([
+      OperationType.ADDITION,
+      OperationType.SUBTRACTION,
+    ])('includes problems with two two-digit operands for %s', async (operation) => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      const { problems } = await generateMathProblems(
+        'Animals 🐶', DifficultyLevel.CUSTOM, operation, 100,
+        { min: 10, max: 100 }, undefined, ProblemType.STANDARD,
+        SpecialPracticeType.COLUMN_ARITHMETIC, undefined, false, DisplayMode.TEXT
+      );
+
+      expect(problems.some((problem) => problem.a >= 10 && problem.b >= 10)).toBe(true);
+    });
+  });
+
   // ---------- Number Bond tests ----------
   describe('NUMBER_BOND', () => {
     it('all problems satisfy parts[0] + parts[1] === whole', async () => {

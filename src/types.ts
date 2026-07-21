@@ -152,6 +152,7 @@ export interface WorksheetConfig {
   difficultyRatios?: DifficultyRatios;
   mulDivLevel?: MulDivLevel;
   excludeCarry?: boolean; // 列竖式加减法：仅生成进位/退位题
+  fillColumnNumbers?: boolean; // 列竖式：预填竖式中的操作数
   problemType?: ProblemType; // 题目类型
   specialPracticeType?: SpecialPracticeType; // 专项练习类型
   multiOperationConfig?: MultiOperationConfig; // 多重运算配置

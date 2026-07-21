@@ -11,11 +11,12 @@ interface Props {
   problem: MathProblem;
   index: number;
   showAnswers: boolean;
+  fillColumnNumbers?: boolean;
   displayMode: DisplayMode;
   pageFontSize?: string;
 }
 
-const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAnswers, displayMode, pageFontSize }) => {
+const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAnswers, fillColumnNumbers = true, displayMode, pageFontSize }) => {
   const { operation, num1, num2, emoji1, emoji2, answer, problemType, blankPosition, isMultiOperation, numbers, operators, emojis, isNumberBond, numberBondWhole, numberBondParts, numberBondBlankIndex, isWordProblem, wordProblemText, wordProblemOperation, wordProblemMeasure, isComparison, comparisonData, isColumnArithmetic, columnTop, columnBottom, columnOp } = problem;
 
   // Compute max digit length across all relevant numbers
@@ -72,7 +73,7 @@ const ProblemVisualizer: React.FC<Props> = React.memo(({ problem, index, showAns
   }
 
   if (isColumnArithmetic && columnTop !== undefined && columnBottom !== undefined && columnOp) {
-    return <ColumnArithmeticRenderer top={columnTop} bottom={columnBottom} op={columnOp} answer={answer} showAnswers={showAnswers} />;
+    return <ColumnArithmeticRenderer top={columnTop} bottom={columnBottom} op={columnOp} answer={answer} showAnswers={showAnswers} fillNumbers={fillColumnNumbers} />;
   }
 
   const blankSquareSx = {
@@ -751,7 +752,7 @@ const DifferenceComparison: React.FC<{ data: import('src/types').ComparisonData;
   );
 };
 
-const COLUMN_FONT_SIZE = 26;
+const COLUMN_FONT_SIZE = 24;
 const COLUMN_LINE_H = 36;
 const COLUMN_DIGIT_W = 36;
 const COLUMN_GAP = 6;
@@ -777,23 +778,42 @@ const ColumnArithmeticRenderer: React.FC<{
   op: string;
   answer: number;
   showAnswers: boolean;
-}> = ({ top, bottom, op, answer, showAnswers }) => {
+  fillNumbers: boolean;
+}> = ({ top, bottom, op, answer, showAnswers, fillNumbers }) => {
   const topStr = String(top);
   const botStr = String(bottom);
   const ansStr = String(answer);
   const isDiv = op === '÷';
+  const horizontalEquation = (
+    <Typography
+      sx={{ mb: 1, color: colors.ink, fontSize: COLUMN_FONT_SIZE, fontWeight: 600, lineHeight: 1.2, whiteSpace: 'nowrap' }}
+    >
+      {top} {op} {bottom} = {showAnswers ? answer : '____'}
+    </Typography>
+  );
 
   if (isDiv) {
     // Long division:  4 ) 24  with overline above dividend
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {horizontalEquation}
+
         {/* Answer row: quotient above overline, aligned over dividend */}
         <Box sx={{ display: 'flex', gap: `${COLUMN_GAP}px`, pl: `${COLUMN_DIGIT_W * botStr.length + COLUMN_GAP * botStr.length + 16}px` }}>
           {showAnswers ? (
             ansStr.split('').map((ch, i) => <DigitBox key={i} ch={ch} color={colors.inkSecondary} />)
           ) : (
             Array.from({ length: ansStr.length }).map((_, i) => (
-              <Box key={i} sx={{ width: COLUMN_DIGIT_W, height: COLUMN_LINE_H, border: '1.5px solid #ccc', borderRadius: 0.5 }} />
+              <Box
+                key={i}
+                data-testid="column-answer-slot"
+                sx={{
+                  width: COLUMN_DIGIT_W,
+                  height: COLUMN_LINE_H,
+                  border: fillNumbers ? '1.5px solid #ccc' : 'none',
+                  borderRadius: 0.5,
+                }}
+              />
             ))
           )}
         </Box>
@@ -803,7 +823,7 @@ const ColumnArithmeticRenderer: React.FC<{
           {/* Divisor */}
           <Box sx={{ display: 'flex', gap: `${COLUMN_GAP}px`, mb: '3px' }}>
             {botStr.split('').map((ch, i) => (
-              <DigitBox key={i} ch={ch} />
+              <DigitBox key={i} ch={fillNumbers ? ch : ''} />
             ))}
           </Box>
 
@@ -822,7 +842,7 @@ const ColumnArithmeticRenderer: React.FC<{
             {/* Dividend digits */}
             <Box sx={{ display: 'flex', gap: `${COLUMN_GAP}px`, mt: 0.5 }}>
               {topStr.split('').map((ch, i) => (
-                <DigitBox key={i} ch={ch} />
+                <DigitBox key={i} ch={fillNumbers ? ch : ''} />
               ))}
             </Box>
           </Box>
@@ -840,6 +860,8 @@ const ColumnArithmeticRenderer: React.FC<{
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      {horizontalEquation}
+
       {/* Operator + numbers */}
       <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
         {/* Operator column */}
@@ -849,10 +871,10 @@ const ColumnArithmeticRenderer: React.FC<{
 
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           {/* Top number */}
-          <DigitRow digits={topStr} padLeft={topPad} />
+          <DigitRow digits={fillNumbers ? topStr : ' '.repeat(topStr.length)} padLeft={topPad} />
 
           {/* Bottom number */}
-          <DigitRow digits={botStr} padLeft={botPad} />
+          <DigitRow digits={fillNumbers ? botStr : ' '.repeat(botStr.length)} padLeft={botPad} />
         </Box>
       </Box>
 
@@ -869,10 +891,11 @@ const ColumnArithmeticRenderer: React.FC<{
           Array.from({ length: ansStr.length }).map((_, i) => (
             <Box
               key={i}
+              data-testid="column-answer-slot"
               sx={{
                 width: COLUMN_DIGIT_W,
                 height: COLUMN_LINE_H,
-                border: '1.5px solid #ccc',
+                border: fillNumbers ? '1.5px solid #ccc' : 'none',
                 borderRadius: 0.5,
               }}
             />

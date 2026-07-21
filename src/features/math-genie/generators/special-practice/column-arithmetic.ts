@@ -91,9 +91,17 @@ export function generateColumnArithmeticProblems(
   const maxNumber = difficulty === DifficultyLevel.CUSTOM && customDifficulty
     ? customDifficulty.max
     : difficulty;
+  const requiresTwoDigitOperand = difficulty === DifficultyLevel.CUSTOM
+    && customDifficulty !== undefined
+    && customDifficulty.min >= 10
+    && customDifficulty.max <= 100;
 
-  // +/- bounds: strict digit alignment
+  // +/- bounds: strict digit alignment, except the 10–100 range allows
+  // both operands to be two-digit numbers.
   const addSub = getDigits(maxNumber);
+  if (requiresTwoDigitOperand) {
+    addSub.botMax = addSub.topMax;
+  }
   // ×/÷ bounds: use selected digit level
   const mul = getMulBounds(mulDivLevel);
   const div = getDivBounds(mulDivLevel);
@@ -148,6 +156,7 @@ export function generateColumnArithmeticProblems(
       a = b * c;
     }
 
+    if ((op === '+' || op === '-') && requiresTwoDigitOperand && a < 10 && b < 10) continue;
     if (excludeZeroProblems && problemContainsZero({ op, a, b, emoji1: '', emoji2: '' })) continue;
 
     const key = `col_${op}_${a}_${b}`;

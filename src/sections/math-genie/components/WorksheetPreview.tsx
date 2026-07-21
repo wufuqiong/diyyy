@@ -16,6 +16,7 @@ interface Props {
   title: string;
   theme: string;
   showAnswers: boolean;
+  fillColumnNumbers?: boolean;
   displayMode: DisplayMode;
   textColumns?: 2 | 3;
   problemsPerPage?: number;
@@ -24,7 +25,7 @@ interface Props {
 }
 
 const WorksheetPreview: React.FC<Props> = React.memo(
-  ({ problems, title, theme, showAnswers, displayMode, textColumns = 2, problemsPerPage = 16, pdfContainerRef, instruction }) => {
+  ({ problems, title, theme, showAnswers, fillColumnNumbers = true, displayMode, textColumns = 2, problemsPerPage = 16, pdfContainerRef, instruction }) => {
     const layout = derivePageLayout({ columns: textColumns, problemsPerPage });
 
     const totalPages = useMemo(
@@ -113,6 +114,7 @@ const WorksheetPreview: React.FC<Props> = React.memo(
                   problem={problem}
                   index={startIndex + index}
                   showAnswers={showAnswers}
+                  fillColumnNumbers={fillColumnNumbers}
                   displayMode={displayMode}
                   pageFontSize={pageFontSize}
                 />

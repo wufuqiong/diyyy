@@ -44,6 +44,7 @@ const defaultConfig: WorksheetConfig = {
   customDifficulty: { min: 1, max: 10 },
   problemType: ProblemType.STANDARD,
   specialPracticeType: SpecialPracticeType.NONE,
+  fillColumnNumbers: true,
   multiOperationConfig: { mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 3 },
   excludeZeroProblems: false,
   autoPreview: true,
@@ -241,6 +242,7 @@ const Preview: React.FC<{ config: WorksheetConfig; problems: MathProblem[]; pdfC
       title={deriveWorksheetTitle(config)}
       theme={config.theme}
       showAnswers={config.showAnswers || false}
+      fillColumnNumbers={config.fillColumnNumbers !== false}
       displayMode={config.displayMode}
       textColumns={config.textColumns || 2}
       problemsPerPage={config.problemsPerPage}

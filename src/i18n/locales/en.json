@@ -275,6 +275,7 @@
     "excludeZeros": "Exclude all zeros",
     "excludeZerosHint": "No operand / result / intermediate value can be 0 (e.g. x+0, x−x, x−a−b=0). Mutually exclusive with Zero Drill.",
     "excludeCarry": "No carry / borrow",
+    "fillColumnNumbers": "Fill column numbers",
     "excludeComparison": "Exclude Comparison",
     "comparison": "Comparison",
     "excludeComparisonDisabled": "Comparison practice unavailable when \"Exclude Comparison\" is on",

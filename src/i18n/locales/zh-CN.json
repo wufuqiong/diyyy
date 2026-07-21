@@ -275,6 +275,7 @@
     "excludeZeros": "排除所有零",
     "excludeZerosHint": "算数、结果和中间值均不能为 0（如 x+0, x−x, x−a−b=0）。与零练习互斥。",
     "excludeCarry": "不含进位/退位",
+    "fillColumnNumbers": "填充数字",
     "excludeComparison": "排除比多少",
     "comparison": "比多少",
     "excludeComparisonDisabled": "\"排除比多少\"开启时比多少练习不可用",

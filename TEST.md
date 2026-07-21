@@ -529,8 +529,9 @@ Run: `npx vitest run src/features/word-search/generators/__tests__/grid-generato
 | Char Color | 29 | ✅ |
 | Char Maze | 41 | ✅ |
 | Hundred Chart | 34 | ✅ |
+| Template Registry | 47 | ✅ |
 | Char Trace | 0 | Skipped (no pure functions) |
-| **Layer 1 total** | **155** | |
+| **Layer 1 total** | **208** | |
 
 ## Layer 2: UI Component Tests
 
@@ -569,7 +570,7 @@ Run: `npx vitest run src/features/word-search/generators/__tests__/grid-generato
 
 ```bash
 # All Layer 1 + 2 tests
-npx vitest run                    # single run (182 tests)
+npx vitest run                    # single run (229 tests)
 
 # Single test file
 npx vitest run src/sections/charcolor/__tests__/utils.test.ts

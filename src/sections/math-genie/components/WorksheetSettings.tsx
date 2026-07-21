@@ -69,6 +69,7 @@ const DEFAULT_CONFIG: WorksheetConfig = {
   difficultyRatios: undefined,
   problemType: ProblemType.STANDARD,
   specialPracticeType: SpecialPracticeType.NONE,
+  fillColumnNumbers: true,
   multiOperationConfig: { mode: MultiOperationMode.CHAIN_ADDITION, numberCount: 3 },
   excludeZeroProblems: false,
   autoPreview: true,
@@ -867,6 +868,21 @@ const WorksheetSettings: React.FC<Props> = ({
                     />
                   }
                   label={<Typography variant="body2">{t('mathGenie.excludeCarry')}</Typography>}
+                />
+              )}
+
+              {isColumnArithmetic && (
+                <FormControlLabel
+                  sx={{ ml: 0 }}
+                  control={
+                    <Switch
+                      checked={config.fillColumnNumbers !== false}
+                      onChange={(e) => onChange({ ...config, fillColumnNumbers: e.target.checked })}
+                      color="primary"
+                      size="small"
+                    />
+                  }
+                  label={<Typography variant="body2">{t('mathGenie.fillColumnNumbers')}</Typography>}
                 />
               )}
             </Stack>
