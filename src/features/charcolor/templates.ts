@@ -10,6 +10,7 @@ export const charcolorTemplates: Template<CharColorConfig>[] = [
     config: {
       userInput: '我是中国人',
       wordsPerPage: 5,
+      practiceMode: 'color',
       selectedPreset: 0,
       selectedLevel: '',
       fullSelectedValue: '',

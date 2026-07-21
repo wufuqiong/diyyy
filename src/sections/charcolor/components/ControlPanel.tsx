@@ -1,6 +1,6 @@
 import type { MiemieDetails } from 'src/types';
 import type { SelectChangeEvent } from '@mui/material';
-import type { CharColorConfig } from 'src/features/charcolor/types';
+import type { CharColorMode, CharColorConfig } from 'src/features/charcolor/types';
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,8 @@ import {
   Typography,
   InputLabel,
   FormControl,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 
 import { shuffleArray } from 'src/utils/array-tools';
@@ -32,6 +34,13 @@ import { COLOR_PRESETS, userInputToChars, hasNonChineseChars } from 'src/feature
 
 import { SettingCard } from 'src/sections/_shared/SettingCard';
 import { SettingsField } from 'src/sections/_shared/SettingsPanel';
+
+import {
+  UNDERLINE_MARKS,
+  ENCLOSING_SHAPES,
+  UnderlineMarkMarker,
+  EnclosingShapeMarker,
+} from './PracticeMarkers';
 
 const miemieDetailsTyped = miemieDetails as MiemieDetails;
 const miemie = loadMiemieLessons(miemieDetailsTyped, 'word');
@@ -52,6 +61,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onPrint,
 }) => {
   const { userInput, wordsPerPage, selectedPreset, selectedLevel, fullSelectedValue } = config;
+  const practiceMode = config.practiceMode ?? 'color';
   const { t } = useTranslation();
 
   const [selectedBookIndexes, setSelectedBookIndexes] = useState<string[]>([]);
@@ -118,6 +128,16 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     let inputChars = userInputToChars(userInput);
     inputChars = shuffleArray(inputChars);
     onChange({ ...config, userInput: inputChars.join('') });
+  };
+
+  const handlePracticeMode = (mode: CharColorMode | null) => {
+    if (!mode || mode === practiceMode) return;
+    const nextWordsPerPage = mode === 'enclosing-shape'
+      ? 3
+      : mode === 'underline-mark'
+        ? (wordsPerPage === 4 ? 4 : 3)
+        : wordsPerPage;
+    onChange({ ...config, practiceMode: mode, wordsPerPage: nextWordsPerPage });
   };
 
   return (
@@ -215,38 +235,106 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       </SettingCard>
 
       <SettingCard label={t('charColor.settings.sectionDisplay')} toolColor={candyColors.red}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Box sx={{ flex: 1 }}>
-            <SettingsField>
-              <FormControl fullWidth size="small">
-                <Select value={wordsPerPage} onChange={(e) => onChange({ ...config, wordsPerPage: e.target.value as number })}>
-                  <MenuItem value={2}>2 字/页</MenuItem>
-                  <MenuItem value={3}>3 字/页</MenuItem>
-                  <MenuItem value={4}>4 字/页</MenuItem>
-                  <MenuItem value={5}>5 字/页</MenuItem>
-                </Select>
-              </FormControl>
-            </SettingsField>
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            <SettingsField>
-              <FormControl fullWidth size="small">
-                <Select value={selectedPreset} onChange={(e) => onChange({ ...config, selectedPreset: e.target.value as number })}>
-                  {COLOR_PRESETS.map((preset, index) => (
-                    <MenuItem key={index} value={index}>{preset.name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </SettingsField>
-          </Box>
-        </Box>
-        <SettingsField label={t('charColor.settings.colorPreview')}>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            {COLOR_PRESETS[selectedPreset].colors.map((color, index) => (
-              <Box key={index} sx={{ width: 32, height: 32, backgroundColor: color, borderRadius: 1, border: '1px solid', borderColor: 'grey.300' }} title={color} />
-            ))}
-          </Box>
+        <SettingsField label={t('charColor.settings.practiceMode')}>
+          <ToggleButtonGroup
+            value={practiceMode}
+            exclusive
+            fullWidth
+            onChange={(_, value) => handlePracticeMode(value as CharColorMode | null)}
+            sx={{
+              gap: 1,
+              '& .MuiToggleButtonGroup-grouped': {
+                m: 0,
+                border: '1px solid !important',
+                borderColor: 'divider !important',
+                borderRadius: '10px !important',
+              },
+            }}
+          >
+            <ToggleButton value="color" sx={{ flex: 1, py: 1, px: 0.5, display: 'flex', flexDirection: 'column', gap: 0.75, textTransform: 'none' }}>
+              <Box sx={{ display: 'flex', gap: 0.4 }}>
+                {COLOR_PRESETS[selectedPreset].colors.slice(0, 3).map((color) => (
+                  <Box key={color} sx={{ width: 11, height: 11, borderRadius: '50%', bgcolor: color }} />
+                ))}
+              </Box>
+              <Typography variant="caption" fontWeight={700}>{t('charColor.settings.modeColor')}</Typography>
+            </ToggleButton>
+            <ToggleButton value="enclosing-shape" sx={{ flex: 1, py: 1, px: 0.5, display: 'flex', flexDirection: 'column', gap: 0.25, textTransform: 'none' }}>
+              <EnclosingShapeMarker char="字" shape="triangle" size={34} />
+              <Typography variant="caption" fontWeight={700}>{t('charColor.settings.modeEnclosingShape')}</Typography>
+            </ToggleButton>
+            <ToggleButton value="underline-mark" sx={{ flex: 1, py: 1, px: 0.5, display: 'flex', flexDirection: 'column', gap: 0.25, textTransform: 'none' }}>
+              <UnderlineMarkMarker char="字" mark="wave" size={34} />
+              <Typography variant="caption" fontWeight={700}>{t('charColor.settings.modeUnderlineMark')}</Typography>
+            </ToggleButton>
+          </ToggleButtonGroup>
         </SettingsField>
+
+        {practiceMode === 'color' && (
+          <>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ flex: 1 }}>
+                <SettingsField label={t('charColor.settings.wordsPerPage')}>
+                  <FormControl fullWidth size="small">
+                    <Select value={wordsPerPage} onChange={(e) => onChange({ ...config, wordsPerPage: e.target.value as number })}>
+                      {[2, 3, 4, 5].map((count) => <MenuItem key={count} value={count}>{count} {t('charColor.settings.charsPerPage')}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </SettingsField>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <SettingsField label={t('charColor.settings.colorScheme')}>
+                  <FormControl fullWidth size="small">
+                    <Select value={selectedPreset} onChange={(e) => onChange({ ...config, selectedPreset: e.target.value as number })}>
+                      {COLOR_PRESETS.map((preset, index) => (
+                        <MenuItem key={index} value={index}>{preset.name}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </SettingsField>
+              </Box>
+            </Box>
+            <SettingsField label={t('charColor.settings.colorPreview')}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                {COLOR_PRESETS[selectedPreset].colors.map((color, index) => (
+                  <Box key={index} sx={{ width: 32, height: 32, backgroundColor: color, borderRadius: 1, border: '1px solid', borderColor: 'grey.300' }} title={color} />
+                ))}
+              </Box>
+            </SettingsField>
+          </>
+        )}
+
+        {practiceMode === 'enclosing-shape' && (
+          <SettingsField label={t('charColor.settings.shapeLegend')} caption={t('charColor.settings.fixedThreeChars')}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-around', py: 0.5 }}>
+              {ENCLOSING_SHAPES.map((shape) => <EnclosingShapeMarker key={shape} char="字" shape={shape} size={52} />)}
+            </Box>
+          </SettingsField>
+        )}
+
+        {practiceMode === 'underline-mark' && (
+          <>
+            <SettingsField label={t('charColor.settings.wordsPerPage')}>
+              <ToggleButtonGroup
+                value={wordsPerPage === 4 ? 4 : 3}
+                exclusive
+                fullWidth
+                size="small"
+                onChange={(_, value) => value && onChange({ ...config, wordsPerPage: value as number })}
+              >
+                <ToggleButton value={3}>3 {t('charColor.settings.charsPerPage')}</ToggleButton>
+                <ToggleButton value={4}>4 {t('charColor.settings.charsPerPage')}</ToggleButton>
+              </ToggleButtonGroup>
+            </SettingsField>
+            <SettingsField label={t('charColor.settings.markLegend')}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-around', py: 0.5 }}>
+                {UNDERLINE_MARKS.slice(0, wordsPerPage === 4 ? 4 : 3).map((mark) => (
+                  <UnderlineMarkMarker key={mark} char="字" mark={mark} size={48} />
+                ))}
+              </Box>
+            </SettingsField>
+          </>
+        )}
       </SettingCard>    </>
   );
 };

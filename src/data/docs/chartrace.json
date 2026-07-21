@@ -12,7 +12,7 @@
     },
     "feature-map": {
       "title": "🗺️ 功能地图 / Feature Map",
-      "content": "<!-- anchor: feature-map -->\n\n| 功能 | 在哪里找到 | 它能做什么 |\n|---|---|---|\n| 智能内容识别 | 手动输入 — 自动检测 | 换行→句子模式 / 逗号→词组模式 / 无分隔→单字模式 |\n| ⭐ 五种格子类型 | Grid & Layout → Grid Type 按钮 | 田字格 / 米字格 / 方格 / 英文四线格 / 无格子 |\n| ⭐ All Pinyin 预设 | 快速预设按钮 | 一键生成完整拼音描红表 |\n| ⭐ Alphabet 预设 | 快速预设按钮 | 一键生成完整字母描红表 |\n| 格子颜色/透明度 | Grid & Layout | 自定义格子线颜色和透明度 |\n| 字体切换 | Text Style → Font Family | 楷体/马正萧/智芒行/衬线体；英文：Fredoka/Patrick Hand/Sans Serif |\n| 描红颜色 | Text Style → Trace Color | 虚线描红字的颜色和透明度 |\n| 拼音显示 | Page Setup → Pinyin 复选框 | 每个字上方显示拼音（四线格 + 声调） |\n| 笔画数显示 | Page Setup → Stroke Count 复选框 | 每个字旁显示笔画数 |\n| 页标题/副标题 | Page Setup → Page Title / Right Info | 自定义打印页的标题 |\n\n| Feature | Where to find it | What it does |\n|---|---|---|\n| Smart content detection | Manual Input — auto | Newlines→sentences / commas→phrases / else→characters |\n| ⭐ Five grid types | Grid & Layout → Grid Type buttons | Tian / Mi / Square / English 4-line / None |\n| ⭐ All Pinyin preset | Quick Presets button | One-click full pinyin table |\n| ⭐ Alphabet preset | Quick Presets button | One-click full alphabet |\n| Grid color/opacity | Grid & Layout | Custom grid line color and opacity |\n| Font switch | Text Style → Font Family | KaiTi/Ma Shan Zheng/Zhi Mang Xing/Serif; English: Fredoka/Patrick Hand/Sans |\n| Trace color | Text Style → Trace Color | Color and opacity for dotted trace characters |\n| Pinyin display | Page Setup → Pinyin checkbox | Show pinyin above each character with tone marks |\n| Stroke count | Page Setup → Stroke Count checkbox | Show stroke count label per character |\n| Page title/subtitle | Page Setup | Customize printed header text |\n\n---"
+      "content": "<!-- anchor: feature-map -->\n\n| 功能 | 在哪里找到 | 它能做什么 |\n|---|---|---|\n| 智能内容识别 | 手动输入 — 自动检测 | 换行→句子模式 / 逗号→词组模式 / 无分隔→单字模式 |\n| ⭐ 五种格子类型 | Grid & Layout → Grid Type 按钮 | 田字格 / 米字格 / 方格 / 英文四线格 / 无格子 |\n| ⭐ All Pinyin 预设 | 快速预设按钮 | 一键生成完整拼音描红表 |\n| ⭐ Alphabet 预设 | 快速预设按钮 | 一键生成完整字母描红表 |\n| 格子颜色/透明度 | Grid & Layout | 自定义格子线颜色和透明度 |\n| 字体切换 | Text Style → Font Family | 楷体/马正萧/智芒行/衬线体；英文：Fredoka/Patrick Hand/Sans Serif |\n| 描红颜色 | Text Style → Trace Color | 虚线描红字的颜色和透明度 |\n| 拼音显示 | Page Setup → Pinyin 复选框 | 每个字上方显示拼音（四线格 + 声调） |\n| 页标题/副标题 | Page Setup → Page Title / Right Info | 自定义打印页的标题 |\n\n| Feature | Where to find it | What it does |\n|---|---|---|\n| Smart content detection | Manual Input — auto | Newlines→sentences / commas→phrases / else→characters |\n| ⭐ Five grid types | Grid & Layout → Grid Type buttons | Tian / Mi / Square / English 4-line / None |\n| ⭐ All Pinyin preset | Quick Presets button | One-click full pinyin table |\n| ⭐ Alphabet preset | Quick Presets button | One-click full alphabet |\n| Grid color/opacity | Grid & Layout | Custom grid line color and opacity |\n| Font switch | Text Style → Font Family | KaiTi/Ma Shan Zheng/Zhi Mang Xing/Serif; English: Fredoka/Patrick Hand/Sans |\n| Trace color | Text Style → Trace Color | Color and opacity for dotted trace characters |\n| Pinyin display | Page Setup → Pinyin checkbox | Show pinyin above each character with tone marks |\n| Page title/subtitle | Page Setup | Customize printed header text |\n\n---"
     },
     "field-reference": {
       "title": "📖 配置项参考 / Field Reference",
@@ -201,14 +201,6 @@
       "location_en": "Page Setup → Pinyin checkbox",
       "description_zh": "每个字上方显示拼音（四线格 + 声调）",
       "description_en": "Show pinyin above each character with tone marks"
-    },
-    {
-      "feature_zh": "笔画数显示",
-      "feature_en": "Stroke count",
-      "location_zh": "Page Setup → Stroke Count 复选框",
-      "location_en": "Page Setup → Stroke Count checkbox",
-      "description_zh": "每个字旁显示笔画数",
-      "description_en": "Show stroke count label per character"
     },
     {
       "feature_zh": "页标题/副标题",

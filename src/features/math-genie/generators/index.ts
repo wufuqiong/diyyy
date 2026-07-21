@@ -2,6 +2,7 @@ import type { DifficultyRatios, MultiOperationConfig, CustomDifficultyRange } fr
 
 import { ProblemType, DisplayMode, MulDivLevel, OperationType, DifficultyLevel, ComparisonSubType, MultiOperationMode, SpecialPracticeType } from 'src/types';
 
+import { generateMulDivProblems } from './mul-div';
 import { generateFillBlankProblems } from './fill-blank';
 import { generateMultiOperationProblems } from './multi-op';
 import { generateZeroDrillProblems } from './special-practice/zero-drill';
@@ -250,6 +251,20 @@ async function generateMathProblems(
       return { problems: cmpProblems, titleSuggestion: cmpTitle };
     }
 
+    const usesMulDivLevel = operation === OperationType.MULTIPLICATION
+      || operation === OperationType.DIVISION
+      || operation === OperationType.MULT_DIV_MIXED;
+    if (usesMulDivLevel && (problemType === ProblemType.STANDARD || problemType === ProblemType.FILL_BLANK)) {
+      const mulDivProblems = generateMulDivProblems(
+        count,
+        operation,
+        mulDivLevel,
+        emojis,
+        problemType,
+      );
+      return { problems: mulDivProblems, titleSuggestion };
+    }
+
     if (problemType === ProblemType.FILL_BLANK) {
       if (difficultyRatios) {
         const total =
@@ -338,6 +353,21 @@ async function generateMathProblems(
         );
         return { problems: fillBlankProblems, titleSuggestion };
       }
+    }
+
+    const usesLargeAddSubRange = operation === OperationType.ADDITION
+      || operation === OperationType.SUBTRACTION
+      || operation === OperationType.MIXED;
+    if (usesLargeAddSubRange && activeCustomDifficulty && activeCustomDifficulty.max > 100) {
+      const largeRangeProblems = generateProblemsForCustomRange(
+        count,
+        activeCustomDifficulty,
+        operation,
+        emojis,
+        new Set<string>(),
+        excludeZeroProblems,
+      );
+      return { problems: largeRangeProblems, titleSuggestion };
     }
 
     if (difficultyRatios) {

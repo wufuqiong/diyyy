@@ -409,7 +409,9 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
     const cellHeightMm = A4_CONTENT_WIDTH_MM / config.colsPerRow;
     const pinyinHeightMm = config.showPinyin ? cellHeightMm / 2 : 0;
     const practiceRowHeightMm = cellHeightMm + pinyinHeightMm;
-    const blockGapMm = 8;
+    const rowGapMm = 1.1;
+    const passGapMm = 3.2;
+    const blockGapMm = 6.4;
     const isBlankMode = config.traceMode === 'blank';
 
     const sentenceBlocks: SentenceBlock[] = sentences.map((sentence) => {
@@ -443,7 +445,10 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
         sampleRows: buildRows(false),
         traceRows: buildRows(true),
         rowUnits: rowsPerPass * 2,
-        heightMm: rowsPerPass * practiceRowHeightMm * 2,
+        heightMm:
+          rowsPerPass * practiceRowHeightMm * 2 +
+          Math.max(0, rowsPerPass - 1) * rowGapMm * 2 +
+          passGapMm,
       };
     });
 
@@ -480,7 +485,17 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
       pages.push([]);
     }
 
-    return renderSheet(pages, (pageBlocks, pageIndex) => (
+    return renderSheet(pages, (pageBlocks, pageIndex) => {
+      const usedHeightMm = pageBlocks.reduce(
+        (total, block, blockIndex) => total + block.heightMm + (blockIndex > 0 ? blockGapMm : 0),
+        0,
+      );
+      const fillerRowCount = Math.max(
+        0,
+        Math.floor((A4_CONTENT_HEIGHT_MM - usedHeightMm) / practiceRowHeightMm),
+      );
+
+      return (
             <>
             <Box component="header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid', borderColor: 'orange.200', pb: 1, mb: 3 }}>
               <Typography variant="h6" className="font-kaiti" sx={{ fontWeight: 'bold', color: 'text.primary' }}>{config.headerTitle}</Typography>
@@ -493,7 +508,7 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
                   {[block.sampleRows, block.traceRows].map((passRows, passIndex) => (
                     <Box key={passIndex} sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                       {passRows.map((rowCells, rowIndex) => (
-                        <Box key={rowIndex} sx={{ width: '100%' }}>
+                        <Box key={rowIndex} data-testid="sentence-practice-row" sx={{ width: '100%' }}>
                           {config.showPinyin && (
                             <Box sx={{ display: 'flex', width: '100%', ...wrapperStyle }}>
                               {rowCells.map((cell, colIndex) => (
@@ -523,40 +538,62 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
                   ))}
                 </Box>
               ))}
-            </Box>
 
-            {/* Fill remaining row budget with blank practice rows */}
-            {(() => {
-              const usedRows = pageBlocks.reduce((sum, b) => sum + b.rowUnits, 0);
-              const remaining = rowBudgetPerPage - usedRows;
-              if (remaining <= 0) return null;
-              return Array.from({ length: remaining }, (_v, ri) => (
-                <Box key={`pad-${ri}`} sx={{ width: '100%' }}>
-                  {config.showPinyin && (
-                    <Box sx={{ display: 'flex', width: '100%', ...wrapperStyle }}>
-                      {Array.from({ length: config.colsPerRow }, (_x, ci) => (
-                        <Box key={ci} sx={{ position: 'relative', bgcolor: 'white', overflow: 'hidden', width: cellWidthPercent, ...cellStyle }}>
-                          {renderPinyinStaff('', true)}
+              {fillerRowCount > 0 && (
+                <Box sx={{ width: '100%', mt: pageBlocks.length > 0 ? -3 : 0 }}>
+                  {Array.from({ length: fillerRowCount }, (_, rowIndex) => (
+                    <Box
+                      key={rowIndex}
+                      data-testid="sentence-filler-row"
+                      data-grid-type={config.gridType}
+                      sx={{ width: '100%' }}
+                    >
+                      {config.showPinyin && (
+                        <Box sx={{ display: 'flex', width: '100%', ...wrapperStyle }}>
+                          {Array.from({ length: config.colsPerRow }, (_cell, colIndex) => (
+                            <Box
+                              key={colIndex}
+                              sx={{
+                                position: 'relative',
+                                bgcolor: 'white',
+                                overflow: 'hidden',
+                                width: cellWidthPercent,
+                                ...cellStyle,
+                              }}
+                            >
+                              {renderPinyinStaff('', true)}
+                            </Box>
+                          ))}
                         </Box>
-                      ))}
-                    </Box>
-                  )}
-                  <Box sx={{ display: 'flex', width: '100%', ...wrapperStyle }}>
-                    {Array.from({ length: config.colsPerRow }, (_y, ci) => (
-                      <Box key={ci} sx={{ aspectRatio: '1/1', position: 'relative', bgcolor: 'white', width: cellWidthPercent, ...cellStyle }}>
-                        {renderSentenceCell(undefined, true)}
+                      )}
+                      <Box sx={{ display: 'flex', width: '100%', ...wrapperStyle }}>
+                        {Array.from({ length: config.colsPerRow }, (_cell, colIndex) => (
+                          <Box
+                            key={colIndex}
+                            sx={{
+                              aspectRatio: '1/1',
+                              position: 'relative',
+                              bgcolor: 'white',
+                              width: cellWidthPercent,
+                              ...cellStyle,
+                            }}
+                          >
+                            {renderSentenceCell(undefined, true)}
+                          </Box>
+                        ))}
                       </Box>
-                    ))}
-                  </Box>
+                    </Box>
+                  ))}
                 </Box>
-              ));
-            })()}
+              )}
+            </Box>
 
             <Box component="footer" sx={{ mt: 'auto', borderTop: 1, borderColor: 'grey.100', pt: 1, textAlign: 'center', color: 'grey.400', fontSize: '0.75rem' }} className="font-kaiti">
               Page {pageIndex + 1}
             </Box>
           </>
-    ));
+      );
+    });
   }
 
   if (isWordMode) {
@@ -725,13 +762,6 @@ export const PaperSheet: React.FC<PaperSheetProps> = ({ config, pdfContainerRef 
                 const charData = getCharData(char);
                 return (
                     <Box key={rowIndex} sx={{ width: '100%' }}>
-                        {/* Meta info row */}
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', mb: 0.5, px: 0.5 }}>
-                            <Typography variant="caption" sx={{ color: 'grey.400' }}>
-                                {config.showStrokeCount && charData.strokes > 0 ? `${charData.strokes}画` : ''}
-                            </Typography>
-                        </Box>
-
                         {config.showPinyin && (
                             <Box sx={{ display: 'flex', width: '100%', mb: 0.5, ...wrapperStyle }}>
                                 {Array.from({ length: config.colsPerRow }).map((_, colIndex) => {

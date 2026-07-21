@@ -8,6 +8,7 @@ function makeConfig(overrides: Partial<CharColorConfig> = {}): CharColorConfig {
   return {
     userInput: '你好世界',
     wordsPerPage: 5,
+    practiceMode: 'color',
     selectedPreset: 0,
     selectedLevel: '小羊上山-1级',
     fullSelectedValue: '小羊上山-1级',
@@ -204,6 +205,31 @@ describe('Char Color Utils', () => {
 
       expect(duration).toBeLessThan(5000);
       expect(pages.length).toBe(100); // 500 / 5
+    });
+
+    it('enclosing-shape mode always uses 3 characters per page', async () => {
+      const { generateCharColorPages } = await import('src/features/charcolor/utils');
+      const pages = generateCharColorPages(makeConfig({
+        userInput: '一二三四五六七',
+        wordsPerPage: 5,
+        practiceMode: 'enclosing-shape',
+      }));
+
+      expect(pages).toHaveLength(3);
+      expect(pages.every((page) => page.chars.length === 3)).toBe(true);
+      expect(pages.every((page) => page.mode === 'enclosing-shape')).toBe(true);
+    });
+
+    it.each([3, 4])('underline-mark mode supports %i characters per page', async (wordsPerPage) => {
+      const { generateCharColorPages } = await import('src/features/charcolor/utils');
+      const pages = generateCharColorPages(makeConfig({
+        userInput: '一二三四五六七八',
+        wordsPerPage,
+        practiceMode: 'underline-mark',
+      }));
+
+      expect(pages[0].chars).toHaveLength(wordsPerPage);
+      expect(pages.every((page) => page.mode === 'underline-mark')).toBe(true);
     });
   });
 

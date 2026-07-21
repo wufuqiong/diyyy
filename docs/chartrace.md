@@ -74,7 +74,6 @@ related_components:
 | 字体切换 | Text Style → Font Family | 楷体/马正萧/智芒行/衬线体；英文：Fredoka/Patrick Hand/Sans Serif |
 | 描红颜色 | Text Style → Trace Color | 虚线描红字的颜色和透明度 |
 | 拼音显示 | Page Setup → Pinyin 复选框 | 每个字上方显示拼音（四线格 + 声调） |
-| 笔画数显示 | Page Setup → Stroke Count 复选框 | 每个字旁显示笔画数 |
 | 页标题/副标题 | Page Setup → Page Title / Right Info | 自定义打印页的标题 |
 
 | Feature | Where to find it | What it does |
@@ -87,7 +86,6 @@ related_components:
 | Font switch | Text Style → Font Family | KaiTi/Ma Shan Zheng/Zhi Mang Xing/Serif; English: Fredoka/Patrick Hand/Sans |
 | Trace color | Text Style → Trace Color | Color and opacity for dotted trace characters |
 | Pinyin display | Page Setup → Pinyin checkbox | Show pinyin above each character with tone marks |
-| Stroke count | Page Setup → Stroke Count checkbox | Show stroke count label per character |
 | Page title/subtitle | Page Setup | Customize printed header text |
 
 ---

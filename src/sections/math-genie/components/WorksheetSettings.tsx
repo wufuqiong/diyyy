@@ -25,7 +25,8 @@ import {
 } from '@mui/material';
 
 import { candyColors } from 'src/theme/tokens';
-import { derivePageLayout, calculateOptimalProblemsPerPage } from 'src/features/math-genie/shared/layout';
+import { calculateAddSubRangeUnique } from 'src/features/math-genie/shared/problem-count';
+import { derivePageLayout, shouldDisableThreeColumns, calculateOptimalProblemsPerPage } from 'src/features/math-genie/shared/layout';
 import {
   DisplayMode,
   ProblemType,
@@ -90,10 +91,10 @@ function calculateMaxUnique(
   const isSub = operation === OperationType.SUBTRACTION || operation === OperationType.MIXED || operation === OperationType.ALL;
   const isMul = operation === OperationType.MULTIPLICATION || operation === OperationType.MULT_DIV_MIXED || operation === OperationType.ALL;
   const isDiv = operation === OperationType.DIVISION || operation === OperationType.MULT_DIV_MIXED || operation === OperationType.ALL;
-  if (isAdd) for (let a = minNum; a < maxNum; a++) for (let b = minNum; b <= maxNum - a; b++) total++;
-  if (isSub) for (let a = 2; a <= maxNum; a++) for (let b = minNum; b < a; b++) total++;
-  if (isMul) for (let a = 1; a <= maxNum; a++) for (let b = 1; a * b <= maxNum; b++) total++;
-  if (isDiv) for (let b = 1; b <= maxNum; b++) for (let c = 0; c <= Math.floor(maxNum / b); c++) total++;
+  if (isAdd) total += Math.max(0, maxNum * (maxNum - 1) / 2);
+  if (isSub) total += Math.max(0, maxNum * (maxNum - 1) / 2);
+  if (isMul) for (let a = 1; a <= maxNum; a++) total += Math.floor(maxNum / a);
+  if (isDiv) for (let b = 1; b <= maxNum; b++) total += Math.floor(maxNum / b) + 1;
   return Math.max(1, total);
 }
 
@@ -184,6 +185,12 @@ const WorksheetSettings: React.FC<Props> = ({
   const isWordProblem = displayMode === DisplayMode.WORD_PROBLEM;
   const isMultiOp = activeProblemType === ProblemType.MULTI_STEP;
   const useMixMode = !!difficultyRatios;
+  const threeColumnsDisabled = shouldDisableThreeColumns({
+    operation,
+    customDifficulty,
+    mulDivLevel,
+    specialPracticeType,
+  });
 
   const [snack, setSnack] = useState<{ open: boolean; msg: string }>({ open: false, msg: '' });
   const [emojiLimitConfirm, setEmojiLimitConfirm] = useState<{ open: boolean; pendingDisplayMode?: DisplayMode }>({ open: false });
@@ -204,9 +211,10 @@ const WorksheetSettings: React.FC<Props> = ({
   // Auto-update problemsPerPage when config changes affect layout.
   // Only primitive values in deps to avoid infinite loops (excludes config, onChange, configProblemsPerPage).
   useEffect(() => {
+    const nextColumns = threeColumnsDisabled && textColumns === 3 ? 2 : textColumns;
     const optimal = calculateOptimalProblemsPerPage({
       displayMode,
-      columns: textColumns,
+      columns: nextColumns,
       problemType: activeProblemType,
       specialPracticeType,
       operation,
@@ -215,8 +223,8 @@ const WorksheetSettings: React.FC<Props> = ({
       multiOperationConfig,
     });
 
-    if (configProblemsPerPage !== optimal) {
-      onChange({ ...config, problemsPerPage: optimal });
+    if (configProblemsPerPage !== optimal || nextColumns !== textColumns) {
+      onChange({ ...config, textColumns: nextColumns, problemsPerPage: optimal });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -228,6 +236,8 @@ const WorksheetSettings: React.FC<Props> = ({
     difficulty,
     customDifficulty?.min,
     customDifficulty?.max,
+    threeColumnsDisabled,
+    mulDivLevel,
     multiOperationConfig?.mode,
     multiOperationConfig?.numberCount,
   ]);
@@ -268,19 +278,7 @@ const WorksheetSettings: React.FC<Props> = ({
       return 100;
     }
 
-    let add = 0;
-    let sub = 0;
-    if (operation !== OperationType.SUBTRACTION) {
-      for (let a = minNum; a < maxNum; a++) {
-        for (let b = minNum; b <= maxNum - a; b++) add++;
-      }
-    }
-    if (operation !== OperationType.ADDITION) {
-      for (let a = Math.max(minNum + 1, 2); a <= maxNum; a++) {
-        for (let b = minNum; b < a; b++) sub++;
-      }
-    }
-    return add + sub;
+    return calculateAddSubRangeUnique(minNum, maxNum, operation);
   }, [operation, multiOperationConfig, customDifficulty]);
 
   const requestedCount = count * perPage;
@@ -656,7 +654,10 @@ const WorksheetSettings: React.FC<Props> = ({
 
               {displayMode === DisplayMode.TEXT && (
                 <>
-                <SettingsField label={t('mathGenie.columns')}>
+                <SettingsField
+                  label={t('mathGenie.columns')}
+                  caption={threeColumnsDisabled ? t('mathGenie.threeColumnsDisabledLargeNumbers') : undefined}
+                >
                   <ToggleButtonGroup
                     value={textColumns}
                     exclusive
@@ -668,7 +669,7 @@ const WorksheetSettings: React.FC<Props> = ({
                     }}
                   >
                     <ToggleButton value={2}>2</ToggleButton>
-                    <ToggleButton value={3}>3</ToggleButton>
+                    <ToggleButton value={3} disabled={threeColumnsDisabled}>3</ToggleButton>
                   </ToggleButtonGroup>
                 </SettingsField>
 

@@ -19,9 +19,9 @@ import {
 
 import { generateMathProblems } from './generators';
 import { reorderProblemsByColumnPerPage } from './generators/shared/problem-key';
-import { derivePageLayout, calculateOptimalProblemsPerPage } from './shared/layout';
 import WorksheetPreview from '../../sections/math-genie/components/WorksheetPreview';
 import WorksheetSettings from '../../sections/math-genie/components/WorksheetSettings';
+import { derivePageLayout, shouldDisableThreeColumns, calculateOptimalProblemsPerPage } from './shared/layout';
 
 const defaultConfig: WorksheetConfig = {
   theme: 'Animals 🐶',
@@ -232,6 +232,12 @@ const Preview: React.FC<{ config: WorksheetConfig; problems: MathProblem[]; pdfC
   problems,
   pdfContainerRef,
 }) => {
+  const effectiveTextColumns = shouldDisableThreeColumns({
+    operation: config.operation,
+    customDifficulty: config.customDifficulty,
+    mulDivLevel: config.mulDivLevel ?? MulDivLevel.ONE_DIGIT,
+    specialPracticeType: config.specialPracticeType ?? SpecialPracticeType.NONE,
+  }) ? 2 : config.textColumns || 2;
   const instruction = config.specialPracticeType === SpecialPracticeType.COMPARISON && config.comparisonConfig?.subType === ComparisonSubType.MAGNITUDE
     ? '在 ○ 中填上 >、< 或 ='
     : undefined;
@@ -244,7 +250,7 @@ const Preview: React.FC<{ config: WorksheetConfig; problems: MathProblem[]; pdfC
       showAnswers={config.showAnswers || false}
       fillColumnNumbers={config.fillColumnNumbers !== false}
       displayMode={config.displayMode}
-      textColumns={config.textColumns || 2}
+      textColumns={effectiveTextColumns}
       problemsPerPage={config.problemsPerPage}
       pdfContainerRef={pdfContainerRef}
       instruction={instruction}
@@ -279,6 +285,12 @@ export const mathGenieTool: WorksheetTool<WorksheetConfig, MathProblem> = {
   },
   deriveContentColumns: (config) => {
     if (config.specialPracticeType === SpecialPracticeType.COLUMN_ARITHMETIC) return 3;
+    if (shouldDisableThreeColumns({
+      operation: config.operation,
+      customDifficulty: config.customDifficulty,
+      mulDivLevel: config.mulDivLevel ?? MulDivLevel.ONE_DIGIT,
+      specialPracticeType: config.specialPracticeType ?? SpecialPracticeType.NONE,
+    })) return 2;
     if (config.specialPracticeType === SpecialPracticeType.COMPARISON) {
       return config.displayMode === DisplayMode.EMOJI ? 2 : config.textColumns || 1;
     }

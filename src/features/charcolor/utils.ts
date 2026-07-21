@@ -42,7 +42,13 @@ function generateRandomColorsForPage(pageChars: string[], presetIndex: number): 
 }
 
 export function generateCharColorPages(config: CharColorConfig): PageData[] {
-  const { userInput, wordsPerPage, selectedPreset } = config;
+  const { userInput, selectedPreset } = config;
+  const mode = config.practiceMode ?? 'color';
+  const wordsPerPage = mode === 'enclosing-shape'
+    ? 3
+    : mode === 'underline-mark'
+      ? (config.wordsPerPage === 4 ? 4 : 3)
+      : config.wordsPerPage;
 
   if (!userInput.trim()) {
     return [];
@@ -67,7 +73,7 @@ export function generateCharColorPages(config: CharColorConfig): PageData[] {
     }
 
     const pageColors = generateRandomColorsForPage(pageChars, selectedPreset);
-    newPages.push({ chars: pageChars, colors: pageColors });
+    newPages.push({ chars: pageChars, colors: pageColors, mode });
   }
 
   return newPages;

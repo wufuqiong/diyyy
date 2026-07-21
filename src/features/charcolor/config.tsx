@@ -14,6 +14,7 @@ import type { PageData, CharColorConfig } from './types';
 const defaultConfig: CharColorConfig = {
   userInput: '',
   wordsPerPage: 3,
+  practiceMode: 'color',
   selectedPreset: 0,
   selectedLevel: '',
   fullSelectedValue: '',
@@ -24,8 +25,8 @@ function generate(config: CharColorConfig): PageData[] {
   return generateCharColorPages(config);
 }
 
-const Preview: React.FC<{ config: CharColorConfig; problems: PageData[]; pdfContainerRef?: React.RefObject<HTMLDivElement | null> }> = ({ problems, pdfContainerRef }) => (
-  <PreviewSheet pages={problems} pdfContainerRef={pdfContainerRef} />
+const Preview: React.FC<{ config: CharColorConfig; problems: PageData[]; pdfContainerRef?: React.RefObject<HTMLDivElement | null> }> = ({ config, problems, pdfContainerRef }) => (
+  <PreviewSheet pages={problems} practiceMode={config.practiceMode ?? 'color'} pdfContainerRef={pdfContainerRef} />
 );
 
 const Settings: React.FC<{

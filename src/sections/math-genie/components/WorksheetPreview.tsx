@@ -116,6 +116,7 @@ const WorksheetPreview: React.FC<Props> = React.memo(
                   showAnswers={showAnswers}
                   fillColumnNumbers={fillColumnNumbers}
                   displayMode={displayMode}
+                  textColumns={textColumns}
                   pageFontSize={pageFontSize}
                 />
               </Box>

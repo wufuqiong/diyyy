@@ -2,10 +2,14 @@
 import type miemieDetails from 'src/data/miemie-details.json';
 
 export type MiemieDetailsTyped = typeof miemieDetails;
+export type CharColorMode = 'color' | 'enclosing-shape' | 'underline-mark';
+export type EnclosingShape = 'square' | 'triangle' | 'circle';
+export type UnderlineMark = 'triangle' | 'circle' | 'wave' | 'line';
 
 export interface CharColorConfig {
   userInput: string;
   wordsPerPage: number;
+  practiceMode?: CharColorMode;
   selectedPreset: number;
   selectedLevel: string;
   fullSelectedValue: string;
@@ -20,4 +24,5 @@ export interface ColorPreset {
 export interface PageData {
   chars: string[];
   colors: string[];
+  mode: CharColorMode;
 }

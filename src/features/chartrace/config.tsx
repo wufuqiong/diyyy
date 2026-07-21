@@ -28,8 +28,6 @@ const defaultConfig: SheetConfig = {
   headerTitle: '我会写汉字',
   headerContent: '姓名: __________  日期: __________',
   showPinyin: true,
-  showStrokeCount: true,
-  showStrokeOrder: false,
   englishLineTheme: 'rainbow',
   showLineNumbers: false,
   traceMode: 'faded',

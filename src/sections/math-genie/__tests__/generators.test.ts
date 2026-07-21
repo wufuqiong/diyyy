@@ -1,6 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import { DisplayMode, ProblemType, OperationType, DifficultyLevel, ComparisonSubType, MultiOperationMode, SpecialPracticeType } from 'src/types';
+import { DisplayMode, ProblemType, MulDivLevel, OperationType, DifficultyLevel, ComparisonSubType, MultiOperationMode, SpecialPracticeType } from 'src/types';
 
 describe('Math Genie Generators', () => {
   describe('1. MIXED mode addition/subtraction balance', () => {
@@ -336,6 +336,72 @@ describe('Math Genie Generators', () => {
     });
   });
 
+  describe('large ranges and multiplication digit levels', () => {
+    it('counts the 100–10000 mixed range without enumerating every problem', async () => {
+      const { calculateAddSubRangeUnique } = await import('src/features/math-genie/shared/problem-count');
+      const startTime = Date.now();
+      const count = calculateAddSubRangeUnique(100, 10000, OperationType.MIXED);
+
+      expect(count).toBeGreaterThan(90_000_000);
+      expect(Date.now() - startTime).toBeLessThan(50);
+    });
+
+    it('generates the 100–10000 mixed range without blocking', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      const startTime = Date.now();
+      const { problems } = await generateMathProblems(
+        'Animals 🐶', DifficultyLevel.CUSTOM, OperationType.MIXED, 30,
+        { min: 100, max: 10000 }, undefined, ProblemType.STANDARD,
+        SpecialPracticeType.NONE, undefined, false, DisplayMode.TEXT
+      );
+
+      expect(problems).toHaveLength(30);
+      expect(Date.now() - startTime).toBeLessThan(1000);
+      expect(problems.filter((problem) => problem.op === '+')).toHaveLength(15);
+      expect(problems.filter((problem) => problem.op === '-')).toHaveLength(15);
+    });
+
+    it.each([
+      ProblemType.STANDARD,
+      ProblemType.FILL_BLANK,
+    ])('keeps multiplication operands one-digit for %s problems', async (problemType) => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      const { problems } = await generateMathProblems(
+        'Animals 🐶', DifficultyLevel.CUSTOM, OperationType.MULTIPLICATION, 50,
+        { min: 100, max: 10000 }, undefined, problemType,
+        SpecialPracticeType.NONE, undefined, false, DisplayMode.TEXT,
+        undefined, MulDivLevel.ONE_DIGIT
+      );
+
+      expect(problems).toHaveLength(50);
+      problems.forEach((problem) => {
+        expect(problem.a).toBeGreaterThanOrEqual(1);
+        expect(problem.a).toBeLessThanOrEqual(9);
+        expect(problem.b).toBeGreaterThanOrEqual(1);
+        expect(problem.b).toBeLessThanOrEqual(9);
+      });
+    });
+
+    it('keeps factors, divisors, and quotients one-digit in mixed ×÷ mode', async () => {
+      const { generateMathProblems } = await import('src/features/math-genie/generators');
+      const { problems } = await generateMathProblems(
+        'Animals 🐶', DifficultyLevel.CUSTOM, OperationType.MULT_DIV_MIXED, 40,
+        { min: 100, max: 10000 }, undefined, ProblemType.STANDARD,
+        SpecialPracticeType.NONE, undefined, false, DisplayMode.TEXT,
+        undefined, MulDivLevel.ONE_DIGIT
+      );
+
+      problems.forEach((problem) => {
+        if (problem.op === '×') {
+          expect(problem.a).toBeLessThanOrEqual(9);
+        } else {
+          expect(problem.a / problem.b).toBeLessThanOrEqual(9);
+        }
+        expect(problem.b).toBeLessThanOrEqual(9);
+      });
+    });
+  });
+
   describe('COLUMN_ARITHMETIC 10–100 range', () => {
     it.each([
       OperationType.ADDITION,
@@ -432,6 +498,30 @@ describe('Math Genie Generators', () => {
 
   // ---------- Page Layout tests ----------
   describe('derivePageLayout', () => {
+    it.each([
+      [OperationType.ADDITION, { min: 100, max: 10000 }, MulDivLevel.ONE_DIGIT, SpecialPracticeType.NONE, true],
+      [OperationType.MIXED, { min: 10, max: 100 }, MulDivLevel.ONE_DIGIT, SpecialPracticeType.NONE, false],
+      [OperationType.MULTIPLICATION, undefined, MulDivLevel.ONE_BY_TWO, SpecialPracticeType.NONE, false],
+      [OperationType.DIVISION, undefined, MulDivLevel.TWO_DIGIT, SpecialPracticeType.NONE, true],
+      [OperationType.MULT_DIV_MIXED, undefined, MulDivLevel.THREE_DIGIT, SpecialPracticeType.NONE, true],
+      [OperationType.MULTIPLICATION, undefined, MulDivLevel.THREE_DIGIT, SpecialPracticeType.COLUMN_ARITHMETIC, false],
+    ])('determines whether three columns must be disabled', async (
+      operation,
+      customDifficulty,
+      mulDivLevel,
+      specialPracticeType,
+      expected,
+    ) => {
+      const { shouldDisableThreeColumns } = await import('src/features/math-genie/shared/layout');
+
+      expect(shouldDisableThreeColumns({
+        operation,
+        customDifficulty,
+        mulDivLevel,
+        specialPracticeType,
+      })).toBe(expected);
+    });
+
     it('fontSize decreases monotonically as problemsPerPage increases', async () => {
       const { derivePageLayout } = await import('src/features/math-genie/shared/layout');
       const a = derivePageLayout({ columns: 3, problemsPerPage: 8 });

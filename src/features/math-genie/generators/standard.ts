@@ -47,14 +47,16 @@ export function generateProblemsForDifficulty(
   const maxAttempts = Math.max(count * 20, 200);
   const addSubTargets = operation === OperationType.MIXED ? getMixedTargetCounts(count) : null;
   const mulDivTargets = operation === OperationType.MULT_DIV_MIXED ? getMulDivMixedTargetCounts(count) : null;
-  const ra = addSubTargets?.additionCount ?? 0;
-  const rs = addSubTargets?.subtractionCount ?? 0;
-  const rm = mulDivTargets?.multiplicationCount ?? 0;
-  const rd = mulDivTargets?.divisionCount ?? 0;
+  const remaining = {
+    ra: addSubTargets?.additionCount ?? 0,
+    rs: addSubTargets?.subtractionCount ?? 0,
+    rm: mulDivTargets?.multiplicationCount ?? 0,
+    rd: mulDivTargets?.divisionCount ?? 0,
+  };
 
   while (problems.length < count && attempts < maxAttempts) {
     attempts += 1;
-    const op = resolveOp(operation, ra, rs, rm, rd);
+    const op = resolveOp(operation, remaining.ra, remaining.rs, remaining.rm, remaining.rd);
 
     let problem: RawMathProblem;
     const { emoji1, emoji2 } = getTwoDifferentEmojis(emojis);
@@ -87,7 +89,7 @@ export function generateProblemsForDifficulty(
     if (!usedProblems?.has(problemKey)) {
       usedProblems?.add(problemKey);
       problems.push(problem);
-      adjustMixCounts(operation, problem, { ra, rs, rm, rd });
+      adjustMixCounts(operation, problem, remaining);
     }
   }
 
@@ -107,15 +109,17 @@ export function generateProblemsForCustomRange(
   const maxAttempts = Math.max(count * 40, 400);
   const addSubTargets = operation === OperationType.MIXED ? getMixedTargetCounts(count) : null;
   const mulDivTargets = operation === OperationType.MULT_DIV_MIXED ? getMulDivMixedTargetCounts(count) : null;
-  const ra = addSubTargets?.additionCount ?? 0;
-  const rs = addSubTargets?.subtractionCount ?? 0;
-  const rm = mulDivTargets?.multiplicationCount ?? 0;
-  const rd = mulDivTargets?.divisionCount ?? 0;
+  const remaining = {
+    ra: addSubTargets?.additionCount ?? 0,
+    rs: addSubTargets?.subtractionCount ?? 0,
+    rm: mulDivTargets?.multiplicationCount ?? 0,
+    rd: mulDivTargets?.divisionCount ?? 0,
+  };
   const { min, max } = customRange;
 
   while (problems.length < count && attempts < maxAttempts) {
     attempts += 1;
-    const op = resolveOp(operation, ra, rs, rm, rd);
+    const op = resolveOp(operation, remaining.ra, remaining.rs, remaining.rm, remaining.rd);
 
     let problem: RawMathProblem;
     const { emoji1, emoji2 } = getTwoDifferentEmojis(emojis);
@@ -151,7 +155,7 @@ export function generateProblemsForCustomRange(
     if (!usedProblems?.has(problemKey)) {
       usedProblems?.add(problemKey);
       problems.push(problem);
-      adjustMixCounts(operation, problem, { ra, rs, rm, rd });
+      adjustMixCounts(operation, problem, remaining);
     }
   }
 

@@ -1,9 +1,9 @@
-import type { ProblemType,
-  OperationType,
-  MultiOperationConfig} from 'src/types';
+import type { ProblemType, MultiOperationConfig} from 'src/types';
 
 import {
   DisplayMode,
+  MulDivLevel,
+  OperationType,
   DifficultyLevel,
   SpecialPracticeType,
 } from 'src/types';
@@ -27,6 +27,28 @@ const MARGIN_MM = 20 * 2; // left + right margins
 
 function clamp(val: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, val));
+}
+
+export function shouldDisableThreeColumns(params: {
+  operation: OperationType;
+  customDifficulty?: { min: number; max: number };
+  mulDivLevel: MulDivLevel;
+  specialPracticeType: SpecialPracticeType;
+}): boolean {
+  if (params.specialPracticeType === SpecialPracticeType.COLUMN_ARITHMETIC) return false;
+
+  const isAddSub = params.operation === OperationType.ADDITION
+    || params.operation === OperationType.SUBTRACTION
+    || params.operation === OperationType.MIXED;
+  const isMulDiv = params.operation === OperationType.MULTIPLICATION
+    || params.operation === OperationType.DIVISION
+    || params.operation === OperationType.MULT_DIV_MIXED;
+
+  return (isAddSub && (params.customDifficulty?.max ?? 0) > 100)
+    || (isMulDiv && (
+      params.mulDivLevel === MulDivLevel.TWO_DIGIT
+      || params.mulDivLevel === MulDivLevel.THREE_DIGIT
+    ));
 }
 
 /**

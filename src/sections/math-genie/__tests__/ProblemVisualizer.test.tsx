@@ -69,3 +69,95 @@ describe('ProblemVisualizer column arithmetic', () => {
     });
   });
 });
+
+describe('ProblemVisualizer large text arithmetic', () => {
+  const largeProblem = {
+    id: 'large-addition',
+    operation: '+' as const,
+    num1: 4321,
+    num2: 5678,
+    emoji1: '',
+    emoji2: '',
+    answer: 9999,
+    problemType: ProblemType.STANDARD,
+  };
+
+  it('reduces the equation font size in a three-column layout', () => {
+    render(
+      <ProblemVisualizer
+        problem={largeProblem}
+        index={0}
+        showAnswers={false}
+        displayMode={DisplayMode.TEXT}
+        textColumns={3}
+      />,
+    );
+
+    expect(parseFloat(getComputedStyle(screen.getByTestId('text-equation')).fontSize)).toBeLessThan(24);
+  });
+
+  it('sizes the answer line for every expected digit', () => {
+    render(
+      <ProblemVisualizer
+        problem={largeProblem}
+        index={0}
+        showAnswers={false}
+        displayMode={DisplayMode.TEXT}
+        textColumns={3}
+      />,
+    );
+
+    expect(getComputedStyle(screen.getByTestId('math-answer-line')).width).toBe('56px');
+  });
+
+  it('keeps a five-digit equation within the three-column width budget', () => {
+    render(
+      <ProblemVisualizer
+        problem={{ ...largeProblem, num1: 99999, num2: 99999, answer: 99999 }}
+        index={0}
+        showAnswers={false}
+        displayMode={DisplayMode.TEXT}
+        textColumns={3}
+      />,
+    );
+
+    const equation = screen.getByTestId('text-equation');
+    const tokens = Array.from(equation.children);
+    const tokenWidth = (token: Element) => {
+      const style = getComputedStyle(token);
+      return Math.max(parseFloat(style.minWidth) || 0, parseFloat(style.width) || 0);
+    };
+    const occupiedWidth = tokens.reduce((total, token) => total + tokenWidth(token), 0)
+      + parseFloat(getComputedStyle(equation).fontSize)
+      + 3 * (tokens.length - 1);
+
+    expect(occupiedWidth).toBeLessThanOrEqual(170);
+  });
+
+  it.each([
+    ['first', 1234],
+    ['second', 5678],
+    ['result', 6912],
+  ] as const)('sizes a %s-position blank for its hidden value', (blankPosition, hiddenValue) => {
+    render(
+      <ProblemVisualizer
+        problem={{
+          ...largeProblem,
+          id: `large-fill-${blankPosition}`,
+          num1: 1234,
+          num2: 5678,
+          answer: 6912,
+          problemType: ProblemType.FILL_BLANK,
+          blankPosition,
+        }}
+        index={0}
+        showAnswers={false}
+        displayMode={DisplayMode.TEXT}
+        textColumns={3}
+      />,
+    );
+
+    expect(getComputedStyle(screen.getByTestId('math-blank-slot')).width)
+      .toBe(`${String(hiddenValue).length * 12 + 8}px`);
+  });
+});

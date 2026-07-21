@@ -226,8 +226,6 @@ export interface SheetConfig {
 
   // Advanced
   showPinyin: boolean;
-  showStrokeCount: boolean;
-  showStrokeOrder: boolean; // Simulates step-by-step
 
   // English 4-line
   englishLineTheme?: 'rainbow' | 'monochrome' | 'same';
@@ -238,5 +236,4 @@ export interface SheetConfig {
 export interface CharData {
   char: string;
   pinyin: string;
-  strokes: number;
 }
